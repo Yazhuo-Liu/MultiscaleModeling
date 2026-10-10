@@ -1,19 +1,20 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import * as THREE from "three";
+import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { createRenderHost } from "@/core/render/createRenderHost";
 import {
   ORBITALS,
   type OrbitalId,
+  LOBE_NEG,
+  LOBE_POS,
   buildOrbitalSurfaces,
   lobeMaterial,
 } from "./orbitals";
 
-const POS = 0xc23b22;
-const NEG = 0x1f5fbf;
-
 export function OrbitalView() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [orbital, setOrbital] = useState<OrbitalId>("2pz");
+  const [pending, startTransition] = useTransition();
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -32,63 +33,75 @@ export function OrbitalView() {
     renderer.setSize(ctx.width, ctx.height, false);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.05;
-    renderer.setClearColor(0xeef2f4, 1);
+    renderer.toneMappingExposure = 1.12;
+    renderer.setClearColor(0xf4f6f8, 1);
 
     const scene = new THREE.Scene();
+    scene.fog = new THREE.Fog(0xf4f6f8, 8, 18);
+
+    const pmrem = new THREE.PMREMGenerator(renderer);
+    const env = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+    scene.environment = env;
+    pmrem.dispose();
+
     const camera = new THREE.PerspectiveCamera(
-      40,
+      36,
       ctx.width / Math.max(ctx.height, 1),
-      0.1,
+      0.05,
       100,
     );
-    camera.position.set(3.4, 2.2, 4.4);
-    camera.lookAt(0, 0, 0);
+    camera.position.set(3.6, 2.0, 4.8);
 
-    scene.add(new THREE.HemisphereLight(0xffffff, 0xb0b8c0, 0.85));
-    const key = new THREE.DirectionalLight(0xffffff, 1.05);
-    key.position.set(4, 7, 3);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.35));
+    const key = new THREE.DirectionalLight(0xffffff, 1.15);
+    key.position.set(5, 8, 4);
     scene.add(key);
-    const fill = new THREE.DirectionalLight(0xd0e4ff, 0.4);
-    fill.position.set(-4, 1, -2);
-    scene.add(fill);
+    const rim = new THREE.DirectionalLight(0xb8d4ff, 0.55);
+    rim.position.set(-5, 2, -3);
+    scene.add(rim);
+    const bounce = new THREE.DirectionalLight(0xfff0e8, 0.35);
+    bounce.position.set(0, -4, 2);
+    scene.add(bounce);
 
-    const axes = new THREE.Group();
-    const axis = (to: THREE.Vector3, color: number) => {
-      const geo = new THREE.BufferGeometry().setFromPoints([
-        new THREE.Vector3(0, 0, 0),
-        to,
-      ]);
-      return new THREE.Line(
-        geo,
-        new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.3 }),
-      );
-    };
-    axes.add(axis(new THREE.Vector3(2.1, 0, 0), 0xb85c38));
-    axes.add(axis(new THREE.Vector3(0, 2.1, 0), 0x2f6b4f));
-    axes.add(axis(new THREE.Vector3(0, 0, 2.1), 0x2f5f8f));
-    scene.add(axes);
+    // Soft ground disc for depth (not a “card”)
+    const ground = new THREE.Mesh(
+      new THREE.CircleGeometry(3.2, 64),
+      new THREE.MeshStandardMaterial({
+        color: 0xe8ecf0,
+        roughness: 1,
+        metalness: 0,
+        transparent: true,
+        opacity: 0.65,
+      }),
+    );
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.y = -1.55;
+    scene.add(ground);
 
     const nucleus = new THREE.Mesh(
-      new THREE.SphereGeometry(0.055, 28, 28),
-      new THREE.MeshStandardMaterial({
-        color: 0x222222,
-        roughness: 0.35,
-        metalness: 0.45,
+      new THREE.SphereGeometry(0.048, 48, 48),
+      new THREE.MeshPhysicalMaterial({
+        color: 0x2a2e33,
+        roughness: 0.25,
+        metalness: 0.85,
+        clearcoat: 0.6,
+        envMapIntensity: 1,
       }),
     );
     scene.add(nucleus);
 
-    const surfaces = buildOrbitalSurfaces(orbital, 6);
+    const surfaces = buildOrbitalSurfaces(orbital, 88);
     const root = new THREE.Group();
-    // Map orbital z → scene y (chemistry convention)
     root.rotation.x = -Math.PI / 2;
     root.scale.setScalar(surfaces.displayScale);
 
-    const posMat = lobeMaterial(POS, 0.56);
-    const negMat = lobeMaterial(NEG, 0.56);
+    const posMat = lobeMaterial(LOBE_POS, env);
+    const negMat = lobeMaterial(LOBE_NEG, env);
     const posMesh = new THREE.Mesh(surfaces.positive, posMat);
     const negMesh = new THREE.Mesh(surfaces.negative, negMat);
+    // Render translucent back faces first for nicer glass
+    posMesh.renderOrder = 1;
+    negMesh.renderOrder = 1;
     root.add(posMesh, negMesh);
     scene.add(root);
 
@@ -96,11 +109,12 @@ export function OrbitalView() {
     const t0 = performance.now();
     const tick = (now: number) => {
       const t = (now - t0) / 1000;
-      root.rotation.z = t * 0.28;
-      camera.position.x = 4.3 * Math.cos(t * 0.14);
-      camera.position.z = 4.3 * Math.sin(t * 0.14);
-      camera.position.y = 2.0 + Math.sin(t * 0.22) * 0.3;
-      camera.lookAt(0, 0.05, 0);
+      root.rotation.z = t * 0.22;
+      const az = t * 0.11;
+      camera.position.x = 5.0 * Math.cos(az);
+      camera.position.z = 5.0 * Math.sin(az);
+      camera.position.y = 1.85 + Math.sin(t * 0.17) * 0.35;
+      camera.lookAt(0, -0.05, 0);
       renderer.render(scene, camera);
       frameId = ctx.requestFrame(tick);
     };
@@ -129,11 +143,9 @@ export function OrbitalView() {
       negMat.dispose();
       nucleus.geometry.dispose();
       (nucleus.material as THREE.Material).dispose();
-      axes.traverse((o) => {
-        const line = o as THREE.Line;
-        line.geometry?.dispose();
-        (line.material as THREE.Material | undefined)?.dispose();
-      });
+      ground.geometry.dispose();
+      (ground.material as THREE.Material).dispose();
+      env.dispose();
       renderer.dispose();
       host.destroy();
     };
@@ -147,20 +159,24 @@ export function OrbitalView() {
             key={o.id}
             type="button"
             className={orbital === o.id ? "active" : undefined}
-            onClick={() => setOrbital(o.id)}
+            onClick={() => startTransition(() => setOrbital(o.id))}
           >
             {o.label}
           </button>
         ))}
+        {pending ? <span className="orbital-busy">Building surface…</span> : null}
       </div>
       <div className="render-stage orbital-stage">
-        <canvas ref={canvasRef} className="render-canvas" aria-label="Atomic orbital isosurface" />
+        <canvas
+          ref={canvasRef}
+          className="render-canvas"
+          aria-label="Atomic orbital isosurface"
+        />
       </div>
       <p className="orbital-caption">
-        Translucent isosurfaces of constant |ψ| (hydrogenic).{" "}
-        <span className="phase pos">Red</span> = ψ &gt; 0 lobe,{" "}
-        <span className="phase neg">blue</span> = ψ &lt; 0 lobe — the usual
-        textbook orbital shells (1s sphere, 2p dumbbells, 3d clover / d<sub>z²</sub>).
+        Smooth marching-cubes isosurfaces of constant |ψ|.{" "}
+        <span className="phase pos">Coral</span> = ψ &gt; 0,{" "}
+        <span className="phase neg">blue</span> = ψ &lt; 0.
       </p>
     </div>
   );

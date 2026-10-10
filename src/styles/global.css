@@ -9,8 +9,8 @@
   --accent-strong: #0b5a54;
   --accent-soft: rgba(15, 118, 110, 0.1);
   --danger: #a33b2b;
-  --phase-pos: #c23b22;
-  --phase-neg: #1f5fbf;
+  --phase-pos: #e4574c;
+  --phase-neg: #3d7edb;
   --radius: 2px;
   --font-display: "Sora", "Segoe UI", sans-serif;
   --font-body: "IBM Plex Sans", "Segoe UI", sans-serif;
@@ -224,10 +224,12 @@ code {
 }
 
 .hero-orbital {
-  width: min(100%, 360px);
+  width: min(100%, 380px);
   aspect-ratio: 1;
   border: 1px solid var(--line);
-  background: #eef2f4;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 45%, #ffffff 0%, #f0f3f6 55%, #e6ebf0 100%);
+  overflow: hidden;
 }
 
 .hero-orbital canvas {
@@ -460,62 +462,77 @@ code {
 /* Orbitals */
 .orbital-view {
   display: grid;
-  gap: 0.85rem;
+  gap: 0.75rem;
 }
 
 .orbital-toolbar {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
+  align-items: center;
+  gap: 0.35rem;
   font-family: var(--font-ui);
 }
 
 .orbital-toolbar button {
   appearance: none;
   border: 1px solid var(--line);
-  background: var(--bg-elevated);
+  background: #fff;
   color: var(--ink-muted);
   font: inherit;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 600;
-  padding: 0.45rem 0.75rem;
-  border-radius: 2px;
+  letter-spacing: 0.02em;
+  padding: 0.5rem 0.85rem;
+  border-radius: 999px;
   cursor: pointer;
+  transition: background 140ms ease, color 140ms ease, border-color 140ms ease;
+}
+
+.orbital-toolbar button:hover {
+  border-color: var(--ink-muted);
+  color: var(--ink);
 }
 
 .orbital-toolbar button.active {
   background: var(--ink);
   border-color: var(--ink);
-  color: #f7f4ee;
+  color: #f4f6f8;
+}
+
+.orbital-busy {
+  margin-left: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--ink-muted);
 }
 
 .orbital-caption {
   margin: 0;
-  font-size: 0.88rem;
+  font-size: 0.86rem;
   color: var(--ink-muted);
   max-width: 62ch;
 }
 
 .orbital-caption .phase.pos {
-  color: var(--phase-pos);
+  color: #e4574c;
   font-weight: 600;
 }
 
 .orbital-caption .phase.neg {
-  color: var(--phase-neg);
+  color: #3d7edb;
   font-weight: 600;
 }
 
 /* Render */
 .render-stage {
-  height: min(62vh, 520px);
-  background: #eef2f4;
+  height: min(64vh, 560px);
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 42%, #ffffff 0%, #f0f3f6 55%, #e6ebf0 100%);
   border: 1px solid var(--line);
   overflow: hidden;
 }
 
 .orbital-stage {
-  height: min(64vh, 540px);
+  height: min(68vh, 580px);
 }
 
 .render-canvas {

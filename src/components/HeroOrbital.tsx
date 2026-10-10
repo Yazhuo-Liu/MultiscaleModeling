@@ -1,8 +1,14 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
-import { buildOrbitalSurfaces, lobeMaterial } from "@/modules/dft/orbitals";
+import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
+import {
+  LOBE_NEG,
+  LOBE_POS,
+  buildOrbitalSurfaces,
+  lobeMaterial,
+} from "@/modules/dft/orbitals";
 
-/** Compact 2p_z isosurface preview for the home hero. */
+/** High-quality 2p_z isosurface for the home hero. */
 export function HeroOrbital() {
   const ref = useRef<HTMLCanvasElement>(null);
 
@@ -14,28 +20,38 @@ export function HeroOrbital() {
       canvas,
       antialias: true,
       alpha: false,
+      powerPreference: "high-performance",
     });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-    renderer.setClearColor(0xeef2f4, 1);
+    renderer.setClearColor(0xf4f6f8, 1);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.12;
 
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 50);
-    camera.position.set(2.8, 1.6, 3.4);
-    camera.lookAt(0, 0, 0);
-    scene.add(new THREE.HemisphereLight(0xffffff, 0xb0b8c0, 0.9));
-    const key = new THREE.DirectionalLight(0xffffff, 1);
-    key.position.set(3, 5, 2);
-    scene.add(key);
+    const pmrem = new THREE.PMREMGenerator(renderer);
+    const env = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+    scene.environment = env;
+    pmrem.dispose();
 
-    const surfaces = buildOrbitalSurfaces("2pz", 4);
+    const camera = new THREE.PerspectiveCamera(34, 1, 0.05, 50);
+    camera.position.set(3.2, 1.6, 3.8);
+
+    scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+    const key = new THREE.DirectionalLight(0xffffff, 1.1);
+    key.position.set(4, 6, 3);
+    scene.add(key);
+    const rim = new THREE.DirectionalLight(0xb8d4ff, 0.5);
+    rim.position.set(-3, 1, -2);
+    scene.add(rim);
+
+    const surfaces = buildOrbitalSurfaces("2pz", 72);
     const root = new THREE.Group();
     root.rotation.x = -Math.PI / 2;
-    root.scale.setScalar(surfaces.displayScale * 1.05);
+    root.scale.setScalar(surfaces.displayScale * 1.08);
 
-    const posMat = lobeMaterial(0xc23b22, 0.58);
-    const negMat = lobeMaterial(0x1f5fbf, 0.58);
+    const posMat = lobeMaterial(LOBE_POS, env);
+    const negMat = lobeMaterial(LOBE_NEG, env);
     root.add(
       new THREE.Mesh(surfaces.positive, posMat),
       new THREE.Mesh(surfaces.negative, negMat),
@@ -43,8 +59,13 @@ export function HeroOrbital() {
     scene.add(root);
 
     const nucleus = new THREE.Mesh(
-      new THREE.SphereGeometry(0.05, 20, 20),
-      new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.4 }),
+      new THREE.SphereGeometry(0.045, 32, 32),
+      new THREE.MeshPhysicalMaterial({
+        color: 0x2a2e33,
+        roughness: 0.25,
+        metalness: 0.85,
+        clearcoat: 0.5,
+      }),
     );
     scene.add(nucleus);
 
@@ -61,9 +82,9 @@ export function HeroOrbital() {
     const t0 = performance.now();
     const tick = (now: number) => {
       const t = (now - t0) / 1000;
-      root.rotation.z = t * 0.3;
-      camera.position.x = 3.1 * Math.cos(t * 0.16);
-      camera.position.z = 3.1 * Math.sin(t * 0.16);
+      root.rotation.z = t * 0.24;
+      camera.position.x = 3.6 * Math.cos(t * 0.13);
+      camera.position.z = 3.6 * Math.sin(t * 0.13);
       camera.lookAt(0, 0, 0);
       renderer.render(scene, camera);
       id = requestAnimationFrame(tick);
@@ -82,6 +103,7 @@ export function HeroOrbital() {
       negMat.dispose();
       nucleus.geometry.dispose();
       (nucleus.material as THREE.Material).dispose();
+      env.dispose();
       renderer.dispose();
     };
   }, []);

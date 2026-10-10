@@ -1,31 +1,30 @@
 import type { ModelingModule } from "@/core/types";
-import { mountSimpleScene, physicalMat } from "@/core/render/simpleScene";
 import { forEachChunked } from "@/core/compute/runSafely";
-import * as THREE from "three";
+import { OrbitalView } from "./OrbitalView";
 
 /** Density Functional Theory — electronic-structure intro + demos. */
 export const dftModule: ModelingModule = {
   id: "dft",
   title: "DFT",
   summary:
-    "Density functional theory: approximate many-body Schrödinger physics through the electron density.",
+    "Density functional theory: many-body electronic structure through the electron density.",
   scale: "electronic",
-  accent: "#1f6f78",
-  tags: ["first-principles", "electronic structure", "exchange–correlation"],
+  accent: "#0f766e",
+  tags: ["first-principles", "electronic structure", "orbitals"],
   intro: {
-    lead: "DFT replaces the many-electron wavefunction with the electron density, making electronic-structure calculations practical for materials.",
+    lead: "DFT replaces the many-electron wavefunction with the electron density, making electronic-structure calculations practical for materials. The visualization below shows the hydrogenic orbitals that form the conceptual backbone of atomic basis sets—not a self-consistent DFT density.",
     sections: [
       {
         heading: "Core idea",
-        body: "The Hohenberg–Kohn theorems show that ground-state properties are uniquely determined by the electron density. Kohn–Sham DFT maps the interacting problem onto effective single-particle equations; most of the remaining difficulty sits in the exchange–correlation functional.",
+        body: "The Hohenberg–Kohn theorems show that ground-state properties are uniquely determined by the electron density. Kohn–Sham DFT maps the interacting problem onto effective single-particle orbitals; most of the remaining difficulty sits in the exchange–correlation functional.",
+      },
+      {
+        heading: "Orbitals vs density",
+        body: "Kohn–Sham orbitals are auxiliary single-particle states. The physical density is ρ(r) = Σ |φᵢ(r)|². Textbook orbital plots (1s, 2p, 3d) illustrate angular shape from spherical harmonics; production DFT codes solve self-consistent equations on grids or with basis sets.",
       },
       {
         heading: "Common approximations",
-        body: "LDA, GGA, meta-GGA, and hybrid functionals form a ladder of XC approximations. Plane-wave pseudopotential codes and localized-basis codes are the two dominant implementation families. Demos here are conceptual toys—not substitutes for VASP, Quantum ESPRESSO, and similar production codes.",
-      },
-      {
-        heading: "Typical uses",
-        body: "Equilibrium structures, bands, densities of states, defect formation energies, and early reaction-path screening. Strong correlation, excitations, and very large systems need other methods or embedded multiscale strategies.",
+        body: "LDA, GGA, meta-GGA, and hybrid functionals form a ladder of XC approximations. Plane-wave pseudopotential and localized-basis codes dominate practice. Browser demos here are pedagogical—not substitutes for VASP, Quantum ESPRESSO, and similar codes.",
       },
     ],
     references: [
@@ -34,112 +33,14 @@ export const dftModule: ModelingModule = {
     ],
   },
   render: {
-    label: "Electron density",
-    mount: (ctx) =>
-      mountSimpleScene(ctx, {
-        background: 0xe7f0ef,
-        contactShadow: true,
-        cameraPosition: [1.8, 1.4, 3.6],
-        setup: (scene) => {
-          const disposables: { dispose: () => void }[] = [];
-
-          const nucleus = new THREE.Mesh(
-            new THREE.SphereGeometry(0.28, 48, 48),
-            physicalMat(0xf0d5a8, { metalness: 0.55, roughness: 0.25, clearcoat: 0.8 }),
-          );
-          nucleus.castShadow = true;
-          scene.add(nucleus);
-          disposables.push(nucleus.geometry, nucleus.material);
-
-          // Nested isosurfaces suggesting ρ(r) shells
-          const shells = [
-            { r: 0.72, color: 0x1f6f78, opacity: 0.55 },
-            { r: 1.15, color: 0x3d9aa3, opacity: 0.28 },
-            { r: 1.65, color: 0x7eb8c9, opacity: 0.14 },
-          ];
-          for (const s of shells) {
-            const mesh = new THREE.Mesh(
-              new THREE.IcosahedronGeometry(s.r, 4),
-              physicalMat(s.color, {
-                transparent: true,
-                opacity: s.opacity,
-                roughness: 0.15,
-                metalness: 0,
-                clearcoat: 1,
-                transmission: 0.35,
-                thickness: 0.4,
-                depthWrite: false,
-              }),
-            );
-            mesh.castShadow = true;
-            scene.add(mesh);
-            disposables.push(mesh.geometry, mesh.material);
-          }
-
-          // Orbital probability cloud
-          const count = 420;
-          const positions = new Float32Array(count * 3);
-          const colors = new Float32Array(count * 3);
-          const cInner = new THREE.Color(0x2a6f4e);
-          const cOuter = new THREE.Color(0x7eb8c9);
-          for (let i = 0; i < count; i++) {
-            const u = Math.random();
-            const v = Math.random();
-            const theta = 2 * Math.PI * u;
-            const phi = Math.acos(2 * v - 1);
-            // Prefer denser samples near the nucleus (toy exponential)
-            const r = -Math.log(1 - Math.random() * 0.92) * 0.55;
-            const rr = Math.min(r, 2.1);
-            positions[i * 3] = rr * Math.sin(phi) * Math.cos(theta);
-            positions[i * 3 + 1] = rr * Math.sin(phi) * Math.sin(theta);
-            positions[i * 3 + 2] = rr * Math.cos(phi);
-            const col = cInner.clone().lerp(cOuter, Math.min(rr / 2, 1));
-            colors[i * 3] = col.r;
-            colors[i * 3 + 1] = col.g;
-            colors[i * 3 + 2] = col.b;
-          }
-          const cloudGeo = new THREE.BufferGeometry();
-          cloudGeo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-          cloudGeo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
-          const cloud = new THREE.Points(
-            cloudGeo,
-            new THREE.PointsMaterial({
-              size: 0.035,
-              vertexColors: true,
-              transparent: true,
-              opacity: 0.85,
-              depthWrite: false,
-              sizeAttenuation: true,
-            }),
-          );
-          scene.add(cloud);
-          disposables.push(cloudGeo, cloud.material);
-
-          return () => {
-            for (const d of disposables) d.dispose();
-          };
-        },
-        onFrame: (scene, t) => {
-          scene.traverse((obj) => {
-            if (
-              obj instanceof THREE.Mesh &&
-              obj.geometry instanceof THREE.IcosahedronGeometry
-            ) {
-              obj.rotation.y = t * 0.22;
-              obj.rotation.x = Math.sin(t * 0.35) * 0.12;
-            }
-            if (obj instanceof THREE.Points) {
-              obj.rotation.y = t * 0.18;
-              obj.rotation.z = Math.sin(t * 0.25) * 0.08;
-            }
-          });
-        },
-      }),
+    label: "Orbitals",
+    mount: () => () => {},
   },
+  RenderPanel: OrbitalView,
   compute: {
     label: "1D well levels",
     description:
-      "Analytic levels of an infinite square well, Eₙ ∝ n² / L². Vary width and quantum number to see level spacing — a pre-DFT quantum toy.",
+      "Analytic levels of an infinite square well, Eₙ ∝ n² / L² — a pre-DFT quantum toy for level spacing.",
     params: [
       { id: "L", label: "Well width L (Å)", type: "number", default: 5, min: 1, max: 20, step: 0.5 },
       { id: "nMax", label: "Max quantum number n", type: "number", default: 6, min: 1, max: 12, step: 1 },

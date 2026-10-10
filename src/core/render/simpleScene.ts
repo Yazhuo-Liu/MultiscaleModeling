@@ -46,7 +46,7 @@ export function mountSimpleScene(
   renderer.shadowMap.enabled = Boolean(options.contactShadow);
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-  const bg = options.background ?? 0xe8f1f0;
+  const bg = options.background ?? 0xeef2f4;
   renderer.setClearColor(bg, 1);
 
   const scene = new THREE.Scene();

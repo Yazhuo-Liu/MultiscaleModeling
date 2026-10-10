@@ -4,12 +4,12 @@ import { createRenderHost } from "@/core/render/createRenderHost";
 import {
   ORBITALS,
   type OrbitalId,
-  orbitalDisplayScale,
-  sampleOrbital,
+  buildOrbitalSurfaces,
+  lobeMaterial,
 } from "./orbitals";
 
-const POS_COLOR = new THREE.Color(0xc23b22); // positive lobe
-const NEG_COLOR = new THREE.Color(0x1f5fbf); // negative lobe
+const POS = 0xc23b22;
+const NEG = 0x1f5fbf;
 
 export function OrbitalView() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -32,91 +32,74 @@ export function OrbitalView() {
     renderer.setSize(ctx.width, ctx.height, false);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.1;
+    renderer.toneMappingExposure = 1.05;
     renderer.setClearColor(0xeef2f4, 1);
 
     const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0xeef2f4, 0.035);
-
     const camera = new THREE.PerspectiveCamera(
       40,
       ctx.width / Math.max(ctx.height, 1),
       0.1,
       100,
     );
-    camera.position.set(3.2, 2.4, 4.6);
+    camera.position.set(3.4, 2.2, 4.4);
     camera.lookAt(0, 0, 0);
 
-    scene.add(new THREE.AmbientLight(0xffffff, 0.7));
-    const key = new THREE.DirectionalLight(0xffffff, 0.9);
-    key.position.set(4, 6, 3);
+    scene.add(new THREE.HemisphereLight(0xffffff, 0xb0b8c0, 0.85));
+    const key = new THREE.DirectionalLight(0xffffff, 1.05);
+    key.position.set(4, 7, 3);
     scene.add(key);
+    const fill = new THREE.DirectionalLight(0xd0e4ff, 0.4);
+    fill.position.set(-4, 1, -2);
+    scene.add(fill);
 
-    // Subtle axis guide (z vertical for chemistry convention in view)
     const axes = new THREE.Group();
-    const axisMat = (c: number) =>
-      new THREE.LineBasicMaterial({ color: c, transparent: true, opacity: 0.35 });
-    const mkAxis = (to: THREE.Vector3, color: number) => {
+    const axis = (to: THREE.Vector3, color: number) => {
       const geo = new THREE.BufferGeometry().setFromPoints([
         new THREE.Vector3(0, 0, 0),
         to,
       ]);
-      return new THREE.Line(geo, axisMat(color));
+      return new THREE.Line(
+        geo,
+        new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.3 }),
+      );
     };
-    axes.add(mkAxis(new THREE.Vector3(2.2, 0, 0), 0xb85c38));
-    axes.add(mkAxis(new THREE.Vector3(0, 2.2, 0), 0x2f6b4f));
-    axes.add(mkAxis(new THREE.Vector3(0, 0, 2.2), 0x2f5f8f));
+    axes.add(axis(new THREE.Vector3(2.1, 0, 0), 0xb85c38));
+    axes.add(axis(new THREE.Vector3(0, 2.1, 0), 0x2f6b4f));
+    axes.add(axis(new THREE.Vector3(0, 0, 2.1), 0x2f5f8f));
     scene.add(axes);
 
     const nucleus = new THREE.Mesh(
-      new THREE.SphereGeometry(0.06, 24, 24),
+      new THREE.SphereGeometry(0.055, 28, 28),
       new THREE.MeshStandardMaterial({
-        color: 0x2a2a2a,
+        color: 0x222222,
         roughness: 0.35,
-        metalness: 0.4,
+        metalness: 0.45,
       }),
     );
     scene.add(nucleus);
 
-    const cloud = sampleOrbital(orbital, 14000, 42);
-    const scale = orbitalDisplayScale(orbital);
-    const colors = new Float32Array(cloud.count * 3);
-    for (let i = 0; i < cloud.count; i++) {
-      const c = cloud.phases[i]! >= 0 ? POS_COLOR : NEG_COLOR;
-      colors[i * 3] = c.r;
-      colors[i * 3 + 1] = c.g;
-      colors[i * 3 + 2] = c.b;
-      cloud.positions[i * 3]! *= scale;
-      cloud.positions[i * 3 + 1]! *= scale;
-      cloud.positions[i * 3 + 2]! *= scale;
-    }
+    const surfaces = buildOrbitalSurfaces(orbital, 5);
+    const root = new THREE.Group();
+    // Map orbital z → scene y (chemistry convention)
+    root.rotation.x = -Math.PI / 2;
+    root.scale.setScalar(surfaces.displayScale);
 
-    const geo = new THREE.BufferGeometry();
-    geo.setAttribute("position", new THREE.BufferAttribute(cloud.positions, 3));
-    geo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
-    const points = new THREE.Points(
-      geo,
-      new THREE.PointsMaterial({
-        size: 0.028,
-        vertexColors: true,
-        transparent: true,
-        opacity: 0.78,
-        depthWrite: false,
-        sizeAttenuation: true,
-      }),
-    );
-    // Chemistry: z up in orbital plots — map orbital z → scene y
-    points.rotation.x = -Math.PI / 2;
-    scene.add(points);
+    const posMat = lobeMaterial(POS, 0.56);
+    const negMat = lobeMaterial(NEG, 0.56);
+    const posMesh = new THREE.Mesh(surfaces.positive, posMat);
+    const negMesh = new THREE.Mesh(surfaces.negative, negMat);
+    root.add(posMesh, negMesh);
+    scene.add(root);
 
     let frameId = 0;
     const t0 = performance.now();
     const tick = (now: number) => {
       const t = (now - t0) / 1000;
-      points.rotation.z = t * 0.22;
-      camera.position.x = 4.2 * Math.cos(t * 0.12);
-      camera.position.z = 4.2 * Math.sin(t * 0.12);
-      camera.position.y = 2.1 + Math.sin(t * 0.2) * 0.25;
+      root.rotation.z = t * 0.28;
+      camera.position.x = 4.3 * Math.cos(t * 0.14);
+      camera.position.z = 4.3 * Math.sin(t * 0.14);
+      camera.position.y = 2.0 + Math.sin(t * 0.22) * 0.3;
       camera.lookAt(0, 0.05, 0);
       renderer.render(scene, camera);
       frameId = ctx.requestFrame(tick);
@@ -140,8 +123,10 @@ export function OrbitalView() {
       ctx.cancelFrame(frameId);
       window.removeEventListener("resize", onResize);
       ro?.disconnect();
-      geo.dispose();
-      (points.material as THREE.Material).dispose();
+      surfaces.positive.dispose();
+      surfaces.negative.dispose();
+      posMat.dispose();
+      negMat.dispose();
       nucleus.geometry.dispose();
       (nucleus.material as THREE.Material).dispose();
       axes.traverse((o) => {
@@ -169,13 +154,13 @@ export function OrbitalView() {
         ))}
       </div>
       <div className="render-stage orbital-stage">
-        <canvas ref={canvasRef} className="render-canvas" aria-label="Atomic orbital" />
+        <canvas ref={canvasRef} className="render-canvas" aria-label="Atomic orbital isosurface" />
       </div>
       <p className="orbital-caption">
-        Hydrogen-like orbital probability density |ψ|² (rejection sampled).{" "}
-        <span className="phase pos">Red</span> = ψ &gt; 0,{" "}
-        <span className="phase neg">blue</span> = ψ &lt; 0. Shapes follow real
-        spherical harmonics (1s sphere, 2p dumbbells, 3d clover / d<sub>z²</sub>).
+        Translucent isosurfaces of constant |ψ| (hydrogenic).{" "}
+        <span className="phase pos">Red</span> = ψ &gt; 0 lobe,{" "}
+        <span className="phase neg">blue</span> = ψ &lt; 0 lobe — the usual
+        textbook orbital shells (1s sphere, 2p dumbbells, 3d clover / d<sub>z²</sub>).
       </p>
     </div>
   );

@@ -18,8 +18,8 @@ export function App() {
         </main>
         <footer className="site-footer">
           <p>
-            Multiscale Modeling — 模块化介绍 / 渲染 / 计算框架。发布请打{" "}
-            <code>vX.Y</code> 标签触发部署。
+            Multiscale Modeling — modular intro / render / compute framework.
+            Deploy by pushing a <code>vX.Y</code> tag.
           </p>
         </footer>
       </div>

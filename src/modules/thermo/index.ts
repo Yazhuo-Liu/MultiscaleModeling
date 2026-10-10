@@ -1,26 +1,27 @@
 import type { ModelingModule } from "@/core/types";
-import { mountSimpleScene } from "@/core/render/simpleScene";
+import { mountSimpleScene, physicalMat } from "@/core/render/simpleScene";
 import { forEachChunked } from "@/core/compute/runSafely";
 import * as THREE from "three";
 
 /** Materials thermodynamics — phase equilibria & free energy toys. */
 export const thermoModule: ModelingModule = {
   id: "thermo",
-  title: "材料热力学",
-  summary: "相平衡、自由能与相图：连接原子计算与工艺设计的热力学语言。",
+  title: "Thermodynamics",
+  summary:
+    "Phase equilibria, free energy, and phase diagrams—the thermodynamic language linking atoms to processing.",
   scale: "cross-scale",
   accent: "#6b4f3a",
-  tags: ["自由能", "相图", "CALPHAD"],
+  tags: ["free energy", "phase diagram", "CALPHAD"],
   intro: {
-    lead: "材料热力学用自由能极小化描述相平衡，是跨尺度建模中承上启下的骨架。",
+    lead: "Materials thermodynamics describes phase equilibria via free-energy minimization—a backbone that bridges scales.",
     sections: [
       {
-        heading: "从第一性原理到相图",
-        body: "DFT 总能、声子与团簇展开可参数化自由能；CALPHAD 则用评估数据库在成分–温度空间插值与外推，服务合金设计。",
+        heading: "From first principles to phase diagrams",
+        body: "DFT total energies, phonons, and cluster expansions can parameterize free energies. CALPHAD interpolates assessed databases across composition–temperature space for alloy design.",
       },
       {
-        heading: "本站 demo",
-        body: "提供规则溶液模型的二元混溶隙示意，帮助理解相互作用参数与临界温度关系。",
+        heading: "This demo",
+        body: "A regular-solution binary miscibility gap illustrates how the interaction parameter sets a critical temperature.",
       },
     ],
     references: [
@@ -29,49 +30,126 @@ export const thermoModule: ModelingModule = {
     ],
   },
   render: {
-    label: "自由能曲面示意",
+    label: "Free-energy surface",
     mount: (ctx) =>
       mountSimpleScene(ctx, {
         background: 0xf3eee8,
-        cameraZ: 5,
-        setup: (scene, camera) => {
-          camera.position.set(2.5, 2.2, 4);
-          camera.lookAt(0, 0, 0);
-          const geo = new THREE.PlaneGeometry(3.2, 3.2, 40, 40);
+        fog: 0xf3eee8,
+        contactShadow: true,
+        cameraPosition: [3.2, 2.6, 3.8],
+        lookAt: [0, 0.2, 0],
+        setup: (scene) => {
+          const seg = 48;
+          const geo = new THREE.PlaneGeometry(3.4, 3.4, seg, seg);
           const pos = geo.attributes.position!;
+          const colors = new Float32Array(pos.count * 3);
+          const cLow = new THREE.Color(0xc4a574);
+          const cHigh = new THREE.Color(0x6b4f3a);
+          const cMid = new THREE.Color(0x1f6f78);
+
           for (let i = 0; i < pos.count; i++) {
             const x = pos.getX(i);
             const y = pos.getY(i);
+            const nx = x / 1.7;
+            const ny = y / 1.7;
+            // Toy free-energy landscape with two basins
             const z =
-              0.35 * Math.sin(x * 2) * Math.cos(y * 2) +
-              0.15 * (x * x + y * y);
+              0.55 * (nx * nx - 0.6) ** 2 +
+              0.35 * (ny * ny - 0.45) ** 2 +
+              0.12 * Math.sin(nx * 3) * Math.cos(ny * 3) -
+              0.15;
             pos.setZ(i, z);
+            const t = THREE.MathUtils.clamp((z + 0.2) / 0.9, 0, 1);
+            const col =
+              t < 0.5
+                ? cLow.clone().lerp(cMid, t * 2)
+                : cMid.clone().lerp(cHigh, (t - 0.5) * 2);
+            colors[i * 3] = col.r;
+            colors[i * 3 + 1] = col.g;
+            colors[i * 3 + 2] = col.b;
           }
+          geo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
           geo.computeVertexNormals();
+
           const mesh = new THREE.Mesh(
             geo,
-            new THREE.MeshStandardMaterial({
-              color: 0x6b4f3a,
-              wireframe: false,
-              flatShading: true,
+            new THREE.MeshPhysicalMaterial({
+              vertexColors: true,
+              roughness: 0.45,
+              metalness: 0.08,
+              clearcoat: 0.35,
               side: THREE.DoubleSide,
             }),
           );
-          mesh.rotation.x = -Math.PI / 2.6;
+          mesh.rotation.x = -Math.PI / 2.35;
+          mesh.castShadow = true;
+          mesh.receiveShadow = true;
           scene.add(mesh);
+
+          // Wire overlay for “mesh” feel without heavy cards
+          const wire = new THREE.LineSegments(
+            new THREE.WireframeGeometry(geo),
+            new THREE.LineBasicMaterial({
+              color: 0xffffff,
+              transparent: true,
+              opacity: 0.12,
+            }),
+          );
+          wire.rotation.copy(mesh.rotation);
+          scene.add(wire);
+
+          const marker = new THREE.Mesh(
+            new THREE.SphereGeometry(0.08, 20, 20),
+            physicalMat(0xc45c26, { emissive: 0x401808, emissiveIntensity: 0.25 }),
+          );
+          marker.castShadow = true;
+          scene.add(marker);
+
+          scene.userData.thermo = { mesh, wire, marker, geo };
+
+          return () => {
+            geo.dispose();
+            (mesh.material as THREE.Material).dispose();
+            wire.geometry.dispose();
+            (wire.material as THREE.Material).dispose();
+            marker.geometry.dispose();
+            (marker.material as THREE.Material).dispose();
+          };
         },
-        onFrame: (scene, t) => {
-          scene.rotation.y = t * 0.2;
+        onFrame: (scene, t, camera) => {
+          const data = scene.userData.thermo as
+            | {
+                mesh: THREE.Mesh;
+                wire: THREE.LineSegments;
+                marker: THREE.Mesh;
+              }
+            | undefined;
+          if (!data) return;
+          data.mesh.rotation.z = t * 0.18;
+          data.wire.rotation.z = data.mesh.rotation.z;
+          const u = (Math.sin(t * 0.7) + 1) / 2;
+          const v = (Math.cos(t * 0.55) + 1) / 2;
+          const x = (u - 0.5) * 2.8;
+          const z = (v - 0.5) * 2.8;
+          const y =
+            0.55 * ((x / 1.7) ** 2 - 0.6) ** 2 +
+            0.35 * ((z / 1.7) ** 2 - 0.45) ** 2 -
+            0.05;
+          // Marker in world space roughly on the tilted plane
+          data.marker.position.set(x * 0.85, y + 0.15, z * 0.85);
+          camera.position.x = 3.2 * Math.cos(t * 0.1);
+          camera.position.z = 3.8 * Math.sin(t * 0.1) + 1.5;
+          camera.lookAt(0, 0.2, 0);
         },
       }),
   },
   compute: {
-    label: "规则溶液混溶隙",
+    label: "Regular-solution miscibility gap",
     description:
-      "二元规则溶液 G_mix = Ω x(1-x) + RT[x ln x + (1-x) ln(1-x)]，扫描温度看混溶隙。",
+      "Binary regular solution G_mix = Ω x(1−x) + RT[x ln x + (1−x) ln(1−x)]. Scan T against the critical temperature.",
     params: [
       { id: "omega", label: "Ω (J/mol)", type: "number", default: 16000, min: 5000, max: 40000, step: 500 },
-      { id: "T", label: "温度 T (K)", type: "number", default: 800, min: 300, max: 2000, step: 50 },
+      { id: "T", label: "Temperature T (K)", type: "number", default: 800, min: 300, max: 2000, step: 50 },
     ],
     run: async (values, ctx) => {
       const omega = Number(values.omega);
@@ -90,7 +168,7 @@ export const thermoModule: ModelingModule = {
 
       const Tc = omega / (2 * R);
       return {
-        summary: `当前 T=${T} K；规则溶液临界温度 Tc ≈ ${Tc.toFixed(1)} K（T < Tc 时出现混溶隙）。`,
+        summary: `T = ${T} K; regular-solution Tc ≈ ${Tc.toFixed(1)} K (miscibility gap when T < Tc).`,
         series,
       };
     },

@@ -128,7 +128,7 @@ export function ComputeHost({ demo }: Props) {
 
         <div className="compute-actions">
           <button type="submit" className="btn primary" disabled={running || pending}>
-            {running ? "计算中…" : "运行 demo"}
+            {running ? "Running…" : "Run demo"}
           </button>
           {running ? (
             <button
@@ -136,7 +136,7 @@ export function ComputeHost({ demo }: Props) {
               className="btn ghost"
               onClick={() => setRunning(false)}
             >
-              取消
+              Cancel
             </button>
           ) : null}
         </div>

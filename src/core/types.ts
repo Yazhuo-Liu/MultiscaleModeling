@@ -114,11 +114,11 @@ export interface ModelingModule {
 }
 
 export const SCALE_LABELS: Record<ScaleBand, string> = {
-  electronic: "电子尺度",
-  atomic: "原子 / 分子尺度",
-  mesoscale: "介观尺度",
-  continuum: "连续介质尺度",
-  "cross-scale": "跨尺度",
+  electronic: "Electronic",
+  atomic: "Atomic / Molecular",
+  mesoscale: "Mesoscale",
+  continuum: "Continuum",
+  "cross-scale": "Cross-scale",
 };
 
 export const SCALE_ORDER: ScaleBand[] = [

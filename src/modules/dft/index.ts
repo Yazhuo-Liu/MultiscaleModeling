@@ -1,5 +1,5 @@
 import type { ModelingModule } from "@/core/types";
-import { mountSimpleScene } from "@/core/render/simpleScene";
+import { mountSimpleScene, physicalMat } from "@/core/render/simpleScene";
 import { forEachChunked } from "@/core/compute/runSafely";
 import * as THREE from "three";
 
@@ -7,24 +7,25 @@ import * as THREE from "three";
 export const dftModule: ModelingModule = {
   id: "dft",
   title: "DFT",
-  summary: "密度泛函理论：从电子密度出发近似求解多体薛定谔方程。",
+  summary:
+    "Density functional theory: approximate many-body Schrödinger physics through the electron density.",
   scale: "electronic",
   accent: "#1f6f78",
-  tags: ["第一性原理", "电子结构", "交换关联"],
+  tags: ["first-principles", "electronic structure", "exchange–correlation"],
   intro: {
-    lead: "DFT 用电子密度替代多电子波函数，使材料电子结构计算在实践上可行。",
+    lead: "DFT replaces the many-electron wavefunction with the electron density, making electronic-structure calculations practical for materials.",
     sections: [
       {
-        heading: "核心思想",
-        body: "Hohenberg–Kohn 定理表明基态性质由电子密度唯一确定。Kohn–Sham 方法引入无相互作用参考体系，把多体问题映射为一组有效单粒子方程，复杂度主要落在交换关联泛函。",
+        heading: "Core idea",
+        body: "The Hohenberg–Kohn theorems show that ground-state properties are uniquely determined by the electron density. Kohn–Sham DFT maps the interacting problem onto effective single-particle equations; most of the remaining difficulty sits in the exchange–correlation functional.",
       },
       {
-        heading: "常见近似",
-        body: "LDA / GGA / meta-GGA / 杂化泛函递进描述交换关联。平面波赝势与局域基组是两类主流实现。本站 demo 只做概念级数值玩具，不能替代 VASP、Quantum ESPRESSO 等生产代码。",
+        heading: "Common approximations",
+        body: "LDA, GGA, meta-GGA, and hybrid functionals form a ladder of XC approximations. Plane-wave pseudopotential codes and localized-basis codes are the two dominant implementation families. Demos here are conceptual toys—not substitutes for VASP, Quantum ESPRESSO, and similar production codes.",
       },
       {
-        heading: "适用场景",
-        body: "平衡结构、能带、态密度、缺陷形成能、反应路径初筛等。强关联、激发态与超大体系需其它方法或嵌入式多尺度策略。",
+        heading: "Typical uses",
+        body: "Equilibrium structures, bands, densities of states, defect formation energies, and early reaction-path screening. Strong correlation, excitations, and very large systems need other methods or embedded multiscale strategies.",
       },
     ],
     references: [
@@ -33,64 +34,118 @@ export const dftModule: ModelingModule = {
     ],
   },
   render: {
-    label: "电子云示意",
+    label: "Electron density",
     mount: (ctx) =>
       mountSimpleScene(ctx, {
-        background: 0xe8f1f0,
+        background: 0xe7f0ef,
+        contactShadow: true,
+        cameraPosition: [1.8, 1.4, 3.6],
         setup: (scene) => {
-          const geo = new THREE.IcosahedronGeometry(1.1, 2);
-          const mat = new THREE.MeshStandardMaterial({
-            color: 0x1f6f78,
-            flatShading: true,
-            transparent: true,
-            opacity: 0.92,
-          });
-          const core = new THREE.Mesh(geo, mat);
-          scene.add(core);
+          const disposables: { dispose: () => void }[] = [];
 
-          const shell = new THREE.Mesh(
-            new THREE.IcosahedronGeometry(1.55, 1),
-            new THREE.MeshStandardMaterial({
-              color: 0x7eb8c9,
-              wireframe: true,
+          const nucleus = new THREE.Mesh(
+            new THREE.SphereGeometry(0.28, 48, 48),
+            physicalMat(0xf0d5a8, { metalness: 0.55, roughness: 0.25, clearcoat: 0.8 }),
+          );
+          nucleus.castShadow = true;
+          scene.add(nucleus);
+          disposables.push(nucleus.geometry, nucleus.material);
+
+          // Nested isosurfaces suggesting ρ(r) shells
+          const shells = [
+            { r: 0.72, color: 0x1f6f78, opacity: 0.55 },
+            { r: 1.15, color: 0x3d9aa3, opacity: 0.28 },
+            { r: 1.65, color: 0x7eb8c9, opacity: 0.14 },
+          ];
+          for (const s of shells) {
+            const mesh = new THREE.Mesh(
+              new THREE.IcosahedronGeometry(s.r, 4),
+              physicalMat(s.color, {
+                transparent: true,
+                opacity: s.opacity,
+                roughness: 0.15,
+                metalness: 0,
+                clearcoat: 1,
+                transmission: 0.35,
+                thickness: 0.4,
+                depthWrite: false,
+              }),
+            );
+            mesh.castShadow = true;
+            scene.add(mesh);
+            disposables.push(mesh.geometry, mesh.material);
+          }
+
+          // Orbital probability cloud
+          const count = 420;
+          const positions = new Float32Array(count * 3);
+          const colors = new Float32Array(count * 3);
+          const cInner = new THREE.Color(0x2a6f4e);
+          const cOuter = new THREE.Color(0x7eb8c9);
+          for (let i = 0; i < count; i++) {
+            const u = Math.random();
+            const v = Math.random();
+            const theta = 2 * Math.PI * u;
+            const phi = Math.acos(2 * v - 1);
+            // Prefer denser samples near the nucleus (toy exponential)
+            const r = -Math.log(1 - Math.random() * 0.92) * 0.55;
+            const rr = Math.min(r, 2.1);
+            positions[i * 3] = rr * Math.sin(phi) * Math.cos(theta);
+            positions[i * 3 + 1] = rr * Math.sin(phi) * Math.sin(theta);
+            positions[i * 3 + 2] = rr * Math.cos(phi);
+            const col = cInner.clone().lerp(cOuter, Math.min(rr / 2, 1));
+            colors[i * 3] = col.r;
+            colors[i * 3 + 1] = col.g;
+            colors[i * 3 + 2] = col.b;
+          }
+          const cloudGeo = new THREE.BufferGeometry();
+          cloudGeo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+          cloudGeo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+          const cloud = new THREE.Points(
+            cloudGeo,
+            new THREE.PointsMaterial({
+              size: 0.035,
+              vertexColors: true,
               transparent: true,
-              opacity: 0.55,
+              opacity: 0.85,
+              depthWrite: false,
+              sizeAttenuation: true,
             }),
           );
-          scene.add(shell);
-
-          const dots = new THREE.Points(
-            new THREE.BufferGeometry().setFromPoints(
-              Array.from({ length: 80 }, () => {
-                const v = new THREE.Vector3().randomDirection().multiplyScalar(1.2 + Math.random());
-                return v;
-              }),
-            ),
-            new THREE.PointsMaterial({ color: 0x2a6f4e, size: 0.05 }),
-          );
-          scene.add(dots);
+          scene.add(cloud);
+          disposables.push(cloudGeo, cloud.material);
 
           return () => {
-            geo.dispose();
-            mat.dispose();
+            for (const d of disposables) d.dispose();
           };
         },
         onFrame: (scene, t) => {
-          scene.rotation.y = t * 0.35;
-          scene.rotation.x = Math.sin(t * 0.4) * 0.15;
+          scene.traverse((obj) => {
+            if (
+              obj instanceof THREE.Mesh &&
+              obj.geometry instanceof THREE.IcosahedronGeometry
+            ) {
+              obj.rotation.y = t * 0.22;
+              obj.rotation.x = Math.sin(t * 0.35) * 0.12;
+            }
+            if (obj instanceof THREE.Points) {
+              obj.rotation.y = t * 0.18;
+              obj.rotation.z = Math.sin(t * 0.25) * 0.08;
+            }
+          });
         },
       }),
   },
   compute: {
-    label: "1D 势阱能级",
+    label: "1D well levels",
     description:
-      "无限深方势阱解析能级 E_n ∝ n² / L²。调节宽度与量子数，观察能级稀疏化——DFT 之前的量子玩具。",
+      "Analytic levels of an infinite square well, Eₙ ∝ n² / L². Vary width and quantum number to see level spacing — a pre-DFT quantum toy.",
     params: [
-      { id: "L", label: "阱宽 L (Å)", type: "number", default: 5, min: 1, max: 20, step: 0.5 },
-      { id: "nMax", label: "最高量子数 n", type: "number", default: 6, min: 1, max: 12, step: 1 },
+      { id: "L", label: "Well width L (Å)", type: "number", default: 5, min: 1, max: 20, step: 0.5 },
+      { id: "nMax", label: "Max quantum number n", type: "number", default: 6, min: 1, max: 12, step: 1 },
       {
         id: "mass",
-        label: "有效质量比 m*/m_e",
+        label: "Effective mass m*/mₑ",
         type: "number",
         default: 1,
         min: 0.1,
@@ -102,7 +157,6 @@ export const dftModule: ModelingModule = {
       const L = Number(values.L);
       const nMax = Math.floor(Number(values.nMax));
       const mass = Number(values.mass);
-      // Hartree atomic units scaled toy: E(eV) ~ (n² hbar² π²) / (2 m L²)
       const prefactor = 37.603 / (mass * L * L);
       const rows: (string | number)[][] = [];
       const series: { x: number; y: number }[] = [];
@@ -115,7 +169,7 @@ export const dftModule: ModelingModule = {
       }, ctx);
 
       return {
-        summary: `无限深势阱前 ${nMax} 个能级（玩具模型，单位 eV）。`,
+        summary: `First ${nMax} levels of an infinite well (toy model, eV).`,
         table: { headers: ["n", "E (eV)"], rows },
         series,
       };

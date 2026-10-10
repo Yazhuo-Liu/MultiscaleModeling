@@ -16,7 +16,7 @@ export function IntroView({ intro }: Props) {
       ))}
       {intro.references && intro.references.length > 0 ? (
         <section className="intro-section">
-          <h3>延伸阅读</h3>
+          <h3>Further reading</h3>
           <ul className="ref-list">
             {intro.references.map((r) => (
               <li key={r.label}>

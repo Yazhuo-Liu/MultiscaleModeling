@@ -19,7 +19,7 @@ export {
   allModuleIds,
 } from "./registry";
 export { createRenderHost } from "./render/createRenderHost";
-export { mountSimpleScene } from "./render/simpleScene";
+export { mountSimpleScene, physicalMat } from "./render/simpleScene";
 export {
   throwIfAborted,
   yieldToMain,

@@ -1,5 +1,5 @@
 import type { ModelingModule } from "@/core/types";
-import { mountSimpleScene } from "@/core/render/simpleScene";
+import { mountSimpleScene, physicalMat } from "@/core/render/simpleScene";
 import { forEachChunked, throwIfAborted } from "@/core/compute/runSafely";
 import * as THREE from "three";
 
@@ -7,62 +7,121 @@ import * as THREE from "three";
 export const mdModule: ModelingModule = {
   id: "md",
   title: "MD",
-  summary: "分子动力学：积分牛顿方程，在有限温度下追踪原子轨迹。",
+  summary:
+    "Molecular dynamics: integrate Newton’s equations to follow atoms at finite temperature.",
   scale: "atomic",
   accent: "#3d5a80",
-  tags: ["轨迹", "系综", "势函数"],
+  tags: ["trajectory", "ensemble", "potential"],
   intro: {
-    lead: "MD 在经典近似下用势函数力推动原子运动，连接微观相互作用与宏观可观测量。",
+    lead: "MD drives atoms with forces from a potential, linking microscopic interactions to macroscopic observables under a classical approximation.",
     sections: [
       {
-        heading: "积分与系综",
-        body: "Verlet / velocity-Verlet 是常用积分器。NVE、NVT、NPT 等系综通过恒温器与恒压器实现。时间步长受最高频振动约束。",
+        heading: "Integrators and ensembles",
+        body: "Verlet / velocity-Verlet are standard integrators. NVE, NVT, and NPT ensembles are realized with thermostats and barostats. The time step is limited by the highest vibrational frequency.",
       },
       {
-        heading: "浏览器 demo 边界",
-        body: "本模块提供极少粒子的 LJ 气体玩具，用于理解温度与动能关系；生产级 MD 请使用 LAMMPS、GROMACS 等。",
+        heading: "Browser demo limits",
+        body: "This module ships a tiny LJ-gas toy to illustrate kinetic temperature—not a production MD engine. Prefer LAMMPS, GROMACS, and similar codes for real work.",
       },
     ],
   },
   render: {
-    label: "粒子热运动",
+    label: "Thermal motion",
     mount: (ctx) =>
       mountSimpleScene(ctx, {
         background: 0xe8eef4,
-        cameraZ: 6,
+        contactShadow: true,
+        cameraPosition: [2.8, 2.4, 4.2],
+        lookAt: [0, 0, 0],
         setup: (scene) => {
+          const box = new THREE.LineSegments(
+            new THREE.EdgesGeometry(new THREE.BoxGeometry(3.2, 3.2, 3.2)),
+            new THREE.LineBasicMaterial({
+              color: 0x3d5a80,
+              transparent: true,
+              opacity: 0.35,
+            }),
+          );
+          scene.add(box);
+
           const group = new THREE.Group();
-          const mat = new THREE.MeshStandardMaterial({ color: 0x3d5a80 });
-          for (let i = 0; i < 24; i++) {
-            const m = new THREE.Mesh(new THREE.SphereGeometry(0.12, 12, 12), mat);
-            m.userData.phase = Math.random() * Math.PI * 2;
-            m.userData.radius = 0.8 + Math.random() * 1.6;
-            group.add(m);
+          const geo = new THREE.SphereGeometry(0.12, 24, 24);
+          const mats = [
+            physicalMat(0x3d5a80, { metalness: 0.4, roughness: 0.25, clearcoat: 0.6 }),
+            physicalMat(0x6b8cae, { metalness: 0.35, roughness: 0.3, clearcoat: 0.5 }),
+            physicalMat(0x1f6f78, { metalness: 0.3, roughness: 0.28, clearcoat: 0.55 }),
+          ];
+
+          type Particle = {
+            mesh: THREE.Mesh;
+            vel: THREE.Vector3;
+            pos: THREE.Vector3;
+          };
+          const particles: Particle[] = [];
+          const n = 28;
+          for (let i = 0; i < n; i++) {
+            const mesh = new THREE.Mesh(geo, mats[i % mats.length]!);
+            mesh.castShadow = true;
+            const pos = new THREE.Vector3(
+              (Math.random() - 0.5) * 2.4,
+              (Math.random() - 0.5) * 2.4,
+              (Math.random() - 0.5) * 2.4,
+            );
+            mesh.position.copy(pos);
+            group.add(mesh);
+            particles.push({
+              mesh,
+              pos,
+              vel: new THREE.Vector3(
+                (Math.random() - 0.5) * 1.2,
+                (Math.random() - 0.5) * 1.2,
+                (Math.random() - 0.5) * 1.2,
+              ),
+            });
           }
           scene.add(group);
-          return () => mat.dispose();
+          scene.userData.md = { particles, half: 1.45 };
+
+          return () => {
+            geo.dispose();
+            mats.forEach((m) => m.dispose());
+            box.geometry.dispose();
+            (box.material as THREE.Material).dispose();
+          };
         },
-        onFrame: (scene, t) => {
-          const g = scene.children.find((c) => c instanceof THREE.Group) as THREE.Group | undefined;
-          g?.children.forEach((child, i) => {
-            const phase = child.userData.phase as number;
-            const r = child.userData.radius as number;
-            child.position.set(
-              Math.cos(t * (0.7 + i * 0.03) + phase) * r,
-              Math.sin(t * (0.9 + i * 0.02) + phase * 1.3) * r * 0.7,
-              Math.sin(t * 0.5 + phase) * 0.8,
-            );
-          });
+        onFrame: (scene, t, camera) => {
+          const data = scene.userData.md as
+            | { particles: { mesh: THREE.Mesh; vel: THREE.Vector3; pos: THREE.Vector3 }[]; half: number }
+            | undefined;
+          if (!data) return;
+          const dt = 0.016;
+          for (const p of data.particles) {
+            p.pos.addScaledVector(p.vel, dt);
+            for (const axis of ["x", "y", "z"] as const) {
+              if (p.pos[axis] > data.half) {
+                p.pos[axis] = data.half;
+                p.vel[axis] *= -1;
+              } else if (p.pos[axis] < -data.half) {
+                p.pos[axis] = -data.half;
+                p.vel[axis] *= -1;
+              }
+            }
+            p.mesh.position.copy(p.pos);
+          }
+          camera.position.x = 2.8 * Math.cos(t * 0.12);
+          camera.position.z = 4.2 * Math.sin(t * 0.12) + 2.5;
+          camera.lookAt(0, 0, 0);
         },
       }),
   },
   compute: {
-    label: "2D LJ 气体温度",
-    description: "极少粒子 velocity-Verlet + LJ，统计动能温度（玩具）。",
+    label: "2D LJ gas temperature",
+    description:
+      "Tiny velocity-Verlet + LJ gas; report a kinetic-temperature indicator (toy units).",
     params: [
-      { id: "n", label: "粒子数", type: "number", default: 16, min: 4, max: 36, step: 1 },
-      { id: "T0", label: "初温目标", type: "number", default: 1.0, min: 0.2, max: 3, step: 0.1 },
-      { id: "steps", label: "步数", type: "number", default: 200, min: 50, max: 800, step: 50 },
+      { id: "n", label: "Particle count", type: "number", default: 16, min: 4, max: 36, step: 1 },
+      { id: "T0", label: "Target initial T", type: "number", default: 1.0, min: 0.2, max: 3, step: 0.1 },
+      { id: "steps", label: "Steps", type: "number", default: 200, min: 50, max: 800, step: 50 },
     ],
     run: async (values, ctx) => {
       const n = Math.floor(Number(values.n));
@@ -74,7 +133,7 @@ export const mdModule: ModelingModule = {
         x: (i % Math.ceil(Math.sqrt(n))) * (box / Math.ceil(Math.sqrt(n))) + 0.5,
         y: Math.floor(i / Math.ceil(Math.sqrt(n))) * (box / Math.ceil(Math.sqrt(n))) + 0.5,
       }));
-      let vels = positions.map(() => ({
+      const vels = positions.map(() => ({
         x: (Math.random() - 0.5) * Math.sqrt(T0),
         y: (Math.random() - 0.5) * Math.sqrt(T0),
       }));
@@ -92,8 +151,7 @@ export const mdModule: ModelingModule = {
             const r2 = dx * dx + dy * dy;
             if (r2 > 6.25 || r2 < 1e-6) continue;
             const inv = 1 / r2;
-            const sr2 = inv;
-            const sr6 = sr2 * sr2 * sr2;
+            const sr6 = inv * inv * inv;
             const ff = 24 * (2 * sr6 * sr6 - sr6) * inv;
             f[i]!.x += ff * dx;
             f[i]!.y += ff * dy;
@@ -127,10 +185,9 @@ export const mdModule: ModelingModule = {
         }
       }, ctx);
 
-      const T =
-        series.length > 0 ? series[series.length - 1]!.y : 0;
+      const T = series.length > 0 ? series[series.length - 1]!.y : 0;
       return {
-        summary: `末态动能温度指标 ≈ ${T.toFixed(4)}（约化单位，玩具统计）。`,
+        summary: `Final kinetic-temperature indicator ≈ ${T.toFixed(4)} (reduced units, toy stats).`,
         series,
       };
     },

@@ -11,7 +11,7 @@ export function SiteHeader() {
       </Link>
       <nav className="site-nav" aria-label="Modules">
         <NavLink to="/" end>
-          总览
+          Overview
         </NavLink>
         {mods.map((m) => (
           <NavLink key={m.id} to={`/m/${m.id}`}>

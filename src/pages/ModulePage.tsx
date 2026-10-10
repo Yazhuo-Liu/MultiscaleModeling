@@ -13,12 +13,12 @@ export function ModulePage() {
   const mod = getModule(id);
   const tabs = useMemo(() => {
     if (!mod) return [] as { id: Tab; label: string }[];
-    const list: { id: Tab; label: string }[] = [{ id: "intro", label: "介绍" }];
+    const list: { id: Tab; label: string }[] = [{ id: "intro", label: "Intro" }];
     if (mod.render || mod.RenderPanel) {
-      list.push({ id: "render", label: mod.render?.label ?? "渲染" });
+      list.push({ id: "render", label: mod.render?.label ?? "Render" });
     }
     if (mod.compute || mod.ComputePanel) {
-      list.push({ id: "compute", label: mod.compute?.label ?? "计算" });
+      list.push({ id: "compute", label: mod.compute?.label ?? "Compute" });
     }
     return list;
   }, [mod]);
@@ -29,12 +29,12 @@ export function ModulePage() {
   if (!mod) {
     return (
       <div className="module-missing">
-        <h1>未找到模块</h1>
+        <h1>Module not found</h1>
         <p>
-          没有 id 为 <code>{id}</code> 的模块。
+          No module with id <code>{id}</code>.
         </p>
         <Link to="/" className="btn primary">
-          返回总览
+          Back to overview
         </Link>
       </div>
     );

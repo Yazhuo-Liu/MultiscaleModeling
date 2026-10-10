@@ -1,5 +1,5 @@
 import type { ModelingModule } from "@/core/types";
-import { mountSimpleScene } from "@/core/render/simpleScene";
+import { mountSimpleScene, physicalMat } from "@/core/render/simpleScene";
 import { forEachChunked } from "@/core/compute/runSafely";
 import * as THREE from "three";
 
@@ -7,68 +7,131 @@ import * as THREE from "three";
 export const nebModule: ModelingModule = {
   id: "neb",
   title: "NEB",
-  summary: "弹性带方法：在初末态之间寻找最小能量路径与鞍点。",
+  summary:
+    "Nudged elastic band: find a minimum-energy path and saddle between end states.",
   scale: "atomic",
   accent: "#c45c26",
-  tags: ["过渡态", "能垒", "反应路径"],
+  tags: ["transition state", "energy barrier", "reaction path"],
   intro: {
-    lead: "NEB 用一串“像”连接反应物与产物，通过弹簧力与投影力寻找最小能量路径（MEP）。",
+    lead: "NEB connects reactants and products with a chain of images, using spring forces and projected potential forces to locate the minimum-energy path (MEP).",
     sections: [
       {
-        heading: "方法要点",
-        body: "切向弹簧力保持像间距，垂直势能力驱动像落到 MEP 上。Climbing-image NEB 让最高像沿切向上爬以精确落在鞍点。",
+        heading: "Method essentials",
+        body: "Tangential spring forces keep image spacing; forces perpendicular to the path drive images onto the MEP. Climbing-image NEB lets the highest image ascend along the tangent to pin the saddle.",
       },
       {
-        heading: "实践注意",
-        body: "初猜路径质量影响收敛；需足够像密度与合适弹簧常数。常与 DFT / 经验势力计算联用。",
+        heading: "Practical notes",
+        body: "Initial-path quality affects convergence; you need enough images and a sensible spring constant. NEB is often paired with DFT or empirical force evaluations.",
       },
     ],
   },
   render: {
-    label: "路径上的像",
+    label: "Path images",
     mount: (ctx) =>
       mountSimpleScene(ctx, {
         background: 0xf3ebe4,
-        cameraZ: 5.5,
+        contactShadow: true,
+        cameraPosition: [0.2, 2.2, 4.8],
+        lookAt: [0, 0.3, 0],
         setup: (scene) => {
           const curve = new THREE.CatmullRomCurve3([
-            new THREE.Vector3(-2, -0.4, 0),
-            new THREE.Vector3(-1, 0.6, 0.2),
-            new THREE.Vector3(0, 1.1, 0),
-            new THREE.Vector3(1, 0.5, -0.2),
-            new THREE.Vector3(2, -0.3, 0),
+            new THREE.Vector3(-2.2, -0.55, 0),
+            new THREE.Vector3(-1.1, 0.55, 0.35),
+            new THREE.Vector3(0, 1.25, 0),
+            new THREE.Vector3(1.1, 0.45, -0.35),
+            new THREE.Vector3(2.2, -0.5, 0),
           ]);
+
           const tube = new THREE.Mesh(
-            new THREE.TubeGeometry(curve, 64, 0.04, 8, false),
-            new THREE.MeshStandardMaterial({ color: 0xc45c26 }),
+            new THREE.TubeGeometry(curve, 96, 0.035, 12, false),
+            physicalMat(0xc45c26, {
+              metalness: 0.2,
+              roughness: 0.35,
+              clearcoat: 0.5,
+            }),
           );
+          tube.castShadow = true;
           scene.add(tube);
+
+          // Energy ribbon under the path
+          const ribbonPts: THREE.Vector3[] = [];
+          for (let i = 0; i <= 40; i++) {
+            const p = curve.getPoint(i / 40);
+            ribbonPts.push(new THREE.Vector3(p.x, -1.05, p.z));
+          }
+          const ribbon = new THREE.Mesh(
+            new THREE.TubeGeometry(
+              new THREE.CatmullRomCurve3(ribbonPts),
+              64,
+              0.02,
+              8,
+              false,
+            ),
+            physicalMat(0xd9c4b0, { roughness: 0.7, metalness: 0 }),
+          );
+          scene.add(ribbon);
+
           const images = new THREE.Group();
-          for (let i = 0; i <= 8; i++) {
-            const p = curve.getPoint(i / 8);
+          const n = 9;
+          for (let i = 0; i <= n; i++) {
+            const u = i / n;
+            const p = curve.getPoint(u);
+            const isSaddle = i === Math.floor(n / 2);
             const m = new THREE.Mesh(
-              new THREE.SphereGeometry(i === 4 ? 0.16 : 0.11, 16, 16),
-              new THREE.MeshStandardMaterial({
-                color: i === 4 ? 0x1f6f78 : 0x5c4033,
+              new THREE.SphereGeometry(isSaddle ? 0.15 : 0.1, 28, 28),
+              physicalMat(isSaddle ? 0x1f6f78 : 0x5c4033, {
+                metalness: isSaddle ? 0.45 : 0.2,
+                roughness: 0.25,
+                clearcoat: 0.7,
+                emissive: isSaddle ? 0x0a3035 : 0x000000,
+                emissiveIntensity: isSaddle ? 0.15 : 0,
               }),
             );
             m.position.copy(p);
+            m.castShadow = true;
             images.add(m);
+
+            // Drop line to “energy axis”
+            if (i % 2 === 0 || isSaddle) {
+              const h = p.y + 1.05;
+              const stem = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.012, 0.012, h, 8),
+                physicalMat(0xb08968, { transparent: true, opacity: 0.45, roughness: 0.6 }),
+              );
+              stem.position.set(p.x, p.y - h / 2, p.z);
+              images.add(stem);
+            }
           }
           scene.add(images);
+          scene.userData.neb = { tube, images };
+
+          return () => {
+            tube.geometry.dispose();
+            (tube.material as THREE.Material).dispose();
+            ribbon.geometry.dispose();
+            (ribbon.material as THREE.Material).dispose();
+          };
         },
-        onFrame: (scene, t) => {
-          scene.rotation.y = Math.sin(t * 0.3) * 0.35;
+        onFrame: (scene, t, camera) => {
+          const root = scene.userData.neb as
+            | { images: THREE.Group }
+            | undefined;
+          if (root) {
+            root.images.rotation.y = Math.sin(t * 0.35) * 0.2;
+          }
+          camera.position.x = Math.sin(t * 0.15) * 0.4;
+          camera.lookAt(0, 0.3, 0);
         },
       }),
   },
   compute: {
-    label: "1D 双阱 MEP 玩具",
-    description: "在双阱势上放置若干像，用简化 NEB 迭代估计能垒。",
+    label: "1D double-well MEP toy",
+    description:
+      "Place images on a double-well potential and iterate a simplified NEB to estimate the barrier.",
     params: [
-      { id: "nImages", label: "像数量", type: "number", default: 9, min: 5, max: 21, step: 2 },
-      { id: "k", label: "弹簧常数", type: "number", default: 5, min: 0.5, max: 20, step: 0.5 },
-      { id: "iters", label: "迭代次数", type: "number", default: 80, min: 20, max: 300, step: 10 },
+      { id: "nImages", label: "Number of images", type: "number", default: 9, min: 5, max: 21, step: 2 },
+      { id: "k", label: "Spring constant", type: "number", default: 5, min: 0.5, max: 20, step: 0.5 },
+      { id: "iters", label: "Iterations", type: "number", default: 80, min: 20, max: 300, step: 10 },
     ],
     run: async (values, ctx) => {
       const n = Math.floor(Number(values.nImages));
@@ -102,10 +165,10 @@ export const nebModule: ModelingModule = {
       }
 
       return {
-        summary: `估计能垒 ≈ ${barrier.toFixed(4)}（双阱解析鞍点 V(0)=1）。`,
+        summary: `Estimated barrier ≈ ${barrier.toFixed(4)} (analytic saddle V(0)=1).`,
         series,
         table: {
-          headers: ["像", "x", "V(x)"],
+          headers: ["image", "x", "V(x)"],
           rows: xs.map((x, i) => [i, x.toFixed(4), V(x).toFixed(4)]),
         },
       };

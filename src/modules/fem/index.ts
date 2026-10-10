@@ -1,26 +1,27 @@
 import type { ModelingModule } from "@/core/types";
-import { mountSimpleScene } from "@/core/render/simpleScene";
+import { mountSimpleScene, physicalMat } from "@/core/render/simpleScene";
 import { forEachChunked } from "@/core/compute/runSafely";
 import * as THREE from "three";
 
 /** Finite Element Method — continuum intro. */
 export const femModule: ModelingModule = {
   id: "fem",
-  title: "有限元法",
-  summary: "连续介质离散：用单元与形函数求解 PDE，衔接微观本构与工程结构。",
+  title: "FEM",
+  summary:
+    "Continuum discretization: solve PDEs with elements and shape functions, linking micro constitutive laws to structures.",
   scale: "continuum",
   accent: "#3f5d4a",
-  tags: ["PDE", "网格", "本构"],
+  tags: ["PDE", "mesh", "constitutive law"],
   intro: {
-    lead: "有限元把求解域剖分成单元，在弱形式下用分片多项式逼近场变量。",
+    lead: "The finite-element method partitions a domain into elements and approximates field variables with piecewise polynomials in weak form.",
     sections: [
       {
-        heading: "基本流程",
-        body: "几何离散 → 选择形函数 → 单元刚度 / 载荷组装 → 施加边界条件 → 求解线性（或非线性）系统 → 后处理。",
+        heading: "Basic workflow",
+        body: "Discretize geometry → choose shape functions → assemble element stiffness / loads → apply boundary conditions → solve the (non)linear system → post-process.",
       },
       {
-        heading: "与多尺度的接点",
-        body: "微观计算可提供有效本构；FE²、均质化、嵌入式原子–连续耦合等方法把细观信息带入宏观 FE 模型。",
+        heading: "Multiscale contact points",
+        body: "Microscale calculations can supply effective constitutive responses. FE², homogenization, and atom–continuum embedding carry fine-scale information into macroscopic FE models.",
       },
     ],
     references: [
@@ -29,55 +30,136 @@ export const femModule: ModelingModule = {
     ],
   },
   render: {
-    label: "网格变形示意",
+    label: "Deforming mesh",
     mount: (ctx) =>
       mountSimpleScene(ctx, {
         background: 0xe9f0ec,
-        cameraZ: 5,
+        contactShadow: true,
+        cameraPosition: [2.6, 2.2, 4.0],
+        lookAt: [0, 0.1, 0],
         setup: (scene) => {
-          const geo = new THREE.PlaneGeometry(3, 2, 12, 8);
-          const mat = new THREE.MeshStandardMaterial({
-            color: 0x3f5d4a,
-            wireframe: true,
-          });
-          const mesh = new THREE.Mesh(geo, mat);
-          scene.add(mesh);
+          const nx = 16;
+          const ny = 10;
+          const geo = new THREE.PlaneGeometry(3.4, 2.1, nx, ny);
+          const base = new Float32Array(geo.attributes.position!.array as Float32Array);
+
+          const solid = new THREE.Mesh(
+            geo,
+            physicalMat(0x3f5d4a, {
+              metalness: 0.12,
+              roughness: 0.4,
+              clearcoat: 0.25,
+              side: THREE.DoubleSide,
+              transparent: true,
+              opacity: 0.88,
+            }),
+          );
+          solid.castShadow = true;
+          solid.receiveShadow = true;
+
+          const wire = new THREE.LineSegments(
+            new THREE.WireframeGeometry(geo),
+            new THREE.LineBasicMaterial({
+              color: 0xd7e6dc,
+              transparent: true,
+              opacity: 0.55,
+            }),
+          );
+
+          const root = new THREE.Group();
+          root.add(solid, wire);
+          scene.add(root);
+
+          // Fixed / loaded edge markers
+          const pinMat = physicalMat(0x1f6f78, { metalness: 0.4, roughness: 0.3 });
+          const loadMat = physicalMat(0xc45c26, { metalness: 0.35, roughness: 0.3 });
+          const pinGeo = new THREE.SphereGeometry(0.06, 16, 16);
+          for (let j = 0; j <= ny; j++) {
+            const y = -1.05 + (2.1 * j) / ny;
+            const pin = new THREE.Mesh(pinGeo, pinMat);
+            pin.position.set(-1.7, y, 0.02);
+            pin.castShadow = true;
+            root.add(pin);
+          }
+          const arrow = new THREE.ArrowHelper(
+            new THREE.Vector3(1, 0, 0),
+            new THREE.Vector3(1.7, 0, 0.05),
+            0.55,
+            0xc45c26,
+            0.14,
+            0.1,
+          );
+          root.add(arrow);
+          // tip marker
+          const tip = new THREE.Mesh(pinGeo, loadMat);
+          tip.position.set(1.7, 0, 0.02);
+          root.add(tip);
+
+          scene.userData.fem = { geo, base, solid, wire, root, nx, ny };
+
           return () => {
             geo.dispose();
-            mat.dispose();
+            (solid.material as THREE.Material).dispose();
+            wire.geometry.dispose();
+            (wire.material as THREE.Material).dispose();
+            pinGeo.dispose();
+            pinMat.dispose();
+            loadMat.dispose();
           };
         },
-        onFrame: (scene, t) => {
-          const mesh = scene.children.find(
-            (c) => (c as THREE.Mesh).isMesh,
-          ) as THREE.Mesh | undefined;
-          if (!mesh) return;
-          const pos = mesh.geometry.attributes.position!;
+        onFrame: (scene, t, camera) => {
+          const data = scene.userData.fem as
+            | {
+                geo: THREE.PlaneGeometry;
+                base: Float32Array;
+                solid: THREE.Mesh;
+                wire: THREE.LineSegments;
+                root: THREE.Group;
+                nx: number;
+                ny: number;
+              }
+            | undefined;
+          if (!data) return;
+
+          const pos = data.geo.attributes.position!;
+          const amp = 0.22 * (0.55 + 0.45 * Math.sin(t * 1.4));
           for (let i = 0; i < pos.count; i++) {
-            const x = pos.getX(i);
-            const y = pos.getY(i);
-            // Mild bending wave on the wireframe plate
-            pos.setZ(i, 0.2 * Math.sin(x * 2.2 + t * 2) * Math.cos(y * 1.4));
+            const x0 = data.base[i * 3]!;
+            const y0 = data.base[i * 3 + 1]!;
+            // Cantilever-like deflection increasing with x
+            const xi = (x0 + 1.7) / 3.4;
+            const defl = amp * xi * xi * (1 + 0.15 * Math.sin(y0 * 3 + t));
+            pos.setXYZ(i, x0, y0 + defl * 0.15, defl);
           }
           pos.needsUpdate = true;
+          data.geo.computeVertexNormals();
+
+          // Refresh wireframe to match deformed solid
+          data.wire.geometry.dispose();
+          data.wire.geometry = new THREE.WireframeGeometry(data.geo);
+
+          camera.position.x = 2.6 * Math.cos(t * 0.12);
+          camera.position.z = 3.2 + Math.sin(t * 0.12) * 1.2;
+          camera.lookAt(0, 0.1, 0);
         },
       }),
   },
   compute: {
-    label: "1D 杆单元拉伸",
-    description: "两节点线性杆单元：固定左端，右端受力，求位移（解析组装）。",
+    label: "1D bar element stretch",
+    description:
+      "Two-node linear bar elements: fix the left end, load the right end, solve for nodal displacements.",
     params: [
-      { id: "E", label: "杨氏模量 E (GPa)", type: "number", default: 200, min: 10, max: 400, step: 10 },
-      { id: "A", label: "截面积 A (mm²)", type: "number", default: 100, min: 10, max: 1000, step: 10 },
-      { id: "L", label: "长度 L (mm)", type: "number", default: 500, min: 50, max: 2000, step: 50 },
-      { id: "F", label: "轴向力 F (kN)", type: "number", default: 10, min: 0.1, max: 100, step: 0.5 },
-      { id: "nElem", label: "单元数", type: "number", default: 4, min: 1, max: 20, step: 1 },
+      { id: "E", label: "Young’s modulus E (GPa)", type: "number", default: 200, min: 10, max: 400, step: 10 },
+      { id: "A", label: "Area A (mm²)", type: "number", default: 100, min: 10, max: 1000, step: 10 },
+      { id: "L", label: "Length L (mm)", type: "number", default: 500, min: 50, max: 2000, step: 50 },
+      { id: "F", label: "Axial force F (kN)", type: "number", default: 10, min: 0.1, max: 100, step: 0.5 },
+      { id: "nElem", label: "Elements", type: "number", default: 4, min: 1, max: 20, step: 1 },
     ],
     run: async (values, ctx) => {
-      const E = Number(values.E) * 1e3; // MPa if A in mm² → N/mm²
+      const E = Number(values.E) * 1e3;
       const A = Number(values.A);
       const L = Number(values.L);
-      const F = Number(values.F) * 1e3; // N
+      const F = Number(values.F) * 1e3;
       const nElem = Math.floor(Number(values.nElem));
       const nNode = nElem + 1;
       const le = L / nElem;
@@ -93,7 +175,6 @@ export const femModule: ModelingModule = {
         K[j]![j]! += k;
       }, ctx);
 
-      // Reduce: u0 = 0, solve for free dofs
       const nFree = nNode - 1;
       const Kf = Array.from({ length: nFree }, (_, r) =>
         Array.from({ length: nFree }, (_, c) => K[r + 1]![c + 1]!),
@@ -101,7 +182,6 @@ export const femModule: ModelingModule = {
       const bf = Array(nFree).fill(0);
       bf[nFree - 1] = F;
 
-      // Gaussian elimination for tiny systems
       for (let i = 0; i < nFree; i++) {
         let piv = i;
         for (let r = i + 1; r < nFree; r++) {
@@ -127,10 +207,10 @@ export const femModule: ModelingModule = {
       const series = u.map((ui, i) => ({ x: (i * L) / nElem, y: ui }));
 
       return {
-        summary: `右端位移 ≈ ${u[u.length - 1]!.toFixed(6)} mm（解析 FL/EA = ${uTipAnalytic.toFixed(6)} mm）。`,
+        summary: `Tip displacement ≈ ${u[u.length - 1]!.toFixed(6)} mm (analytic FL/EA = ${uTipAnalytic.toFixed(6)} mm).`,
         series,
         table: {
-          headers: ["节点", "x (mm)", "u (mm)"],
+          headers: ["node", "x (mm)", "u (mm)"],
           rows: u.map((ui, i) => [i, ((i * L) / nElem).toFixed(2), ui.toFixed(6)]),
         },
       };

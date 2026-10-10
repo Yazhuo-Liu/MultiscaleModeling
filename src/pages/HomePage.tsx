@@ -10,16 +10,17 @@ export function HomePage() {
       <section className="hero">
         <div className="hero-copy">
           <p className="hero-brand">Multiscale Modeling</p>
-          <h1>从电子到连续介质的材料建模入门</h1>
+          <h1>From electrons to continuum mechanics</h1>
           <p className="hero-lead">
-            介绍、WebGL 可视化与浏览器端轻量计算，按尺度组织，模块彼此独立，便于后续扩展。
+            Introductions, refined WebGL visuals, and lightweight in-browser
+            demos—organized by scale, with modules you can extend independently.
           </p>
           <div className="hero-cta">
             <a className="btn primary" href="#scale-map">
-              浏览尺度图谱
+              Explore the scale map
             </a>
             <Link className="btn ghost" to={`/m/${modules[0]?.id ?? "dft"}`}>
-              从 DFT 开始
+              Start with DFT
             </Link>
           </div>
         </div>
@@ -30,8 +31,11 @@ export function HomePage() {
 
       <section id="scale-map" className="scale-map">
         <header className="section-head">
-          <h2>尺度图谱</h2>
-          <p>每个模块实现同一套介绍 / 渲染 / 计算接口，可单独增删而不牵动其它模块。</p>
+          <h2>Scale map</h2>
+          <p>
+            Every module implements the same intro / render / compute contract,
+            so you can add or rewrite one topic without touching the others.
+          </p>
         </header>
 
         <div className="scale-columns">
@@ -41,7 +45,7 @@ export function HomePage() {
               <div key={scale} className="scale-col">
                 <h3>{SCALE_LABELS[scale]}</h3>
                 {mods.length === 0 ? (
-                  <p className="muted">待扩展</p>
+                  <p className="muted">Coming soon</p>
                 ) : (
                   <ul>
                     {mods.map((m) => (
@@ -80,11 +84,11 @@ export function HomePage() {
 
       <section className="framework-note">
         <header className="section-head">
-          <h2>扩展方式</h2>
+          <h2>How to extend</h2>
           <p>
-            在 <code>src/modules/&lt;id&gt;/</code> 新建目录，导出符合{" "}
-            <code>ModelingModule</code> 的对象并在 <code>src/modules/index.ts</code>{" "}
-            注册即可。
+            Create <code>src/modules/&lt;id&gt;/</code>, export a{" "}
+            <code>ModelingModule</code>, and register it in{" "}
+            <code>src/modules/index.ts</code>.
           </p>
         </header>
       </section>

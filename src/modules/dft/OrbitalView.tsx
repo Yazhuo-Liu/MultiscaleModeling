@@ -79,7 +79,7 @@ export function OrbitalView() {
     );
     scene.add(nucleus);
 
-    const surfaces = buildOrbitalSurfaces(orbital, 5);
+    const surfaces = buildOrbitalSurfaces(orbital, 6);
     const root = new THREE.Group();
     // Map orbital z → scene y (chemistry convention)
     root.rotation.x = -Math.PI / 2;

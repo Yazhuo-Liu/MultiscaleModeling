@@ -45,7 +45,7 @@ export function HeroOrbital() {
     rim.position.set(-3, 1, -2);
     scene.add(rim);
 
-    const surfaces = buildOrbitalSurfaces("2pz", 72);
+    const surfaces = buildOrbitalSurfaces("2pz", 88);
     const root = new THREE.Group();
     root.rotation.x = -Math.PI / 2;
     root.scale.setScalar(surfaces.displayScale * 1.08);

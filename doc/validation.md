@@ -26,3 +26,14 @@ npm run test:browser
 ## 解释边界
 
 这些检查验证教材交互和已声明的教学模型，不等同于真实材料的预测精度验证。DFT/HF、Schmid 激活等示例的简化在课程与科学说明中明确。网站发布是否完成应以对应 Actions 运行及线上响应为准，不以本地构建成功代替。
+
+## 首次发布
+
+2026-10-27 已通过 `npm run deploy` 发布提交 `7f6cb11`。
+
+- [Pages workflow](https://github.com/Yazhuo-Liu/MultiscaleModeling/actions/runs/40457840939)：build / deploy 成功。
+- [线上网站](https://yazhuoliu.com/MultiscaleModeling/)：HTTPS 200，标题正确；主脚本、样式和 Three.js 实验脚本的 SHA256 与发布前测试产物逐一一致。
+- GitHub contributor API 仅返回 `Yazhuo-Liu`；所有提交沿用初始提交的用户作者邮箱。
+- 发布后只整理源码格式和记录，没有再次触发部署。后续需要更新线上版本时再运行专门发布命令。
+
+浏览器检查还实际拖拽三维相机并比较渲染结果，验证 WebGL 不可用时二维降级，以及减少动态效果偏好下的初始暂停状态。

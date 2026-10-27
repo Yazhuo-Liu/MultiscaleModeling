@@ -64,14 +64,14 @@ git push origin HEAD:refs/heads/main
 
 ## 常见故障
 
-| 现象 | 处理 |
-| --- | --- |
-| 工作区不干净 | 完成检查、提交和普通 push，再执行发布命令 |
-| 当前 HEAD 与远程 main 不一致 | 先 push 待发布内容；若已有未推送发布标记，按脚本提示重试该 push |
-| Git 用户名或邮箱缺失 | 配置你自己的 Git 身份；脚本不会代设机器人身份 |
-| 设置了其他 `DEPLOY_REF` | 当前发布入口固定为 main；其他分支不受支持 |
+| 现象                           | 处理                                                               |
+| ------------------------------ | ------------------------------------------------------------------ |
+| 工作区不干净                   | 完成检查、提交和普通 push，再执行发布命令                          |
+| 当前 HEAD 与远程 main 不一致   | 先 push 待发布内容；若已有未推送发布标记，按脚本提示重试该 push    |
+| Git 用户名或邮箱缺失           | 配置你自己的 Git 身份；脚本不会代设机器人身份                      |
+| 设置了其他 `DEPLOY_REF`        | 当前发布入口固定为 main；其他分支不受支持                          |
 | Pages configure 或 deploy 失败 | 检查 Pages source、Actions 权限、Pages 环境保护规则和部署 job 日志 |
-| GitHub API 返回 Forbidden | 命令式发布不使用 API；从仓库 Actions 网页查看结果即可 |
-| 构建成功但某章节 404 | 使用站内 `#/method/...` hash 链接；不要把 hash 路由改为服务端路径 |
+| GitHub API 返回 Forbidden      | 命令式发布不使用 API；从仓库 Actions 网页查看结果即可              |
+| 构建成功但某章节 404           | 使用站内 `#/method/...` hash 链接；不要把 hash 路由改为服务端路径  |
 
 Actions → Publish website → Run workflow 是备用手动入口。脚本返回“发布标记已推送”只证明 Git 推送成功，不证明构建或部署完成。

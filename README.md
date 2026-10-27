@@ -27,20 +27,22 @@ npm run preview
 
 `npm test` 检查数值模型；`npm run build` 执行 TypeScript 检查并生成 `dist/`。网站采用 hash 路由和相对资源路径，适合 GitHub Pages 仓库子路径。纯静态托管时保留 `dist/` 的完整文件结构。
 
+源码格式化命令：`npm run format`。网页配色、字号与布局集中在 `src/theme.css`，字体随站点打包，无外部字体服务请求。
+
 ## 内容与界面维护
 
-| 文件 | 用途 |
-| --- | --- |
-| `src/theme.css` | 全站视觉变量与样式；修改 UI 从此文件开始 |
-| `src/App.tsx` | 导航、尺度地图、课程页面与学习路径 |
-| `src/content/methods.ts` | 11 种方法的结构化课程内容与参考资料 |
-| `src/simulations/` | 浏览器端数值模型与测试 |
-| `src/components/SimulationLab.tsx` | 2D / 3D 实验、参数、暂停与重置 |
-| `src/types.ts` | 内容与模拟器共享接口 |
-| `doc/architecture.md` | 架构、教学原则、实施与验证计划 |
-| `doc/numerics.md` | 实现模型与数值验证说明 |
-| `doc/scientific-models.md` | 科学边界与课程说明 |
-| `doc/deployment.md` | 提交、手动发布与故障排查 |
+| 文件                               | 用途                                     |
+| ---------------------------------- | ---------------------------------------- |
+| `src/theme.css`                    | 全站视觉变量与样式；修改 UI 从此文件开始 |
+| `src/App.tsx`                      | 导航、尺度地图、课程页面与学习路径       |
+| `src/content/methods.ts`           | 11 种方法的结构化课程内容与参考资料      |
+| `src/simulations/`                 | 浏览器端数值模型与测试                   |
+| `src/components/SimulationLab.tsx` | 2D / 3D 实验、参数、暂停与重置           |
+| `src/types.ts`                     | 内容与模拟器共享接口                     |
+| `doc/architecture.md`              | 架构、教学原则、实施与验证计划           |
+| `doc/numerics.md`                  | 实现模型与数值验证说明                   |
+| `doc/scientific-models.md`         | 科学边界与课程说明                       |
+| `doc/deployment.md`                | 提交、手动发布与故障排查                 |
 
 ## 显式发布
 

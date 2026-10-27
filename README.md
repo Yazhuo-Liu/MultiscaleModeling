@@ -1,8 +1,8 @@
 # 尺度之间 · Multiscale Modeling
 
-面向材料、力学、机械专业初学者的中文多尺度建模交互教材。从电子结构到工程连续体，以**长度与时间**为线索，连接理论、可操作实验与算法代码。
+面向材料、力学、机械专业初学者的中英文多尺度建模交互教材。从电子结构到工程连续体，以**长度与时间**为线索，连接理论、可操作实验与算法代码。
 
-覆盖 11 种方法：DFT、Hartree–Fock、分子动力学、Monte Carlo、位错动力学、Kinetic Monte Carlo、相场、多晶塑性、本构 / 速率与状态方程、有限元、有限差分。每章提供直觉、核心概念、方程、交互实验、算法步骤、代码、模型边界与参考资料。
+覆盖 11 种方法：DFT、Hartree–Fock、分子动力学、Monte Carlo、位错动力学、Kinetic Monte Carlo、相场、多晶塑性、本构 / 速率与状态方程、有限元、有限差分。每章提供直觉、核心概念、方程、交互实验、算法步骤、代码、模型边界与参考资料。新增的深入理论包括学习目标、3节详细推导与变量表、科学示意图、定量算例、常见误区与可展开自测。顶栏按钮切换中英文并记住语言，切换保留实验状态。
 
 实验完全在浏览器本机计算，支持 2D 与 3D 查看。网站不需要后端、数据库、密钥或付费服务。教学简化模型用于理解概念；其近似与适用范围在章节中明确说明，不应用于未经验证的工程预测。
 
@@ -43,6 +43,17 @@ npm run preview
 | `doc/numerics.md`                  | 实现模型与数值验证说明                   |
 | `doc/scientific-models.md`         | 科学边界与课程说明                       |
 | `doc/deployment.md`                | 提交、手动发布与故障排查                 |
+
+## 双语与理论维护
+
+- `src/i18n.tsx`：语言选择、持久化和文档语言；`src/content/ui-en.ts`：界面翻译。
+- `src/content/methods.ts` / `methods.en.ts`：中英文课程基础内容。
+- `src/content/theory-*.ts`：11章详细理论，含并列的 `zh` 与 `en` 数据。
+- `src/components/TheoryFigure.tsx`：11张双语SVG科学示意图。
+- `src/content/simulation-i18n.ts`：实验参数、读数与模型说明翻译，不改变数值计算。
+- `src/theme.css` 中的 `--reading-size`、`--reading-leading`、`--reading-width` 控制正文；阅读样式仍集中在同一文件。
+
+构建后运行 `npm run test:bilingual`，检查全部英文章节、切换时的实验连续性、语言记忆、手机布局和正文尺寸。`npm test` 同时包含数值与双语内容完整性检查。
 
 ## 显式发布
 

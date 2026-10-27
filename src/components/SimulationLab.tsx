@@ -13,6 +13,11 @@ import {
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { createSimulation, simulationDefinitions } from "../simulations";
+import { useLanguage, type Locale } from "../i18n";
+import {
+  translateSimulationText,
+  simulationDescription,
+} from "../content/simulation-i18n";
 import type {
   Method,
   MethodId,
@@ -33,12 +38,14 @@ const positionLabels: Partial<Record<MethodId, string>> = {
   kmc: "x / nm · y / nm",
   fem: "杆形变示意 · 位移放大 10⁴ 倍",
 };
-const number = (n: number) =>
+const formatNumber = (n: number, locale: Locale) =>
   !Number.isFinite(n)
     ? "—"
     : n !== 0 && (Math.abs(n) < 0.001 || Math.abs(n) > 1e5)
       ? n.toExponential(2)
-      : n.toLocaleString("zh-CN", { maximumFractionDigits: 4 });
+      : n.toLocaleString(locale === "zh" ? "zh-CN" : "en", {
+          maximumFractionDigits: 4,
+        });
 const limits = (values: number[]) => {
   let lo = Infinity,
     hi = -Infinity;
@@ -79,6 +86,9 @@ function CanvasView({
   methodId: MethodId;
   fieldRange?: [number, number];
 }) {
+  const { locale, t } = useLanguage();
+  const number = (n: number) => formatNumber(n, locale);
+  const label = (value: string) => translateSimulationText(locale, value);
   const ref = useRef<HTMLCanvasElement>(null);
   const pointBounds = useRef<{ x: number; y: number; range: number } | null>(
     null,
@@ -114,10 +124,10 @@ function CanvasView({
         ctx.arc(x, y, 0.7, 0, 2 * Math.PI);
         ctx.fill();
       }
-    const pad = { l: 58, r: 28, t: 32, b: 45 };
+    const pad = { l: 66, r: 28, t: 36, b: 50 };
     const iw = w - pad.l - pad.r,
       ih = h - pad.t - pad.b;
-    ctx.font = "11px ui-monospace, monospace";
+    ctx.font = "13px ui-monospace, monospace";
     if (frame.grid) {
       const { width, height, values } = frame.grid;
       const side = Math.min(iw, ih),
@@ -156,7 +166,7 @@ function CanvasView({
       ctx.fillText(number(hi), barLeft + barWidth + 6, top + side + 20);
       ctx.textAlign = "center";
       ctx.fillText(
-        `${width} × ${height} 网格 · 固定色标`,
+        `${width} × ${height} ${t("网格 · 固定色标", "grid · fixed color scale")}`,
         w / 2,
         top + side + 35,
       );
@@ -178,9 +188,9 @@ function CanvasView({
       if (axes) {
         ctx.fillStyle = "#536c74";
         ctx.textAlign = "left";
-        ctx.fillText(axes.y, pad.l, 17);
+        ctx.fillText(label(axes.y), pad.l, 17);
         ctx.textAlign = "center";
-        ctx.fillText(axes.x, pad.l + iw / 2, h - 4);
+        ctx.fillText(label(axes.x), pad.l + iw / 2, h - 4);
       }
       ctx.textAlign = "right";
       for (let i = 0; i <= 4; i++) {
@@ -260,9 +270,14 @@ function CanvasView({
       });
       ctx.fillStyle = "#65777d";
       ctx.textAlign = "left";
-      ctx.fillText(positionLabels[methodId] ?? "x–y 投影", 18, 23);
+      ctx.fillText(
+        label(positionLabels[methodId] ?? "x–y 投影"),
+        18,
+        23,
+        w - 120,
+      );
       ctx.textAlign = "right";
-      ctx.fillText(`${points.length} 个节点`, w - 18, 23);
+      ctx.fillText(`${points.length} ${t("个节点", "nodes")}`, w - 18, 23);
       ctx.textAlign = "center";
       ctx.fillText(
         `x: ${number(xmin)} → ${number(xmax)}  ·  y: ${number(ymin)} → ${number(ymax)}`,
@@ -270,13 +285,16 @@ function CanvasView({
         h - 16,
       );
     }
-  }, [frame, size, definition, methodId, fieldRange]);
+  }, [frame, size, definition, methodId, fieldRange, locale]);
   return (
     <canvas
       ref={ref}
       className="lab-canvas"
       role="img"
-      aria-label="实时模拟的二维视图，数值结果见下方读数"
+      aria-label={t(
+        "实时模拟的二维视图，数值结果见下方读数",
+        "Two-dimensional simulation; numerical results are listed below",
+      )}
     />
   );
 }
@@ -294,6 +312,7 @@ function ThreeView({
   onError: () => void;
   fieldRange?: [number, number];
 }) {
+  const { locale, t } = useLanguage();
   const ref = useRef<HTMLDivElement>(null);
   const pointBounds = useRef<{
     x: number;
@@ -326,11 +345,17 @@ function ThreeView({
     node.appendChild(renderer.domElement);
     renderer.domElement.setAttribute(
       "aria-label",
-      "三维视图：拖拽旋转，滚轮缩放",
+      t(
+        "三维视图：拖拽旋转，滚轮缩放",
+        "Three-dimensional view: drag to rotate, scroll to zoom",
+      ),
     );
     renderer.domElement.setAttribute("role", "img");
     renderer.domElement.tabIndex = 0;
-    renderer.domElement.title = "拖拽旋转，滚轮缩放；聚焦后方向键平移";
+    renderer.domElement.title = t(
+      "拖拽旋转，滚轮缩放；聚焦后方向键平移",
+      "Drag to rotate; scroll to zoom; focus and use arrow keys to pan",
+    );
     const contextLost = (event: Event) => {
       event.preventDefault();
       onError();
@@ -397,6 +422,22 @@ function ThreeView({
       state.current = null;
     };
   }, [onError]);
+  useEffect(() => {
+    const canvas = state.current?.renderer.domElement;
+    if (canvas) {
+      canvas.setAttribute(
+        "aria-label",
+        t(
+          "三维视图：拖拽旋转，滚轮缩放",
+          "Three-dimensional view: drag to rotate, scroll to zoom",
+        ),
+      );
+      canvas.title = t(
+        "拖拽旋转，滚轮缩放；聚焦后方向键平移",
+        "Drag to rotate; scroll to zoom; focus and use arrow keys to pan",
+      );
+    }
+  }, [locale, onError]);
   useEffect(() => {
     const context = state.current;
     if (!context) return;
@@ -630,7 +671,8 @@ function ThreeView({
   return <div ref={ref} className="lab-three" />;
 }
 
-function exportFrame(frame: SimulationFrame, name: string) {
+function exportFrame(frame: SimulationFrame, name: string, locale: Locale) {
+  const label = (value: string) => translateSimulationText(locale, value);
   const rows: (string | number)[][] = [
     ["type", "index", "x", "y", "z", "value"],
   ];
@@ -648,10 +690,12 @@ function exportFrame(frame: SimulationFrame, name: string) {
     ]),
   );
   frame.curves?.forEach((c) =>
-    c.points.forEach(([x, y], i) => rows.push([c.name, i, x, y, "", ""])),
+    c.points.forEach(([x, y], i) =>
+      rows.push([label(c.name), i, x, y, "", ""]),
+    ),
   );
   frame.metrics.forEach((m) =>
-    rows.push(["metric", m.label, "", "", m.unit ?? "", m.value]),
+    rows.push(["metric", label(m.label), "", "", label(m.unit ?? ""), m.value]),
   );
   const text = rows
     .map((r) => r.map((v) => `"${String(v).replaceAll('"', '""')}"`).join(","))
@@ -667,6 +711,9 @@ function exportFrame(frame: SimulationFrame, name: string) {
 }
 
 export default function SimulationLab({ method }: { method: Method }) {
+  const { locale, t } = useLanguage();
+  const number = (n: number) => formatNumber(n, locale);
+  const label = (value: string) => translateSimulationText(locale, value);
   const definition = simulationDefinitions[method.id];
   const defaults = useMemo(
     () =>
@@ -753,17 +800,14 @@ export default function SimulationLab({ method }: { method: Method }) {
   };
   return (
     <div className="simulation-lab" ref={root}>
-      <div className="lab-heading">
-        <span className="lab-eyebrow">IN-BROWSER EXPERIMENT</span>
-        <span className="lab-local">
-          <span className="status-dot" />
-          本机计算
-        </span>
-      </div>
       <div className="lab-workspace">
         <div className="lab-display">
           <div className="lab-display-toolbar">
-            <div className="lab-mode" role="group" aria-label="可视化维度">
+            <div
+              className="lab-mode"
+              role="group"
+              aria-label={t("可视化维度", "Visualization dimension")}
+            >
               <button
                 className={mode === "2d" ? "active" : ""}
                 aria-pressed={mode === "2d"}
@@ -783,7 +827,8 @@ export default function SimulationLab({ method }: { method: Method }) {
               </button>
             </div>
             <span className="lab-step">
-              {running ? "运行中" : "已暂停"} · {steps} 步
+              {running ? t("运行中", "Running") : t("已暂停", "Paused")} ·{" "}
+              {steps} {t("步", "steps")}
             </span>
           </div>
           <div className="lab-viewport">
@@ -805,25 +850,37 @@ export default function SimulationLab({ method }: { method: Method }) {
             )}
           </div>
           <div className="lab-view-hint">
-            {mode === "3d"
-              ? frame.grid
-                ? `拖拽旋转 · 滚轮缩放 · 高度与颜色均使用固定范围 ${number(fieldRange?.[0] ?? 0)} → ${number(fieldRange?.[1] ?? 1)}`
-                : definition.view === "curves"
-                  ? `拖拽旋转 · 滚轮缩放 · 横轴：${axisLabels[method.id]?.x ?? "x"}；纵轴：${axisLabels[method.id]?.y ?? "y"}；第三轴仅展示`
-                  : "拖拽旋转 · 滚轮缩放 · 平面模型保持在平面内"
-              : frame.grid
-                ? "固定色标：颜色变化可比较场值变化；精确结果见下方读数"
-                : definition.view === "curves"
-                  ? "坐标自动适配当前数据范围"
-                  : "固定视图比例，观察粒子运动与形变；坐标范围见图内读数"}
-            {webglFailed && " · 当前设备未提供 WebGL，已使用二维视图"}
+            {mode === "3d" ? (
+              <>
+                {t("拖拽旋转 · 滚轮缩放", "Drag to rotate · Scroll to zoom")}
+                {frame.grid
+                  ? ` · ${t("高度表示场值", "Height represents field value")}`
+                  : definition.view === "curves"
+                    ? ` · ${label(axisLabels[method.id]?.x ?? "x")} / ${label(axisLabels[method.id]?.y ?? "y")}`
+                    : ` · ${t("二维模型", "Planar model")}`}
+              </>
+            ) : frame.grid ? (
+              t("固定色标", "Fixed color scale")
+            ) : definition.view === "curves" ? (
+              t("坐标范围随数据调整", "Axes adjust to the data range")
+            ) : (
+              t(
+                "固定比例显示运动与形变",
+                "Fixed scale for motion and deformation",
+              )
+            )}
+            {webglFailed &&
+              t(
+                " · 当前设备未提供 WebGL，已使用二维视图",
+                " · 3D is unavailable on this device; showing 2D",
+              )}
           </div>
           {frame.curves?.length && definition.view === "curves" ? (
             <div className="lab-legend">
               {frame.curves.map((curve, i) => (
-                <span key={curve.name}>
+                <span key={label(curve.name)}>
                   <i className={`legend-dot legend-dot-${i % 4}`} />
-                  {curve.name}
+                  {label(curve.name)}
                 </span>
               ))}
             </div>
@@ -834,14 +891,14 @@ export default function SimulationLab({ method }: { method: Method }) {
               onClick={() => setRunning(!running)}
             >
               {running ? <Pause size={16} /> : <Play size={16} />}
-              {running ? "暂停" : "运行实验"}
+              {running ? t("暂停", "Pause") : t("运行实验", "Run experiment")}
             </button>
             <button
               className="lab-icon-button"
               onClick={step}
               disabled={running}
-              aria-label="前进一步"
-              title="前进一步"
+              aria-label={t("前进一步", "Step forward")}
+              title={t("前进一步", "Step forward")}
             >
               <SkipForward size={17} />
             </button>
@@ -851,15 +908,18 @@ export default function SimulationLab({ method }: { method: Method }) {
                 setRunning(false);
                 reset();
               }}
-              aria-label="重置参数与实验"
-              title="重置参数与实验"
+              aria-label={t(
+                "重置参数与实验",
+                "Reset parameters and experiment",
+              )}
+              title={t("重置参数与实验", "Reset parameters and experiment")}
             >
               <RotateCcw size={16} />
             </button>
             <label className="lab-speed">
-              速度
+              {t("速度", "Speed")}
               <select
-                aria-label="模拟速度"
+                aria-label={t("模拟速度", "Simulation speed")}
                 value={speed}
                 onChange={(e) => setSpeed(Number(e.target.value))}
               >
@@ -871,9 +931,9 @@ export default function SimulationLab({ method }: { method: Method }) {
             </label>
             <button
               className="lab-export lab-icon-button"
-              onClick={() => exportFrame(frame, method.id)}
-              aria-label="导出当前数值 CSV"
-              title="导出当前数值 CSV"
+              onClick={() => exportFrame(frame, method.id, locale)}
+              aria-label={t("导出当前数值 CSV", "Export current data as CSV")}
+              title={t("导出当前数值 CSV", "Export current data as CSV")}
             >
               <Download size={16} />
             </button>
@@ -881,15 +941,18 @@ export default function SimulationLab({ method }: { method: Method }) {
         </div>
         <div className="lab-controls">
           <div className="lab-controls-title">
-            实验参数<span>调节后重新开始</span>
+            {t("实验参数", "Parameters")}
+            <span>
+              {t("调节后重新开始", "Changing a parameter resets the model")}
+            </span>
           </div>
           {definition.controls.map((control) => (
             <label className="lab-control" key={control.key}>
               <span>
-                {control.label}
+                {label(control.label)}
                 <output>
                   {number(params[control.key] ?? control.initial)}{" "}
-                  {control.unit}
+                  {label(control.unit ?? "")}
                 </output>
               </span>
               <input
@@ -908,31 +971,23 @@ export default function SimulationLab({ method }: { method: Method }) {
               </span>
             </label>
           ))}
-          <div className="lab-observe">
-            <span>
-              <Info size={14} />
-              试着观察
-            </span>
-            <ul>
-              {method.experiment.observe.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-          </div>
         </div>
       </div>
       {error && (
         <p className="lab-error" role="alert">
-          {error}
+          {label(error)}
         </p>
       )}
-      <div className="lab-metrics" aria-label="当前模拟数值">
+      <div
+        className="lab-metrics"
+        aria-label={t("当前模拟数值", "Current simulation values")}
+      >
         {frame.metrics.map((metric) => (
           <div className="lab-metric" key={metric.label}>
-            <span>{metric.label}</span>
+            <span>{label(metric.label)}</span>
             <strong>
               {number(metric.value)}
-              <small>{metric.unit}</small>
+              <small>{label(metric.unit ?? "")}</small>
             </strong>
           </div>
         ))}
@@ -940,13 +995,12 @@ export default function SimulationLab({ method }: { method: Method }) {
       <details className="lab-model-note">
         <summary>
           <Info size={14} />
-          模型、坐标与单位说明
+          {t("模型、坐标与单位说明", "Model, axes and units")}
         </summary>
-        <p>{definition.description}</p>
-        <p>{method.experiment.limitations}</p>
         <p>
-          实验默认暂停，点击运行后才开始计算；切换页面、滚动离开实验区或隐藏标签页时自动停止推进。导出仅下载当前显示的数据快照。
+          {simulationDescription(locale, method.id, definition.description)}
         </p>
+        <p>{method.experiment.limitations}</p>
       </details>
     </div>
   );

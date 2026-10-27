@@ -7,7 +7,7 @@
   --line: #e8ebef;
   --accent: #577c75;
   --accent-dark: #386258;
-  --sidebar: 244px;
+  --sidebar: 272px;
   --radius: 15px;
   --font:
     "DM Sans Variable", "Noto Sans SC Variable", system-ui, -apple-system,
@@ -142,7 +142,7 @@ a svg {
 .brand small {
   display: block;
   font-family: var(--mono);
-  font-size: 8px;
+  font-size: 11px;
   letter-spacing: 1.4px;
   color: #939aa2;
   margin-top: 5px;
@@ -172,7 +172,7 @@ a svg {
   background: none;
   min-width: 0;
   width: 100%;
-  font-size: 11px;
+  font-size: 14px;
   color: var(--ink);
   outline: 0;
 }
@@ -186,7 +186,7 @@ a svg {
   padding: 10px 12px;
   border-radius: 7px;
   color: #727985;
-  font-size: 12px;
+  font-size: 15px;
   margin: 2px 0;
 }
 .nav-main.active {
@@ -205,7 +205,7 @@ a svg {
 }
 .nav-label {
   margin: 25px 11px 19px;
-  font-size: 10px;
+  font-size: 13px;
   letter-spacing: 1.6px;
   color: #9ca2ab;
   display: flex;
@@ -222,7 +222,7 @@ a svg {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 500;
   margin: 0 11px 6px;
 }
@@ -230,7 +230,7 @@ a svg {
   font-family: var(--mono);
   margin-left: auto;
   color: #b8bdc5;
-  font-size: 9px;
+  font-size: 12px;
 }
 .scale-dot {
   background: var(--scale);
@@ -246,7 +246,7 @@ a svg {
   justify-content: space-between;
   padding: 6px 11px 6px 25px;
   color: #7b828d;
-  font-size: 11px;
+  font-size: 14px;
   border-radius: 6px;
   min-height: 28px;
 }
@@ -261,7 +261,7 @@ a svg {
 }
 .method-abbr {
   font-family: var(--mono);
-  font-size: 9px;
+  font-size: 12px;
   color: #a3a9b1;
   max-width: 40px;
   overflow: hidden;
@@ -277,7 +277,7 @@ a svg {
 .sidebar-bottom {
   margin-top: auto;
   padding: 24px 10px 0;
-  font-size: 10px;
+  font-size: 13px;
   color: #9ba2aa;
 }
 .progress-label {
@@ -287,7 +287,7 @@ a svg {
 }
 .progress-label b {
   font-family: var(--mono);
-  font-size: 9px;
+  font-size: 12px;
   color: #81978b;
 }
 .sidebar-bottom progress {
@@ -309,14 +309,14 @@ a svg {
   background: #8ca797;
 }
 .sidebar-bottom p {
-  font-size: 9px;
+  font-size: 12px;
   margin: 10px 0 17px;
 }
 .sidebar-bottom a {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 10px;
+  font-size: 13px;
 }
 .sidebar-bottom a svg:last-child {
   margin-left: auto;
@@ -338,7 +338,7 @@ a svg {
   display: flex;
   align-items: center;
   gap: 12px;
-  font-size: 10px;
+  font-size: 13px;
   color: #a0a5ae;
 }
 .breadcrumbs b {
@@ -349,7 +349,7 @@ a svg {
   display: flex;
   align-items: center;
   gap: 7px;
-  font-size: 10px;
+  font-size: 13px;
   color: #8c949e;
 }
 .local-dot {
@@ -364,7 +364,7 @@ a svg {
   margin-left: 14px;
   padding-left: 20px;
   border-left: 1px solid var(--line);
-  font-size: 9px;
+  font-size: 12px;
 }
 .page {
   max-width: 1290px;
@@ -380,7 +380,7 @@ a svg {
 }
 .eyebrow {
   font-family: var(--mono);
-  font-size: 9px;
+  font-size: 12px;
   letter-spacing: 1.6px;
   font-weight: 500;
   display: flex;
@@ -396,7 +396,7 @@ a svg {
 }
 .muted {
   color: #89929b;
-  font-size: 9px;
+  font-size: 12px;
   letter-spacing: 1.7px;
 }
 .hero h1 {
@@ -410,7 +410,7 @@ a svg {
   color: var(--accent);
 }
 .hero p {
-  font-size: 12px;
+  font-size: 15px;
   color: #7c8591;
   line-height: 2.1;
 }
@@ -428,7 +428,7 @@ a svg {
   min-height: 42px;
   padding: 12px 20px;
   border-radius: 7px;
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 500;
   transition:
     background 0.18s,
@@ -454,13 +454,13 @@ a svg {
 .text-button {
   padding: 10px 4px;
   color: #77818a;
-  font-size: 10px;
+  font-size: 13px;
 }
 .hero-meta {
   display: flex;
   gap: 17px;
   align-items: center;
-  font-size: 9px;
+  font-size: 12px;
   color: #9ca3aa;
   margin-top: 24px;
 }
@@ -498,7 +498,7 @@ a svg {
   );
 }
 .art-note {
-  font-size: 9px;
+  font-size: 12px;
   display: flex;
   align-items: center;
   gap: 7px;
@@ -534,12 +534,12 @@ a svg {
   color: #4e625d;
 }
 .intro-stats small {
-  font-size: 12px;
+  font-size: 15px;
   color: #a0ada7;
   font-weight: 400;
 }
 .intro-stats span {
-  font-size: 10px;
+  font-size: 13px;
   color: #8f969d;
 }
 .intro-stats svg {
@@ -558,7 +558,7 @@ a svg {
   margin-top: 10px;
 }
 .section-heading p {
-  font-size: 11px;
+  font-size: 14px;
   color: #8b929a;
   margin-top: 10px;
 }
@@ -570,7 +570,7 @@ a svg {
   align-items: center;
   gap: 6px;
   color: #a1a8af;
-  font-size: 9px;
+  font-size: 12px;
   white-space: nowrap;
 }
 .scale-map {
@@ -609,7 +609,7 @@ a svg {
   transform-origin: 0 0;
 }
 .axis-title {
-  font-size: 9px;
+  font-size: 12px;
   color: #86909b;
   letter-spacing: 1px;
 }
@@ -645,7 +645,7 @@ a svg {
   justify-content: space-between;
   align-items: flex-end;
   font-family: var(--mono);
-  font-size: 9px;
+  font-size: 12px;
   color: #99a2ad;
 }
 .x-ticks {
@@ -656,7 +656,7 @@ a svg {
   left: 64px;
   right: 24px;
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: 13px;
   color: #8c96a0;
 }
 .map-region {
@@ -682,12 +682,12 @@ a svg {
   display: flex;
   align-items: center;
   gap: 7px;
-  font-size: 11px;
+  font-size: 14px;
   color: var(--scale);
   white-space: nowrap;
 }
 .region-title > span {
-  font-size: 8px;
+  font-size: 11px;
   font-family: var(--mono);
   opacity: 0.7;
 }
@@ -707,7 +707,7 @@ a svg {
   display: flex;
   gap: 3px;
   align-items: center;
-  font-size: 8px;
+  font-size: 11px;
   color: color-mix(in srgb, var(--scale) 80%, #253345);
   background: #ffffff9c;
   padding: 3px 5px;
@@ -722,7 +722,7 @@ a svg {
   justify-content: space-between;
   margin-top: 11px;
   color: #a7afb6;
-  font-size: 8px;
+  font-size: 11px;
 }
 .methods-section {
   margin-top: 43px;
@@ -737,7 +737,7 @@ a svg {
   display: flex;
   gap: 6px;
   align-items: center;
-  font-size: 10px;
+  font-size: 13px;
   color: #87919b;
   padding: 8px 13px;
   border-radius: 6px;
@@ -751,7 +751,7 @@ a svg {
 }
 .filter-tabs button > span:not(.scale-dot) {
   font-family: var(--mono);
-  font-size: 8px;
+  font-size: 11px;
   opacity: 0.65;
 }
 .method-grid {
@@ -793,11 +793,11 @@ a svg {
   color: var(--scale);
   border-radius: 7px;
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 500;
 }
 .card-scale {
-  font-size: 9px;
+  font-size: 12px;
   color: #9aa1a9;
 }
 .card-top > svg {
@@ -810,12 +810,12 @@ a svg {
   letter-spacing: -0.4px;
 }
 .card-english {
-  font-size: 9px;
+  font-size: 12px;
   color: #a4acb5;
   margin-top: 5px;
 }
 .method-card p {
-  font-size: 10px;
+  font-size: 13px;
   color: #89929d;
   margin: 13px 0 18px;
   line-height: 1.8;
@@ -827,7 +827,7 @@ a svg {
   gap: 10px;
   border-top: 1px solid #f0f2f4;
   padding: 11px 0;
-  font-size: 8px;
+  font-size: 11px;
   color: #a2aab4;
 }
 .card-bottom span:first-child {
@@ -862,12 +862,12 @@ a svg {
   margin: 8px 0;
 }
 .start-banner p {
-  font-size: 10px;
+  font-size: 13px;
   color: #8b9891;
 }
 .start-banner .button {
   margin-left: auto;
-  font-size: 10px;
+  font-size: 13px;
   gap: 10px;
 }
 .footer {
@@ -878,7 +878,7 @@ a svg {
   display: flex;
   justify-content: space-between;
   color: #a3abb2;
-  font-size: 9px;
+  font-size: 12px;
   gap: 20px;
 }
 .footer > span {
@@ -908,7 +908,7 @@ a svg {
   top: 10px;
 }
 .no-results {
-  font-size: 11px;
+  font-size: 14px;
   padding: 10px;
   color: var(--muted);
 }
@@ -917,7 +917,7 @@ a svg {
   padding-top: 28px;
 }
 .back-link {
-  font-size: 10px;
+  font-size: 13px;
   color: #929da5;
   display: inline-flex;
   align-items: center;
@@ -946,7 +946,7 @@ a svg {
   margin-top: 10px;
 }
 .method-description {
-  font-size: 13px;
+  font-size: 16px;
   color: #78838e;
   max-width: 680px;
   margin-top: 20px;
@@ -990,12 +990,12 @@ a svg {
 }
 .method-facts span {
   display: block;
-  font-size: 9px;
+  font-size: 12px;
   color: #929ca6;
   margin-bottom: 8px;
 }
 .method-facts b {
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 450;
   line-height: 1.7;
 }
@@ -1010,7 +1010,7 @@ a svg {
   align-items: center;
   gap: 8px;
   padding: 14px 4px;
-  font-size: 12px;
+  font-size: 15px;
   color: #8d97a2;
   border-bottom: 2px solid transparent;
   margin-bottom: -1px;
@@ -1038,7 +1038,7 @@ a svg {
   margin: 10px 0;
 }
 .intuition-callout p {
-  font-size: 12px;
+  font-size: 15px;
   color: #6e8077;
   line-height: 2;
 }
@@ -1056,7 +1056,7 @@ a svg {
 .step-number {
   font-family: var(--mono);
   color: var(--scale);
-  font-size: 11px;
+  font-size: 14px;
 }
 .concept-card h3 {
   font-size: 16px;
@@ -1064,7 +1064,7 @@ a svg {
   margin: 14px 0 11px;
 }
 .concept-card p {
-  font-size: 12px;
+  font-size: 15px;
   line-height: 2;
   color: #87909a;
 }
@@ -1085,7 +1085,7 @@ a svg {
   white-space: pre-wrap;
 }
 .equation-card p {
-  font-size: 12px;
+  font-size: 15px;
   color: #8b95a0;
   border-top: 1px solid var(--line);
   padding-top: 19px;
@@ -1104,7 +1104,7 @@ a svg {
   font-size: 15px;
 }
 .next-lab p {
-  font-size: 11px;
+  font-size: 14px;
   color: #8d97a3;
   margin-top: 7px;
 }
@@ -1129,7 +1129,7 @@ a svg {
 }
 .lab-notes p,
 .lab-notes li {
-  font-size: 11px;
+  font-size: 14px;
   color: #84909b;
   line-height: 2;
 }
@@ -1141,7 +1141,7 @@ a svg {
   margin-top: 8px;
 }
 .local-badge {
-  font-size: 9px;
+  font-size: 12px;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -1157,7 +1157,7 @@ a svg {
   gap: 15px;
 }
 .algorithm-steps li {
-  font-size: 12px;
+  font-size: 15px;
   line-height: 1.9;
   display: flex;
   gap: 13px;
@@ -1169,7 +1169,7 @@ a svg {
 }
 .algorithm-steps li > span {
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: 14px;
   color: var(--accent);
   padding-top: 2px;
 }
@@ -1185,7 +1185,7 @@ a svg {
   align-items: center;
   justify-content: space-between;
   padding: 13px 18px;
-  font-size: 11px;
+  font-size: 14px;
   border-bottom: 1px solid #3a4851;
   background: #2a3740;
   gap: 10px;
@@ -1196,7 +1196,7 @@ a svg {
   gap: 8px;
 }
 .code-toolbar small {
-  font-size: 9px;
+  font-size: 12px;
   color: #98abb7;
   margin-left: 10px;
 }
@@ -1205,7 +1205,7 @@ a svg {
   gap: 14px;
 }
 .code-toolbar button {
-  font-size: 10px;
+  font-size: 13px;
   color: #a3bbc3;
   display: flex;
   align-items: center;
@@ -1214,7 +1214,7 @@ a svg {
 }
 .code-block pre {
   font-family: var(--mono);
-  font-size: 12px;
+  font-size: 15px;
   line-height: 1.9;
   padding: 24px;
   margin: 0;
@@ -1223,7 +1223,7 @@ a svg {
   tab-size: 4;
 }
 .code-note {
-  font-size: 10px;
+  font-size: 13px;
   color: #98a2aa;
   margin-top: 15px;
 }
@@ -1244,7 +1244,7 @@ a svg {
 .detail-card ul {
   padding-left: 18px;
   color: #87939f;
-  font-size: 12px;
+  font-size: 15px;
   line-height: 2;
   margin-bottom: 0;
 }
@@ -1280,13 +1280,13 @@ a svg {
   place-items: center;
   border-radius: 8px;
   font-family: var(--mono);
-  font-size: 12px;
+  font-size: 15px;
 }
 .connection-list h3 {
   font-size: 15px;
 }
 .connection-list p {
-  font-size: 11px;
+  font-size: 14px;
   color: #909aa4;
   margin-top: 6px;
 }
@@ -1305,7 +1305,7 @@ a svg {
   border-bottom: 1px solid var(--line);
 }
 .references li > span {
-  font-size: 10px;
+  font-size: 13px;
   font-family: var(--mono);
   color: #a4adb6;
   padding-top: 3px;
@@ -1313,7 +1313,7 @@ a svg {
 .references a {
   display: inline-flex;
   gap: 10px;
-  font-size: 13px;
+  font-size: 16px;
   line-height: 1.8;
   color: #526c64;
 }
@@ -1321,7 +1321,7 @@ a svg {
   margin-top: 4px;
 }
 .references p {
-  font-size: 11px;
+  font-size: 14px;
   color: #949fa8;
   margin-top: 5px;
 }
@@ -1336,7 +1336,7 @@ a svg {
   display: flex;
   gap: 12px;
   align-items: center;
-  font-size: 12px;
+  font-size: 15px;
   color: #75847f;
 }
 .chapter-pagination a:last-child {
@@ -1344,7 +1344,7 @@ a svg {
 }
 .chapter-pagination small {
   display: block;
-  font-size: 9px;
+  font-size: 12px;
   color: #a4aeb6;
   margin-bottom: 8px;
 }
@@ -1361,7 +1361,7 @@ a svg {
   line-height: 1.5;
 }
 .page-title p {
-  font-size: 13px;
+  font-size: 16px;
   line-height: 2;
   color: #89949e;
   max-width: 730px;
@@ -1388,7 +1388,7 @@ a svg {
   margin: 9px 0;
 }
 .path-heading p {
-  font-size: 12px;
+  font-size: 15px;
   color: #919ba5;
 }
 .path-stops {
@@ -1410,15 +1410,15 @@ a svg {
 .path-stops a > span {
   font-family: var(--mono);
   color: var(--scale);
-  font-size: 10px;
+  font-size: 13px;
 }
 .path-stops b {
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 500;
 }
 .path-stops small {
   display: block;
-  font-size: 9px;
+  font-size: 12px;
   font-family: var(--mono);
   color: var(--scale);
   margin-top: 6px;
@@ -1439,7 +1439,7 @@ a svg {
   color: #799083;
 }
 .info-note p {
-  font-size: 12px;
+  font-size: 15px;
   line-height: 2;
 }
 .comparison-wrap {
@@ -1451,7 +1451,7 @@ a svg {
 .comparison-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 11px;
+  font-size: 14px;
   min-width: 700px;
   text-align: left;
 }
@@ -1477,7 +1477,7 @@ a svg {
 .comparison-table td:first-child b {
   display: block;
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: 13px;
   margin-bottom: 5px;
 }
 .comparison-table td:first-child svg {
@@ -1494,7 +1494,7 @@ a svg {
   font-size: 20px;
 }
 .resources-end p {
-  font-size: 12px;
+  font-size: 15px;
   color: #8c98a2;
   margin: 12px 0 20px;
 }
@@ -1525,7 +1525,7 @@ a svg {
   margin-top: 6px;
 }
 .lab-eyebrow {
-  font-size: 8px;
+  font-size: 11px;
   letter-spacing: 1.5px;
   font-family: var(--mono);
   color: #91a19b;
@@ -1534,7 +1534,7 @@ a svg {
   display: flex;
   align-items: center;
   gap: 5px;
-  font-size: 9px;
+  font-size: 12px;
   color: #879c91;
 }
 .status-dot {
@@ -1544,7 +1544,7 @@ a svg {
   background: #7ca88e;
 }
 .lab-intro {
-  font-size: 11px;
+  font-size: 14px;
   color: #8b99a3;
   margin: 13px 0 19px;
   line-height: 1.9;
@@ -1578,7 +1578,7 @@ a svg {
   gap: 3px;
 }
 .lab-mode button {
-  font-size: 9px;
+  font-size: 12px;
   border-radius: 3px;
   padding: 5px 12px;
   color: #8999a0;
@@ -1589,7 +1589,7 @@ a svg {
   box-shadow: 0 1px 3px #3f535411;
 }
 .lab-step {
-  font-size: 9px;
+  font-size: 12px;
   font-family: var(--mono);
   color: #879da5;
 }
@@ -1611,7 +1611,7 @@ a svg {
   touch-action: none;
 }
 .lab-view-hint {
-  font-size: 9px;
+  font-size: 12px;
   color: #95a5ad;
   padding: 5px 14px 10px;
   text-align: center;
@@ -1621,7 +1621,7 @@ a svg {
   flex-wrap: wrap;
   justify-content: center;
   gap: 13px;
-  font-size: 9px;
+  font-size: 12px;
   color: #8d9ca4;
   padding: 0 12px 12px;
 }
@@ -1665,7 +1665,7 @@ a svg {
   display: flex;
   align-items: center;
   gap: 5px;
-  font-size: 10px;
+  font-size: 13px;
 }
 .lab-icon-button {
   display: flex;
@@ -1683,11 +1683,11 @@ a svg {
   display: flex;
   gap: 5px;
   align-items: center;
-  font-size: 9px;
+  font-size: 12px;
   color: #91a0a8;
 }
 .lab-speed select {
-  font-size: 10px;
+  font-size: 13px;
   background: #fff;
   border: 1px solid var(--line);
   padding: 5px;
@@ -1696,7 +1696,7 @@ a svg {
 }
 .lab-export {
   margin-left: auto;
-  font-size: 9px;
+  font-size: 12px;
   display: flex;
   align-items: center;
   gap: 5px;
@@ -1707,13 +1707,13 @@ a svg {
   padding: 2px 0;
 }
 .lab-controls-title {
-  font-size: 12px;
+  font-size: 15px;
   margin-bottom: 20px;
   font-weight: 550;
   color: #637c73;
 }
 .lab-controls h4 {
-  font-size: 12px;
+  font-size: 15px;
   font-weight: 550;
   color: #637c73;
   margin: 0 0 20px;
@@ -1726,14 +1726,14 @@ a svg {
   display: flex;
   justify-content: space-between;
   gap: 8px;
-  font-size: 10px;
+  font-size: 13px;
   color: #7f939b;
   margin-bottom: 12px;
 }
 .lab-control output {
   font-family: var(--mono);
   color: #588176;
-  font-size: 10px;
+  font-size: 13px;
   white-space: nowrap;
 }
 .lab-control input {
@@ -1745,7 +1745,7 @@ a svg {
 .lab-range {
   display: flex;
   justify-content: space-between;
-  font-size: 8px;
+  font-size: 11px;
   font-family: var(--mono);
   color: #a4afb5;
   margin-top: 10px;
@@ -1753,11 +1753,11 @@ a svg {
 .lab-observe {
   border-top: 1px solid var(--line);
   padding-top: 16px;
-  font-size: 10px;
+  font-size: 13px;
   color: #92a1aa;
 }
 .lab-observe h4 {
-  font-size: 11px;
+  font-size: 14px;
   margin-bottom: 10px;
 }
 .lab-observe ul {
@@ -1782,7 +1782,7 @@ a svg {
 }
 .lab-metric > span {
   display: block;
-  font-size: 9px;
+  font-size: 12px;
   color: #98a5ad;
   margin-bottom: 9px;
 }
@@ -1793,12 +1793,12 @@ a svg {
   color: #50746c;
 }
 .lab-metric small {
-  font-size: 9px;
+  font-size: 12px;
   color: #96a7a5;
   margin-left: 5px;
 }
 .lab-model-note {
-  font-size: 10px;
+  font-size: 13px;
   color: #95a4ac;
   border-top: 1px solid var(--line);
   padding-top: 15px;
@@ -1815,7 +1815,7 @@ a svg {
 .lab-error {
   padding: 25px;
   color: #a06054;
-  font-size: 12px;
+  font-size: 15px;
   line-height: 1.9;
 }
 .lab-error button {
@@ -1843,7 +1843,7 @@ a svg {
   }
   .region-title small {
     display: block;
-    font-size: 8px;
+    font-size: 11px;
     opacity: 0.8;
   }
   .method-card {
@@ -1855,7 +1855,7 @@ a svg {
 }
 @media (max-width: 1150px) {
   :root {
-    --sidebar: 218px;
+    --sidebar: 244px;
   }
   .sidebar {
     padding-inline: 14px;
@@ -1873,20 +1873,20 @@ a svg {
     font-size: 46px;
   }
   .hero p {
-    font-size: 11px;
+    font-size: 14px;
   }
   .hero-actions {
     gap: 9px;
   }
   .hero-meta {
-    font-size: 8px;
+    font-size: 11px;
     gap: 8px;
   }
   .hero-meta span + span {
     padding-left: 8px;
   }
   .intro-stats span {
-    font-size: 8px;
+    font-size: 11px;
   }
   .intro-stats b {
     font-size: 20px;
@@ -1902,7 +1902,7 @@ a svg {
     padding: 8px;
   }
   .region-title {
-    font-size: 10px;
+    font-size: 13px;
     gap: 4px;
   }
   .region-links {
@@ -2006,7 +2006,7 @@ a svg {
     display: none;
   }
   .region-title {
-    font-size: 9px;
+    font-size: 12px;
   }
   .region-links a {
     font-size: 7px;
@@ -2045,7 +2045,7 @@ a svg {
     gap: 15px;
   }
   .chapter-tabs button {
-    font-size: 10px;
+    font-size: 13px;
   }
   .chapter-tabs button svg {
     width: 14px;
@@ -2100,7 +2100,7 @@ a svg {
     margin-left: 0;
   }
   .footer {
-    font-size: 8px;
+    font-size: 11px;
   }
   .footer > span:last-child {
     display: none;
@@ -2111,7 +2111,7 @@ a svg {
 }
 @media (max-width: 700px) {
   :root {
-    --sidebar: 244px;
+    --sidebar: 272px;
   }
   .sidebar {
     transform: translateX(-100%);
@@ -2145,10 +2145,10 @@ a svg {
   }
   .topbar-right {
     margin-left: auto;
-    font-size: 8px;
+    font-size: 11px;
   }
   .breadcrumbs {
-    font-size: 9px;
+    font-size: 12px;
     gap: 7px;
   }
   .breadcrumbs > span {
@@ -2174,7 +2174,7 @@ a svg {
     margin-top: 18px;
   }
   .hero p {
-    font-size: 10px;
+    font-size: 13px;
   }
   .hero-art {
     margin-right: -13px;
@@ -2187,16 +2187,16 @@ a svg {
     margin-top: 22px;
   }
   .hero .button {
-    font-size: 10px;
+    font-size: 13px;
     min-height: 38px;
     padding: 10px 14px;
   }
   .hero .text-button {
     padding-inline: 0;
-    font-size: 9px;
+    font-size: 12px;
   }
   .hero-meta {
-    font-size: 8px;
+    font-size: 11px;
     margin-top: 18px;
   }
   .art-note {
@@ -2211,13 +2211,13 @@ a svg {
     margin-bottom: 29px;
   }
   .intro-stats span {
-    font-size: 9px;
+    font-size: 12px;
   }
   .section-heading h2 {
     font-size: 20px;
   }
   .section-heading p {
-    font-size: 10px;
+    font-size: 13px;
   }
   .scale-map {
     height: 340px;
@@ -2225,11 +2225,11 @@ a svg {
   }
   .y-title {
     left: 7px;
-    font-size: 8px;
+    font-size: 11px;
   }
   .y-ticks {
     left: 21px;
-    font-size: 8px;
+    font-size: 11px;
     top: 24px;
     bottom: 54px;
   }
@@ -2239,7 +2239,7 @@ a svg {
     min-height: 67px;
   }
   .region-title {
-    font-size: 9px;
+    font-size: 12px;
   }
   .region-links {
     margin-top: 5px;
@@ -2255,7 +2255,7 @@ a svg {
   .x-ticks {
     left: 43px;
     right: 15px;
-    font-size: 9px;
+    font-size: 12px;
   }
   .map-footnote {
     font-size: 7px;
@@ -2269,7 +2269,7 @@ a svg {
     margin-block: 18px;
   }
   .filter-tabs button {
-    font-size: 9px;
+    font-size: 12px;
     padding: 7px 9px;
   }
   .method-grid {
@@ -2284,10 +2284,10 @@ a svg {
     gap: 7px;
   }
   .card-scale {
-    font-size: 8px;
+    font-size: 11px;
   }
   .card-symbol {
-    font-size: 9px;
+    font-size: 12px;
     min-width: 31px;
     height: 29px;
   }
@@ -2298,12 +2298,12 @@ a svg {
     font-size: 14px;
   }
   .card-english {
-    font-size: 8px;
+    font-size: 11px;
     line-height: 1.6;
     min-height: 24px;
   }
   .method-card p {
-    font-size: 9px;
+    font-size: 12px;
     margin-top: 9px;
   }
   .card-bottom {
@@ -2332,10 +2332,10 @@ a svg {
     font-size: 28px;
   }
   .method-english {
-    font-size: 11px;
+    font-size: 14px;
   }
   .method-description {
-    font-size: 12px;
+    font-size: 15px;
   }
   .method-monogram {
     width: 72px;
@@ -2350,7 +2350,7 @@ a svg {
     padding: 17px 0;
   }
   .method-facts b {
-    font-size: 10px;
+    font-size: 13px;
   }
   .chapter-tabs {
     gap: 0;
@@ -2359,7 +2359,7 @@ a svg {
   }
   .chapter-tabs button {
     gap: 5px;
-    font-size: 10px;
+    font-size: 13px;
   }
   .chapter-tabs button svg {
     width: 13px;
@@ -2375,10 +2375,10 @@ a svg {
     font-size: 18px;
   }
   .intuition-callout p {
-    font-size: 11px;
+    font-size: 14px;
   }
   .concept-card p {
-    font-size: 11px;
+    font-size: 14px;
   }
   .equation-card {
     padding: 20px;
@@ -2388,20 +2388,20 @@ a svg {
     padding-inline: 0;
   }
   .equation-card p {
-    font-size: 11px;
+    font-size: 14px;
   }
   .algorithm-steps {
     grid-template-columns: 1fr;
   }
   .code-toolbar {
     padding: 11px;
-    font-size: 9px;
+    font-size: 12px;
   }
   .code-toolbar small {
     display: none;
   }
   .code-block pre {
-    font-size: 10px;
+    font-size: 13px;
     padding: 17px;
   }
   .detail-columns {
@@ -2420,7 +2420,7 @@ a svg {
     display: none;
   }
   .lab-intro {
-    font-size: 10px;
+    font-size: 13px;
   }
   .lab-viewport {
     height: 290px;
@@ -2433,7 +2433,7 @@ a svg {
     padding: 10px;
   }
   .lab-export {
-    font-size: 8px;
+    font-size: 11px;
   }
   .lab-metrics {
     grid-template-columns: 1fr 1fr;
@@ -2442,16 +2442,16 @@ a svg {
     font-size: 16px;
   }
   .lab-step {
-    font-size: 8px;
+    font-size: 11px;
   }
   .chapter-pagination a {
-    font-size: 11px;
+    font-size: 14px;
   }
   .page-title h1 {
     font-size: 27px;
   }
   .page-title p {
-    font-size: 12px;
+    font-size: 15px;
   }
   .simple-page {
     padding-top: 35px;
@@ -2466,7 +2466,7 @@ a svg {
     font-size: 20px;
   }
   .path-heading p {
-    font-size: 11px;
+    font-size: 14px;
   }
   .path-number {
     font-size: 19px;
@@ -2478,7 +2478,7 @@ a svg {
     flex: auto;
   }
   .path-stops b {
-    font-size: 12px;
+    font-size: 15px;
   }
   .path-stops a > span {
     min-width: 15px;
@@ -2496,16 +2496,16 @@ a svg {
     align-items: flex-start;
   }
   .info-note p {
-    font-size: 11px;
+    font-size: 14px;
   }
   .references a {
-    font-size: 12px;
+    font-size: 15px;
   }
   .references li {
     gap: 13px;
   }
   .references p {
-    font-size: 10px;
+    font-size: 13px;
   }
   .resources-end {
     padding: 23px;
@@ -2522,7 +2522,7 @@ a svg {
     min-width: 135px;
   }
   .hero p {
-    font-size: 9px;
+    font-size: 12px;
   }
   .method-card {
     padding-inline: 11px;
@@ -2531,10 +2531,10 @@ a svg {
     font-size: 6px;
   }
   .region-title {
-    font-size: 8px;
+    font-size: 11px;
   }
   .chapter-tabs button {
-    font-size: 9px;
+    font-size: 12px;
   }
   .chapter-tabs button svg {
     display: none;
@@ -2557,7 +2557,7 @@ a svg {
   justify-content: space-between;
 }
 .lab-controls-title > span {
-  font-size: 8px;
+  font-size: 11px;
   color: #a1acb3;
   font-weight: 400;
 }
@@ -2574,38 +2574,38 @@ a svg {
 
 /* Reading comfort and high-contrast body copy. */
 .hero p {
-  font-size: 13px;
+  font-size: 16px;
   color: #687581;
 }
 .hero-meta {
   color: #74828c;
 }
 .hero-actions .button {
-  font-size: 12px;
+  font-size: 15px;
 }
 .section-heading p {
-  font-size: 12px;
+  font-size: 15px;
   color: #75818c;
 }
 .nav-method {
-  font-size: 12px;
+  font-size: 15px;
   color: #687580;
 }
 .nav-group-title {
-  font-size: 12px;
+  font-size: 15px;
 }
 .nav-main {
-  font-size: 12px;
+  font-size: 15px;
 }
 .method-card h3 {
   font-size: 18px;
 }
 .method-card p {
-  font-size: 12px;
+  font-size: 15px;
   color: #73808c;
 }
 .card-english {
-  font-size: 10px;
+  font-size: 13px;
   color: #7f8b96;
 }
 .card-scale {
@@ -2620,7 +2620,7 @@ a svg {
 .intuition-callout p,
 .concept-card p,
 .equation-card p {
-  font-size: 13px;
+  font-size: 16px;
   color: #65757f;
 }
 .method-description {
@@ -2628,7 +2628,7 @@ a svg {
 }
 .lab-notes p,
 .lab-notes li {
-  font-size: 12px;
+  font-size: 15px;
   color: #6e7e88;
 }
 .lab-observe {
@@ -2641,7 +2641,7 @@ a svg {
   color: #7f9099;
 }
 .detail-card ul {
-  font-size: 13px;
+  font-size: 16px;
   color: #6b7b88;
 }
 .references p {
@@ -2669,19 +2669,19 @@ a svg {
 }
 @media (max-width: 700px) {
   .hero p {
-    font-size: 11px;
+    font-size: 14px;
   }
   .hero-actions .button {
-    font-size: 10px;
+    font-size: 13px;
   }
   .method-card h3 {
     font-size: 15px;
   }
   .method-card p {
-    font-size: 11px;
+    font-size: 14px;
   }
   .card-english {
-    font-size: 9px;
+    font-size: 12px;
   }
   .method-card {
     min-height: 227px;
@@ -2698,6 +2698,990 @@ a svg {
   .concept-card p,
   .intuition-callout p,
   .equation-card p {
+    font-size: 15px;
+  }
+}
+
+/* Bilingual reading system: centralized typography and long-form theory. */
+:root {
+  --reading-size: 16px;
+  --reading-leading: 1.95;
+  --reading-width: 780px;
+}
+html[lang="en"] {
+  --reading-leading: 1.8;
+}
+body {
+  font-size: var(--reading-size);
+}
+.language-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 14px;
+  border: 1px solid #cfdcd5;
+  border-radius: 8px;
+  color: var(--accent-dark);
+  background: #f5f9f6;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.language-toggle:hover {
+  background: #eaf2ed;
+}
+.language-toggle > span:first-child {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: #799184;
+  border-right: 1px solid #d7e2db;
+  padding-right: 10px;
+}
+.brand small {
+  font-size: 10px;
+}
+.nav-method {
+  font-size: 14px;
+  line-height: 1.65;
+  padding-block: 7px;
+  gap: 7px;
+}
+.nav-method > span:first-child {
+  min-width: 0;
+}
+.method-abbr {
+  flex-shrink: 0;
+  font-size: 10px;
+  max-width: 44px;
+}
+.nav-group-title {
+  font-size: 14px;
+}
+.nav-main {
+  font-size: 14px;
+}
+.nav-label {
+  font-size: 12px;
+}
+.sidebar-search input {
+  font-size: 13px;
+}
+.sidebar-bottom p {
+  font-size: 12px;
+}
+.sidebar-bottom a {
+  font-size: 12px;
+}
+.sidebar-bottom {
+  font-size: 12px;
+}
+.topbar {
+  gap: 16px;
+  min-height: 72px;
+  height: auto;
+  padding-block: 13px;
+}
+.breadcrumbs {
+  min-width: 0;
+  font-size: 13px;
+}
+.breadcrumbs b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.topbar-right {
+  flex-shrink: 0;
+}
+.hero p {
+  font-size: 16px;
+  line-height: 1.9;
+}
+.hero-meta {
+  font-size: 12px;
+  line-height: 1.8;
+}
+.hero h1 {
+  line-height: 1.25;
+}
+.hero-actions {
+  flex-wrap: wrap;
+}
+.hero-actions .button,
+.button {
+  font-size: 14px;
+}
+.hero-meta span {
+  align-items: baseline;
+}
+.intro-stats {
+  gap: 10px;
+}
+.intro-stats > div {
+  gap: 10px;
+  padding-inline: 8px;
+}
+.intro-stats span {
+  font-size: 12px;
+  line-height: 1.7;
+}
+.intro-stats b {
+  white-space: nowrap;
+}
+.section-heading h2 {
+  font-size: 25px;
+  line-height: 1.5;
+}
+.section-heading p {
+  font-size: 15px;
+  line-height: 1.9;
+}
+.quiet-label {
+  font-size: 12px;
+  white-space: normal;
+  max-width: 235px;
+  line-height: 1.7;
+}
+.filter-tabs button {
+  font-size: 13px;
+  padding: 9px 13px;
+}
+.method-card {
+  min-height: 260px;
+}
+.method-card p {
+  font-size: 15px;
+  line-height: 1.85;
+}
+.method-card h3 {
+  line-height: 1.55;
+}
+.card-english {
+  font-size: 12px;
+  line-height: 1.6;
+}
+.card-scale {
+  font-size: 12px;
+}
+.card-bottom {
+  font-size: 11px;
+  line-height: 1.6;
+  flex-wrap: wrap;
+}
+.card-symbol {
+  font-size: 11px;
+}
+.card-top {
+  flex-wrap: wrap;
+}
+.start-banner p {
+  font-size: 14px;
+}
+.start-banner .button {
+  font-size: 14px;
+}
+.start-banner h2 {
+  line-height: 1.5;
+}
+.scale-map-scroll {
+  overflow-x: auto;
+  padding: 2px;
+}
+.scale-map {
+  min-width: 650px;
+  height: 430px;
+}
+.map-region {
+  min-height: 76px;
+}
+.region-title {
+  font-size: 12px;
+  white-space: normal;
+  line-height: 1.5;
+}
+.region-title strong {
+  font-weight: 600;
+}
+.region-title small {
+  display: none;
+}
+.region-links a {
+  font-size: 11px;
+  padding: 4px 6px;
+}
+.region-title > span {
+  font-size: 10px;
+}
+.map-region:last-child {
+  min-height: 100px;
+}
+.x-ticks,
+.y-ticks {
+  font-size: 12px;
+}
+.map-footnote {
+  font-size: 12px;
+  line-height: 1.8;
+  gap: 20px;
+}
+.axis-title {
+  font-size: 11px;
+}
+.axis-title span {
+  display: none;
+}
+.method-description {
+  font-size: 17px;
+  line-height: 1.9;
+}
+.method-facts span {
+  font-size: 13px;
+}
+.method-facts b {
+  font-size: 14px;
+}
+.method-facts {
+  grid-template-columns: 1fr 1.2fr 1fr 1.6fr;
+}
+.chapter-tabs {
+  gap: 25px;
+}
+.chapter-tabs button {
+  font-size: 15px;
+  line-height: 1.5;
+}
+.chapter-tabs button svg {
+  width: 17px;
+}
+.intuition-callout p,
+.concept-card p,
+.equation-card p {
+  font-size: var(--reading-size);
+  line-height: var(--reading-leading);
+}
+.concept-card h3 {
+  font-size: 19px;
+}
+.concept-grid {
+  grid-template-columns: 1fr;
+}
+.concept-card {
+  display: grid;
+  grid-template-columns: 38px 1fr;
+  gap: 0 14px;
+  padding: 25px 28px;
+}
+.concept-card h3 {
+  margin: 0 0 10px;
+}
+.concept-card p {
+  grid-column: 2;
+  max-width: var(--reading-width);
+}
+.step-number {
+  padding-top: 5px;
+  font-size: 13px;
+}
+.theory-content > .section-heading,
+.theory-content > .concept-grid,
+.theory-content > .equation-card {
+  max-width: 900px;
+  margin-inline: auto;
+}
+.theory-content > .section-heading {
+  margin-bottom: 20px;
+}
+.theory-reading {
+  max-width: 900px;
+  margin: 36px auto 0;
+}
+.theory-reading h2 {
+  font-size: 23px;
+  line-height: 1.55;
+  letter-spacing: -0.025em;
+}
+.theory-reading p,
+.theory-reading li,
+.symbol-glossary dd {
+  font-size: var(--reading-size);
+  line-height: var(--reading-leading);
+  color: #546773;
+  overflow-wrap: anywhere;
+}
+.learning-objectives {
+  background: #f0f5f2;
+  border: 1px solid #dde8e0;
+  padding: 25px 30px;
+  border-radius: 12px;
+}
+.learning-objectives h2 {
+  font-size: 19px;
+  color: #476857;
+}
+.learning-objectives ul {
+  padding-left: 22px;
+  margin-bottom: 0;
+}
+.learning-objectives li + li {
+  margin-top: 7px;
+}
+.theory-figure {
+  margin: 30px 0;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: #fff;
+  overflow: hidden;
+}
+.theory-figure-title {
+  font-size: 18px;
+  font-weight: 600;
+  padding: 22px 26px 4px;
+  color: #3e6256;
+}
+.theory-figure-viewport {
+  overflow-x: auto;
+  padding: 14px 8px 6px;
+}
+.theory-figure-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-width: 560px;
+  max-height: 450px;
+}
+.theory-figure-caption {
+  padding: 18px 26px 23px;
+  border-top: 1px solid var(--line);
+  font-size: 14px;
+  line-height: 1.85;
+  color: #70808b;
+}
+.theory-outline {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  border-left: 3px solid #c3d4c9;
+  padding: 3px 0 3px 21px;
+  margin: 35px 0;
+}
+.theory-outline > span {
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: #84978b;
+}
+.theory-outline a {
+  font-size: 15px;
+  color: var(--accent-dark);
+  line-height: 1.65;
+}
+.theory-outline a:hover {
+  text-decoration: underline;
+}
+.theory-section {
+  margin: 38px auto;
+  max-width: var(--reading-width);
+  scroll-margin-top: 25px;
+}
+.theory-section-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 15px;
+  margin-bottom: 19px;
+}
+.theory-section-heading > span {
+  font-family: var(--mono);
+  font-size: 14px;
+  color: #90a39a;
+}
+.theory-section p + p {
+  margin-top: 16px;
+}
+.theory-formula {
+  border-block: 1px solid #e1e8e4;
+  padding: 21px;
+  margin: 23px 0 18px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 22px;
+  line-height: 1.85;
+  text-align: center;
+  background: #f2f6f4;
+  border-radius: 6px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.symbol-glossary {
+  margin: 20px 0 0;
+}
+.symbol-glossary > div {
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  gap: 15px;
+  padding: 11px 0;
+  border-bottom: 1px solid #e9eeeb;
+}
+.symbol-glossary dt {
+  font-family: Georgia, serif;
+  font-size: 18px;
+  color: #456b5c;
+  overflow-wrap: anywhere;
+}
+.symbol-glossary dd {
+  margin: 0;
+  font-size: 15px;
+}
+.worked-example {
+  border: 1px solid #e4dccb;
+  background: #fbf8f0;
+  padding: 28px 32px;
+  border-radius: 12px;
+  margin: 35px 0;
+}
+.worked-example h2 {
+  margin: 14px 0 17px;
+}
+.worked-example ol {
+  padding-left: 22px;
+}
+.worked-example li + li {
+  margin-top: 12px;
+}
+.example-result {
+  margin-top: 22px;
+  padding-top: 20px;
+  border-top: 1px solid #e7dfcb;
+}
+.example-result strong {
+  display: block;
+  font-size: 15px;
+  color: #8a743f;
+  margin-bottom: 8px;
+}
+.theory-pitfalls {
+  max-width: var(--reading-width);
+  margin: 38px auto;
+}
+.theory-pitfalls ul {
+  padding-left: 22px;
+}
+.theory-pitfalls li + li {
+  margin-top: 14px;
+}
+.self-check {
+  background: #edf3f7;
+  border: 1px solid #dae5ed;
+  padding: 27px 30px;
+  border-radius: 12px;
+}
+.self-check h2 {
+  font-size: 20px;
+  margin: 15px 0 20px;
+}
+.self-check summary {
+  color: #496d87;
+  font-size: 15px;
+  cursor: pointer;
+  padding: 8px 0;
+}
+.self-check details p {
+  margin-top: 14px;
+}
+.lab-workspace {
+  margin-top: 0;
+}
+.lab-controls-title {
+  font-size: 15px;
+}
+.lab-control > span {
+  font-size: 14px;
+  line-height: 1.7;
+  align-items: baseline;
+}
+.lab-control output {
+  font-size: 12px;
+}
+.lab-control .lab-range {
+  font-size: 12px;
+}
+.lab-view-hint {
+  font-size: 12px;
+  line-height: 1.7;
+}
+.lab-step {
+  font-size: 12px;
+  white-space: nowrap;
+}
+.lab-mode button {
+  font-size: 13px;
+  padding: 6px 10px;
+}
+.lab-play {
+  font-size: 13px;
+  padding: 9px 12px;
+}
+.lab-speed,
+.lab-speed select {
+  font-size: 12px;
+}
+.lab-metric > span {
+  font-size: 12px;
+  line-height: 1.5;
+}
+.lab-metric small {
+  font-size: 11px;
+}
+.lab-model-note {
+  font-size: 14px;
+}
+.lab-model-note p {
+  line-height: 1.9;
+}
+.lab-notes p,
+.lab-notes li {
+  font-size: 15px;
+  line-height: 1.9;
+}
+.lab-notes h3 {
+  font-size: 18px;
+}
+.algorithm-steps li,
+.detail-card ul,
+.connection-list p,
+.page-title p,
+.path-heading p,
+.info-note p {
+  font-size: 16px;
+  line-height: 1.9;
+}
+.code-block pre {
+  font-size: 14px;
+  line-height: 1.9;
+}
+.code-note {
+  font-size: 14px;
+}
+.code-toolbar,
+.code-toolbar button {
+  font-size: 13px;
+}
+.references a {
+  font-size: 16px;
+}
+.references p {
+  font-size: 14px;
+}
+.comparison-table {
+  font-size: 14px;
+}
+.comparison-table td:first-child {
+  min-width: 180px;
+}
+.comparison-table td {
+  line-height: 1.8;
+}
+.next-lab p {
+  font-size: 14px;
+}
+.footer {
+  font-size: 12px;
+}
+html[lang="en"] .hero h1 {
+  font-size: clamp(38px, 4vw, 58px);
+  letter-spacing: -2px;
+}
+html[lang="en"] .brand {
+  font-size: 18px;
+  letter-spacing: -0.5px;
+}
+html[lang="en"] .brand small {
+  letter-spacing: 1px;
+  font-size: 9px;
+}
+html[lang="en"] .hero-meta {
+  max-width: 410px;
+}
+html[lang="en"] .card-scale {
+  font-size: 11px;
+}
+html[lang="en"] .method-hero h1 {
+  font-size: 35px;
+  line-height: 1.35;
+}
+@media (max-width: 1150px) {
+  .intro-stats {
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+  }
+  .intro-stats > div {
+    justify-content: flex-start !important;
+  }
+  .intro-stats > div:nth-child(2) {
+    border: 0;
+  }
+  .lab-workspace {
+    grid-template-columns: minmax(0, 1fr) 210px;
+  }
+  .method-facts {
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  .method-facts > div:nth-child(2) {
+    border: 0;
+  }
+  .hero {
+    grid-template-columns: 1.4fr 1fr;
+  }
+  .hero-art {
+    opacity: 0.75;
+  }
+  .hero-meta {
+    display: block;
+  }
+  .hero-actions {
+    gap: 9px;
+  }
+  .section-heading {
+    align-items: flex-start;
+  }
+  .quiet-label {
+    display: none;
+  }
+  .method-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .chapter-tabs {
+    gap: 14px;
+  }
+  .chapter-tabs button {
+    font-size: 14px;
+  }
+  .lab-controls {
+    min-width: 0;
+  }
+}
+@media (max-width: 900px) {
+  .lab-workspace {
+    grid-template-columns: 1fr;
+  }
+  .lab-controls {
+    grid-template-columns: 1fr 1fr;
+  }
+  .topbar {
+    padding-inline: 22px;
+  }
+  .breadcrumbs > span {
+    display: none;
+  }
+  .breadcrumbs > svg {
+    display: none;
+  }
+  .hero {
+    grid-template-columns: 1fr;
+  }
+  .hero-art {
+    display: none;
+  }
+  .hero p {
+    max-width: 550px;
+  }
+  .chapter-tabs {
+    gap: 5px;
+  }
+  .chapter-tabs button {
+    font-size: 13px;
+  }
+  .chapter-tabs button svg {
+    display: none;
+  }
+  .start-banner {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .start-banner .button {
+    margin-left: 0;
+  }
+  .method-hero h1 {
+    font-size: 30px;
+  }
+  .method-monogram {
+    display: none;
+  }
+}
+@media (max-width: 700px) {
+  :root {
+    --reading-size: 16px;
+    --sidebar: 285px;
+  }
+  .page {
+    padding-inline: 20px;
+  }
+  .topbar {
+    padding-inline: 16px;
+    gap: 10px;
+  }
+  .topbar-right {
+    margin-left: auto;
+  }
+  .language-toggle {
+    font-size: 13px;
+    padding: 8px 10px;
+    gap: 7px;
+  }
+  .language-toggle > span:first-child {
+    font-size: 10px;
+    padding-right: 7px;
+  }
+  .breadcrumbs {
     font-size: 12px;
+  }
+  .hero {
+    padding-top: 35px;
+    grid-template-columns: 1fr;
+  }
+  .hero h1,
+  html[lang="en"] .hero h1 {
+    font-size: 46px;
+    letter-spacing: -1.6px;
+  }
+  .hero-art {
+    display: none;
+  }
+  .hero p {
+    font-size: 16px;
+  }
+  .hero-actions .button {
+    font-size: 14px;
+  }
+  .hero-meta {
+    font-size: 12px;
+  }
+  .intro-stats span {
+    font-size: 12px;
+  }
+  .intro-stats b {
+    font-size: 22px;
+  }
+  .section-heading h2 {
+    font-size: 24px;
+  }
+  .section-heading p {
+    font-size: 15px;
+  }
+  .method-grid {
+    grid-template-columns: 1fr;
+  }
+  .method-card {
+    min-height: 230px;
+    padding: 22px 23px 0;
+  }
+  .method-card h3 {
+    font-size: 21px;
+  }
+  .method-card p {
+    font-size: 16px;
+  }
+  .card-english {
+    font-size: 13px;
+    min-height: 0;
+  }
+  .card-top {
+    margin-bottom: 15px;
+  }
+  .card-scale,
+  html[lang="en"] .card-scale {
+    font-size: 13px;
+  }
+  .card-symbol {
+    font-size: 12px;
+    min-width: 38px;
+    height: 34px;
+  }
+  .card-bottom {
+    font-size: 12px;
+    padding-block: 14px;
+  }
+  .filter-tabs button {
+    font-size: 13px;
+  }
+  .map-footnote {
+    font-size: 12px;
+  }
+  .start-banner h2 {
+    font-size: 22px;
+  }
+  .start-banner p {
+    font-size: 15px;
+  }
+  .method-hero h1,
+  html[lang="en"] .method-hero h1 {
+    font-size: 30px;
+  }
+  .method-english {
+    font-size: 15px;
+  }
+  .method-description {
+    font-size: 16px;
+  }
+  .method-facts span {
+    font-size: 12px;
+  }
+  .method-facts b {
+    font-size: 13px;
+  }
+  .chapter-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3px 13px;
+    margin-top: 20px;
+  }
+  .chapter-tabs button {
+    justify-content: center;
+    font-size: 14px;
+    padding: 13px 3px;
+  }
+  .chapter-tabs button svg {
+    display: block;
+    width: 15px;
+  }
+  .intuition-callout {
+    padding: 23px;
+  }
+  .intuition-callout h2 {
+    font-size: 21px;
+  }
+  .intuition-callout p,
+  .concept-card p,
+  .equation-card p {
+    font-size: 16px;
+  }
+  .concept-card {
+    padding: 23px 20px;
+    grid-template-columns: 26px 1fr;
+    gap: 0 9px;
+  }
+  .concept-card h3 {
+    font-size: 19px;
+  }
+  .concept-card p {
+    grid-column: 1/-1;
+    margin-top: 8px;
+  }
+  .equation {
+    font-size: 23px;
+    line-height: 1.7;
+  }
+  .theory-reading h2 {
+    font-size: 22px;
+  }
+  .learning-objectives,
+  .worked-example,
+  .self-check {
+    padding: 23px 21px;
+  }
+  .theory-section {
+    margin-block: 31px;
+  }
+  .theory-section-heading {
+    gap: 10px;
+  }
+  .theory-section-heading > span {
+    font-size: 12px;
+  }
+  .symbol-glossary > div {
+    grid-template-columns: 65px 1fr;
+    gap: 12px;
+  }
+  .theory-formula {
+    font-size: 20px;
+    padding: 18px 12px;
+  }
+  .theory-figure-title {
+    padding: 20px 20px 6px;
+    font-size: 18px;
+  }
+  .theory-figure-caption {
+    padding: 18px 20px;
+    font-size: 14px;
+  }
+  .lab-section > .section-heading h2 {
+    font-size: 23px;
+  }
+  .simulation-lab {
+    padding: 13px;
+  }
+  .lab-playback {
+    gap: 7px;
+    flex-wrap: wrap;
+  }
+  .lab-viewport {
+    height: 320px;
+  }
+  .lab-controls {
+    gap: 20px;
+  }
+  .lab-control > span {
+    font-size: 14px;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .lab-control > span.lab-range {
+    flex-direction: row;
+  }
+  .lab-step {
+    font-size: 11px;
+  }
+  .lab-metrics {
+    grid-template-columns: 1fr 1fr;
+  }
+  .lab-metric > span {
+    font-size: 12px;
+  }
+  .lab-mode button {
+    font-size: 13px;
+  }
+  .lab-play {
+    font-size: 13px;
+  }
+  .code-block pre {
+    font-size: 13px;
+  }
+  .code-toolbar {
+    font-size: 12px;
+    flex-wrap: wrap;
+  }
+  .code-toolbar button {
+    font-size: 13px;
+  }
+  .code-toolbar > div {
+    margin-left: auto;
+  }
+  .code-note {
+    font-size: 14px;
+  }
+  .path-stops a div {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .path-stops b {
+    font-size: 15px;
+  }
+  .path-heading h2 {
+    font-size: 24px;
+  }
+  .references a {
+    font-size: 16px;
+  }
+  .references p {
+    font-size: 14px;
+  }
+  .info-note p {
+    font-size: 16px;
+  }
+  .footer {
+    font-size: 11px;
+    line-height: 1.7;
+    flex-wrap: wrap;
+  }
+  .footer > span {
+    flex-wrap: wrap;
   }
 }

@@ -24,7 +24,17 @@ import {
   Sparkles,
   X,
 } from "lucide-react";
-import { methods } from "./content/methods";
+import { methods as methodsZh } from "./content/methods";
+import { methodsEn } from "./content/methods.en";
+import { useLanguage, type Locale } from "./i18n";
+import { uiEn } from "./content/ui-en";
+const TheoryReading = lazy(() => import("./components/TheoryReading"));
+const methodsFor = (locale: Locale) =>
+  locale === "zh" ? methodsZh : methodsEn;
+function useUI() {
+  const lang = useLanguage();
+  return { ...lang, ui: (text: string) => lang.t(text, uiEn[text] || text) };
+}
 import type { Method, ScaleId } from "./types";
 const SimulationLab = lazy(() => import("./components/SimulationLab"));
 const scales: {
@@ -90,6 +100,8 @@ function useRoute() {
   return route;
 }
 function App() {
+  const { locale, setLocale, ui } = useUI();
+  const methods = methodsFor(locale);
   const route = useRoute();
   const [query, setQuery] = useState("");
   const [mobile, setMobile] = useState(false);
@@ -109,18 +121,22 @@ function App() {
   useEffect(() => {
     setMobile(false);
     if (current) {
-      document.title = `${current.title} · 尺度之间`;
+      document.title = `${current.title} · ${ui(ui("尺度之间"))}`;
       setVisited((v) => (v.includes(current.id) ? v : [...v, current.id]));
-    } else document.title = "尺度之间 · 多尺度建模入门";
-  }, [route, current]);
+    } else document.title = ui("尺度之间 · 多尺度建模入门");
+  }, [route, current, locale]);
   useEffect(() => {
     try {
       localStorage.setItem("multiscale-visited", JSON.stringify(visited));
     } catch {}
   }, [visited]);
-  const shown = methods.filter((m) =>
-    (m.title + m.english + m.short).toLowerCase().includes(query.toLowerCase()),
-  );
+  const shown = methods.filter((m) => {
+    const zh = methodsZh.find((item) => item.id === m.id)!;
+    const en = methodsEn.find((item) => item.id === m.id)!;
+    return `${zh.title} ${en.title} ${m.english} ${m.short}`
+      .toLowerCase()
+      .includes(query.toLowerCase());
+  });
   return (
     <div className="app-shell">
       <a
@@ -131,12 +147,12 @@ function App() {
           document.getElementById("main-content")?.focus();
         }}
       >
-        跳至内容
+        {ui("跳至内容")}
       </a>
       {mobile && (
         <button
           className="sidebar-overlay"
-          aria-label="关闭菜单"
+          aria-label={ui("关闭菜单")}
           onClick={() => setMobile(false)}
         />
       )}
@@ -146,7 +162,8 @@ function App() {
             <Layers3 size={23} />
           </span>
           <span>
-            尺度之间<small>MULTISCALE ATLAS</small>
+            {ui("尺度之间")}
+            <small>MULTISCALE ATLAS</small>
           </span>
         </a>
         <div className="sidebar-search">
@@ -154,19 +171,19 @@ function App() {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="搜索建模方法…"
-            aria-label="搜索建模方法"
+            placeholder={ui("搜索建模方法…")}
+            aria-label={ui("搜索建模方法")}
           />
           {query && (
-            <button aria-label="清除搜索" onClick={() => setQuery("")}>
+            <button aria-label={ui("清除搜索")} onClick={() => setQuery("")}>
               <X size={14} />
             </button>
           )}
         </div>
-        <nav aria-label="主导航">
+        <nav aria-label={ui("主导航")}>
           <a href="#/" className={`nav-main ${route === "/" ? "active" : ""}`}>
             <Compass size={18} />
-            探索尺度
+            {ui("探索尺度")}
             <span className="nav-dot" />
           </a>
           <a
@@ -174,16 +191,17 @@ function App() {
             className={`nav-main ${route === "/path" ? "active" : ""}`}
           >
             <GraduationCap size={18} />
-            学习路线
+            {ui("学习路线")}
           </a>
           <div className="nav-label">
-            建模方法 <span>11</span>
+            {ui("建模方法")}
+            <span>11</span>
           </div>
           {scales.map((s) => (
             <div className="nav-group" key={s.id}>
               <div className="nav-group-title">
                 <span className={`scale-dot ${s.id}`} />
-                {s.name}
+                {ui(s.name)}
                 <span>{s.number}</span>
               </div>
               {shown
@@ -204,37 +222,39 @@ function App() {
                 ))}
             </div>
           ))}
-          {shown.length === 0 && <p className="no-results">没有匹配的方法</p>}
+          {shown.length === 0 && (
+            <p className="no-results">{ui("没有匹配的方法")}</p>
+          )}
           <div className="nav-divider" />
           <a
             href="#/compare"
             className={`nav-main ${route === "/compare" ? "active" : ""}`}
           >
             <Boxes size={17} />
-            方法比较
+            {ui("方法比较")}
           </a>
           <a
             href="#/resources"
             className={`nav-main ${route === "/resources" ? "active" : ""}`}
           >
             <BookOpen size={17} />
-            参考与拓展
+            {ui("参考与拓展")}
           </a>
         </nav>
         <div className="sidebar-bottom">
           <div className="progress-label">
-            <span>探索进度</span>
+            <span>{ui("探索进度")}</span>
             <b>{visited.length} / 11</b>
           </div>
           <progress value={visited.length} max={11} />
-          <p>每一次探索，都连接一个尺度。</p>
+          <p>{ui("每一次探索，都连接一个尺度。")}</p>
           <a
             href="https://github.com/Yazhuo-Liu/MultiscaleModeling"
             target="_blank"
             rel="noreferrer"
           >
             <Github size={15} />
-            开源学习项目
+            {ui("开源学习项目")}
             <ArrowUpRight size={14} />
           </a>
         </div>
@@ -243,28 +263,36 @@ function App() {
         <header className="topbar">
           <button
             className="mobile-toggle icon-button"
-            aria-label="打开菜单"
+            aria-label={ui("打开菜单")}
             onClick={() => setMobile(true)}
           >
             <Menu size={21} />
           </button>
           <div className="breadcrumbs">
-            <span>多尺度建模入门</span>
+            <span>{ui("多尺度建模入门")}</span>
             <ChevronRight size={13} />
             <b>
               {current?.title ||
                 {
-                  "/": "探索尺度",
-                  "/path": "学习路线",
-                  "/compare": "方法比较",
-                  "/resources": "参考与拓展",
+                  "/": ui("探索尺度"),
+                  "/path": ui("学习路线"),
+                  "/compare": ui("方法比较"),
+                  "/resources": ui("参考与拓展"),
                 }[route] ||
-                "页面未找到"}
+                ui("页面未找到")}
             </b>
           </div>
           <div className="topbar-right">
-            <span className="local-dot" />
-            在你的浏览器中探索<span className="edition">交互教材 · 中文</span>
+            <button
+              className="language-toggle"
+              onClick={() => setLocale(locale === "zh" ? "en" : "zh")}
+              aria-label={
+                locale === "zh" ? "Switch to English" : "Switch to Chinese"
+              }
+            >
+              <span aria-hidden="true">{ui("中 / EN")}</span>
+              <span>{locale === "zh" ? "English" : "中文"}</span>
+            </button>
           </div>
         </header>
         <main id="main-content" tabIndex={-1}>
@@ -280,9 +308,9 @@ function App() {
             <Resources />
           ) : (
             <div className="page simple-page">
-              <h1>这个尺度还没有被发现</h1>
+              <h1>{ui("这个尺度还没有被发现")}</h1>
               <a href="#/" className="button primary">
-                返回尺度地图
+                {ui("返回尺度地图")}
               </a>
             </div>
           )}
@@ -290,16 +318,18 @@ function App() {
         <footer className="footer">
           <span>
             <Layers3 size={15} />
-            尺度之间 <span className="footer-separator">/</span>{" "}
-            从微观机制，理解宏观世界。
+            {ui("尺度之间")}
+            <span className="footer-separator">/</span>{" "}
+            {ui("从微观机制，理解宏观世界。")}
           </span>
-          <span>开放知识 · 本机计算 · 持续生长</span>
         </footer>
       </div>
     </div>
   );
 }
 function Home() {
+  const { locale, setLocale, ui } = useUI();
+  const methods = methodsFor(locale);
   const [filter, setFilter] = useState<ScaleId | "all">("all");
   return (
     <div className="page home-page">
@@ -309,30 +339,31 @@ function Home() {
             <span />A SMALL START. A MULTISCALE WORLD.
           </div>
           <h1>
-            从原子，
-            <br />到<span>万物。</span>
+            {ui("从原子，")}
+            <br />
+            {ui("到")}
+            <span>{ui("万物。")}</span>
           </h1>
           <p>
-            一块金属的强度，藏在电子、原子与晶粒之间。
+            {ui("一块金属的强度，藏在电子、原子与晶粒之间。")}
             <br className="desktop-break" />
-            沿着长度与时间，探索材料背后的建模语言。
+            {ui("沿着长度与时间，探索材料背后的建模语言。")}
           </p>
           <div className="hero-actions">
             <a className="button primary" href="#/method/dft">
-              开始探索
+              {ui("开始探索")}
               <ArrowRight size={17} />
             </a>
             <a className="button text-button" href="#/path">
-              找到我的学习路线
+              {ui("找到我的学习路线")}
               <ArrowUpRight size={16} />
             </a>
           </div>
           <div className="hero-meta">
             <span>
               <i />
-              为材料 · 力学 · 机械初学者设计
+              {ui("为材料 · 力学 · 机械初学者设计")}
             </span>
-            <span>无需安装软件</span>
           </div>
         </div>
         <div className="hero-art" aria-hidden="true">
@@ -409,28 +440,28 @@ function Home() {
           </svg>
           <div className="art-note">
             <Atom size={14} />
-            不同尺度，同一个世界
+            {ui("不同尺度，同一个世界")}
           </div>
         </div>
       </section>
       <div className="intro-stats">
         <div>
           <b>05</b>
-          <span>空间与时间尺度</span>
+          <span>{ui("空间与时间尺度")}</span>
         </div>
         <div>
           <b>11</b>
-          <span>经典建模方法</span>
+          <span>{ui("经典建模方法")}</span>
         </div>
         <div>
           <b>
             2D <small>&</small> 3D
           </b>
-          <span>可交互的科学实验</span>
+          <span>{ui("可交互的科学实验")}</span>
         </div>
         <div>
           <FlaskConical size={24} />
-          <span>动手调参，观察规律</span>
+          <span>{ui("动手调参，观察规律")}</span>
         </div>
       </div>
       <section className="map-section">
@@ -438,35 +469,39 @@ function Home() {
           <div>
             <div className="eyebrow muted">THE BIG PICTURE</div>
             <h2>
-              找到你要探索的尺度<span className="heading-dot">.</span>
+              {ui("找到你要探索的尺度")}
+              <span className="heading-dot">.</span>
             </h2>
-            <p>从电子到连续体，每一种方法都有它擅长回答的问题。</p>
+            <p>{ui("从电子到连续体，每一种方法都有它擅长回答的问题。")}</p>
           </div>
           <span className="quiet-label">
             <MoveUpRight size={15} />
-            点击区域，进入对应方法
+            {ui("点击区域，进入对应方法")}
           </span>
         </div>
-        <ScaleMap />
+        <div className="scale-map-scroll">
+          <ScaleMap />
+        </div>
         <div className="map-footnote">
-          <span>尺度区间是典型示意，随材料、算法与计算资源变化。</span>
-          <span>对数坐标 · 非严格边界</span>
+          <span>{ui("尺度区间是典型示意，随材料、算法与计算资源变化。")}</span>
+          <span>{ui("对数坐标 · 非严格边界")}</span>
         </div>
       </section>
       <section className="methods-section" id="methods">
         <div className="section-heading">
           <div>
             <div className="eyebrow muted">YOUR MODELING TOOLKIT</div>
-            <h2>认识方法，从一个问题开始</h2>
+            <h2>{ui("认识方法，从一个问题开始")}</h2>
           </div>
-          <span className="quiet-label">直觉 → 理论 → 实验 → 代码</span>
+          <span className="quiet-label">{ui("直觉 → 理论 → 实验 → 代码")}</span>
         </div>
-        <div className="filter-tabs" aria-label="按尺度筛选">
+        <div className="filter-tabs" aria-label={ui("按尺度筛选")}>
           <button
             onClick={() => setFilter("all")}
             className={filter === "all" ? "selected" : ""}
           >
-            全部方法 <span>11</span>
+            {ui("全部方法")}
+            <span>11</span>
           </button>
           {scales.map((s) => (
             <button
@@ -475,7 +510,7 @@ function Home() {
               className={filter === s.id ? "selected" : ""}
             >
               <span className={`scale-dot ${s.id}`} />
-              {s.name}
+              {ui(s.name)}
             </button>
           ))}
         </div>
@@ -490,16 +525,20 @@ function Home() {
               >
                 <div className="card-top">
                   <span className="card-symbol">{m.short}</span>
-                  <span className="card-scale">{scaleOf(m.scale).name}</span>
+                  <span className="card-scale">
+                    {ui(scaleOf(m.scale).name)}
+                  </span>
                   <ArrowUpRight size={18} />
                 </div>
                 <h3>{m.title}</h3>
-                <div className="card-english">{m.english}</div>
+                {locale === "zh" && (
+                  <div className="card-english">{m.english}</div>
+                )}
                 <p>{m.tagline}</p>
                 <div className="card-bottom">
                   <span>
                     <FlaskConical size={13} />
-                    交互实验
+                    {ui("交互实验")}
                   </span>
                   <span>{m.length}</span>
                 </div>
@@ -513,11 +552,11 @@ function Home() {
         </div>
         <div>
           <span className="eyebrow muted">NOT SURE WHERE TO START?</span>
-          <h2>第一次接触多尺度建模？</h2>
-          <p>从热扩散或原子运动开始，先看见现象，再走进方程。</p>
+          <h2>{ui("第一次接触多尺度建模？")}</h2>
+          <p>{ui("从热扩散或原子运动开始，先看见现象，再走进方程。")}</p>
         </div>
         <a href="#/path" className="button secondary">
-          查看学习路线
+          {ui("查看学习路线")}
           <ArrowRight size={17} />
         </a>
       </section>
@@ -525,6 +564,8 @@ function Home() {
   );
 }
 function ScaleMap() {
+  const { locale, setLocale, ui } = useUI();
+  const methods = methodsFor(locale);
   const [active, setActive] = useState<ScaleId | null>(null);
   const groups = [
     { x: 14, y: 76, w: 24, h: 24 },
@@ -536,7 +577,8 @@ function ScaleMap() {
   return (
     <div className="scale-map">
       <div className="axis-title y-title">
-        特征时间 <span>TIME</span>
+        {ui("特征时间")}
+        <span>TIME</span>
       </div>
       <div className="y-ticks">
         {["hours", "s", "ms", "μs", "ns", "ps", "fs"].map((t) => (
@@ -561,8 +603,8 @@ function ScaleMap() {
           >
             <div className="region-title">
               <span>{s.number}</span>
-              <strong>{s.name}</strong>
-              <small>{s.en}</small>
+              <strong>{ui(s.name)}</strong>
+              {locale === "zh" && <small>{s.en}</small>}
             </div>
             <div className="region-links">
               {methods
@@ -587,12 +629,15 @@ function ScaleMap() {
         ))}
       </div>
       <div className="axis-title x-title">
-        特征长度 <span>LENGTH</span>
+        {ui("特征长度")}
+        <span>LENGTH</span>
       </div>
     </div>
   );
 }
 function MethodPage({ method: m }: { method: Method }) {
+  const { locale, ui } = useUI();
+  const methods = methodsFor(locale);
   const [tab, setTab] = useState("theory");
   const [copied, setCopied] = useState(false);
   const index = methods.indexOf(m);
@@ -627,16 +672,17 @@ function MethodPage({ method: m }: { method: Method }) {
     <article className={`page method-page ${m.scale}`}>
       <a href="#/" className="back-link">
         <ChevronLeft size={15} />
-        返回尺度地图
+        {ui("返回尺度地图")}
       </a>
       <div className="method-hero">
         <div>
           <div className="eyebrow">
             <span className={`scale-dot ${m.scale}`} />
-            {s.number} / {s.name} <span className="eyebrow-line" /> {m.short}
+            {s.number} / {ui(s.name)} <span className="eyebrow-line" />{" "}
+            {m.short}
           </div>
           <h1>{m.title}</h1>
-          <p className="method-english">{m.english}</p>
+          {locale === "zh" && <p className="method-english">{m.english}</p>}
           <p className="method-description">{m.description}</p>
         </div>
         <div className="method-monogram">
@@ -646,28 +692,28 @@ function MethodPage({ method: m }: { method: Method }) {
       </div>
       <div className="method-facts">
         <div>
-          <span>典型长度</span>
+          <span>{ui("典型长度")}</span>
           <b>{m.length}</b>
         </div>
         <div>
-          <span>特征时间</span>
+          <span>{ui("特征时间")}</span>
           <b>{m.time}</b>
         </div>
         <div>
-          <span>学习级别</span>
+          <span>{ui("学习级别")}</span>
           <b>{m.difficulty}</b>
         </div>
         <div>
-          <span>建议基础</span>
+          <span>{ui("建议基础")}</span>
           <b>{m.prerequisites.join(" · ")}</b>
         </div>
       </div>
-      <div className="chapter-tabs" role="tablist" aria-label="章节内容">
+      <div className="chapter-tabs" role="tablist" aria-label={ui("章节内容")}>
         {[
-          { id: "theory", title: "概念与理论", icon: BookOpen },
-          { id: "lab", title: "交互实验", icon: FlaskConical },
-          { id: "code", title: "算法与代码", icon: Code2 },
-          { id: "more", title: "应用与延伸", icon: Compass },
+          { id: "theory", title: ui("概念与理论"), icon: BookOpen },
+          { id: "lab", title: ui("交互实验"), icon: FlaskConical },
+          { id: "code", title: ui("算法与代码"), icon: Code2 },
+          { id: "more", title: ui("应用与延伸"), icon: Compass },
         ].map((t) => (
           <button
             key={t.id}
@@ -691,7 +737,7 @@ function MethodPage({ method: m }: { method: Method }) {
                 <Sparkles size={23} />
               </div>
               <div>
-                <span className="eyebrow muted">先建立直觉</span>
+                <span className="eyebrow muted">{ui("先建立直觉")}</span>
                 <h2>{m.tagline}</h2>
                 <p>{m.intuition}</p>
               </div>
@@ -699,7 +745,7 @@ function MethodPage({ method: m }: { method: Method }) {
             <div className="section-heading">
               <div>
                 <div className="eyebrow muted">STEP BY STEP</div>
-                <h2>从现象走进模型</h2>
+                <h2>{ui("从现象走进模型")}</h2>
               </div>
             </div>
             <div className="concept-grid">
@@ -712,17 +758,24 @@ function MethodPage({ method: m }: { method: Method }) {
               ))}
             </div>
             <section className="equation-card">
-              <div className="eyebrow muted">THE CORE IDEA / 核心方程</div>
+              <div className="eyebrow muted">
+                {ui("THE CORE IDEA / 核心方程")}
+              </div>
               <div className="equation">{m.equation.formula}</div>
               <p>{m.equation.explanation}</p>
             </section>
+            <Suspense fallback={<p>{ui("正在展开理论…")}</p>}>
+              <TheoryReading method={m} />
+            </Suspense>
             <div className="next-lab">
               <div>
-                <h3>把方程变成你能看见的现象</h3>
-                <p>{m.experiment.title} · 调整参数，检验你的直觉。</p>
+                <h3>{ui("把方程变成你能看见的现象")}</h3>
+                <p>
+                  {m.experiment.title} {ui("· 调整参数，检验你的直觉。")}
+                </p>
               </div>
               <button className="button primary" onClick={() => setTab("lab")}>
-                打开交互实验
+                {ui("打开交互实验")}
                 <ArrowRight size={16} />
               </button>
             </div>
@@ -736,13 +789,11 @@ function MethodPage({ method: m }: { method: Method }) {
                 <h2>{m.experiment.title}</h2>
                 <p>{m.experiment.description}</p>
               </div>
-              <span className="local-badge">
-                <span className="local-dot" />
-                浏览器本机计算
-              </span>
             </div>
             <Suspense
-              fallback={<div className="loading-panel">正在准备交互实验…</div>}
+              fallback={
+                <div className="loading-panel">{ui("正在准备交互实验…")}</div>
+              }
             >
               <SimulationLab method={m} />
             </Suspense>
@@ -750,7 +801,7 @@ function MethodPage({ method: m }: { method: Method }) {
               <div>
                 <h3>
                   <Search size={17} />
-                  试着观察
+                  {ui("试着观察")}
                 </h3>
                 <ol>
                   {m.experiment.observe.map((x) => (
@@ -761,7 +812,7 @@ function MethodPage({ method: m }: { method: Method }) {
               <div>
                 <h3>
                   <Compass size={17} />
-                  模型的边界
+                  {ui("模型的边界")}
                 </h3>
                 <p>{m.experiment.limitations}</p>
               </div>
@@ -773,10 +824,9 @@ function MethodPage({ method: m }: { method: Method }) {
             <div className="section-heading">
               <div>
                 <div className="eyebrow muted">UNDER THE HOOD</div>
-                <h2>理解算法，再写下第一行代码</h2>
+                <h2>{ui("理解算法，再写下第一行代码")}</h2>
                 <p>
-                  独立的教学示例，使用 Python / NumPy
-                  表达核心算法。网页实验采用本机 JavaScript 实现。
+                  {ui("用 Python / NumPy 阅读核心算法，逐步理解每一次更新。")}
                 </p>
               </div>
             </div>
@@ -797,11 +847,11 @@ function MethodPage({ method: m }: { method: Method }) {
                 <div>
                   <button onClick={copy}>
                     {copied ? <CheckCheck size={15} /> : <Copy size={15} />}{" "}
-                    {copied ? "已复制" : "复制"}
+                    {copied ? ui("已复制") : ui("复制")}
                   </button>
                   <button onClick={download}>
                     <Download size={15} />
-                    下载
+                    {ui("下载")}
                   </button>
                 </div>
               </div>
@@ -810,8 +860,9 @@ function MethodPage({ method: m }: { method: Method }) {
               </pre>
             </div>
             <p className="code-note">
-              运行环境：Python 3 +
-              NumPy。下载后在本机运行；网页中的交互实验无需安装这些工具。示例用于理解算法，非生产级材料参数标定程序。
+              {ui(
+                "示例需要 Python 3 与 NumPy。请结合模型假设理解代码中的参数与边界条件。",
+              )}
             </p>
           </section>
         )}
@@ -819,7 +870,7 @@ function MethodPage({ method: m }: { method: Method }) {
           <section>
             <div className="detail-columns">
               <div className="detail-card">
-                <h2>它能回答什么？</h2>
+                <h2>{ui("它能回答什么？")}</h2>
                 <ul>
                   {m.applications.map((x) => (
                     <li key={x}>{x}</li>
@@ -827,7 +878,7 @@ function MethodPage({ method: m }: { method: Method }) {
                 </ul>
               </div>
               <div className="detail-card">
-                <h2>使用前要知道</h2>
+                <h2>{ui("使用前要知道")}</h2>
                 <ul>
                   {m.limitations.map((x) => (
                     <li key={x}>{x}</li>
@@ -835,7 +886,7 @@ function MethodPage({ method: m }: { method: Method }) {
                 </ul>
               </div>
             </div>
-            <h2 className="subsection-title">跨过尺度的桥梁</h2>
+            <h2 className="subsection-title">{ui("跨过尺度的桥梁")}</h2>
             <div className="connection-list">
               {m.connections.map((c) => {
                 const next = methods.find((x) => x.id === c.id)!;
@@ -853,17 +904,17 @@ function MethodPage({ method: m }: { method: Method }) {
                 );
               })}
             </div>
-            <h2 className="subsection-title">继续阅读</h2>
+            <h2 className="subsection-title">{ui("继续阅读")}</h2>
             <ReferenceList refs={m.references} />
           </section>
         )}
       </div>
-      <nav className="chapter-pagination" aria-label="前后章节">
+      <nav className="chapter-pagination" aria-label={ui("前后章节")}>
         {index > 0 ? (
           <a href={`#/method/${methods[index - 1].id}`}>
             <ChevronLeft size={20} />
             <span>
-              <small>上一种方法</small>
+              <small>{ui("上一种方法")}</small>
               {methods[index - 1].title}
             </span>
           </a>
@@ -871,14 +922,15 @@ function MethodPage({ method: m }: { method: Method }) {
           <a href="#/">
             <ChevronLeft size={20} />
             <span>
-              <small>回到起点</small>尺度地图
+              <small>{ui("回到起点")}</small>
+              {ui("尺度地图")}
             </span>
           </a>
         )}
         {index < methods.length - 1 ? (
           <a href={`#/method/${methods[index + 1].id}`}>
             <span>
-              <small>下一种方法</small>
+              <small>{ui("下一种方法")}</small>
               {methods[index + 1].title}
             </span>
             <ChevronRight size={20} />
@@ -886,7 +938,8 @@ function MethodPage({ method: m }: { method: Method }) {
         ) : (
           <a href="#/compare">
             <span>
-              <small>建立全局认识</small>比较建模方法
+              <small>{ui("建立全局认识")}</small>
+              {ui("比较建模方法")}
             </span>
             <ChevronRight size={20} />
           </a>
@@ -896,23 +949,25 @@ function MethodPage({ method: m }: { method: Method }) {
   );
 }
 function LearningPath() {
+  const { locale, setLocale, ui } = useUI();
+  const methods = methodsFor(locale);
   const paths = [
     {
-      title: "先看见，再理解",
-      tag: "推荐入门",
-      body: "从你熟悉的热传导和弹性变形开始，建立“方程—离散—计算”的直觉。",
+      title: ui("先看见，再理解"),
+      tag: ui("推荐入门"),
+      body: ui("从你熟悉的热传导和弹性变形开始，建立“方程—离散—计算”的直觉。"),
       ids: ["fdm", "fem", "constitutive"],
     },
     {
-      title: "从原子寻找答案",
-      tag: "材料微观路线",
-      body: "看原子如何运动，理解热涨落，再思考原子间的力从哪里来。",
+      title: ui("从原子寻找答案"),
+      tag: ui("材料微观路线"),
+      body: ui("看原子如何运动，理解热涨落，再思考原子间的力从哪里来。"),
       ids: ["md", "mc", "dft", "hf"],
     },
     {
-      title: "把尺度连接起来",
-      tag: "进阶探索",
-      body: "观察缺陷、扩散、界面与晶粒，理解微观机制如何影响宏观响应。",
+      title: ui("把尺度连接起来"),
+      tag: ui("进阶探索"),
+      body: ui("观察缺陷、扩散、界面与晶粒，理解微观机制如何影响宏观响应。"),
       ids: ["kmc", "dd", "phase-field", "crystal-plasticity"],
     },
   ];
@@ -920,8 +975,10 @@ function LearningPath() {
     <div className="page simple-page">
       <PageTitle
         eyebrow="A PATH THAT FITS YOU"
-        title="每一种好奇，都有一条路线。"
-        description="不必从最小的尺度开始。选一个熟悉的物理问题，让你的第一步更轻松。"
+        title={ui("每一种好奇，都有一条路线。")}
+        description={ui(
+          "不必从最小的尺度开始。选一个熟悉的物理问题，让你的第一步更轻松。",
+        )}
       />
       {paths.map((p, i) => (
         <section key={p.title} className="learning-path">
@@ -953,30 +1010,35 @@ function LearningPath() {
       <div className="info-note">
         <BookOpen size={22} />
         <p>
-          推荐学习节奏：读直觉 → 猜测调参结果 → 运行实验 → 回看方程 →
-          阅读代码。每次只改变一个参数，记录你看到的变化。
+          {ui(
+            "推荐学习节奏：读直觉 → 猜测调参结果 → 运行实验 → 回看方程 → 阅读代码。每次只改变一个参数，记录你看到的变化。",
+          )}
         </p>
       </div>
     </div>
   );
 }
 function Compare() {
+  const { locale, setLocale, ui } = useUI();
+  const methods = methodsFor(locale);
   return (
     <div className="page simple-page">
       <PageTitle
         eyebrow="CHOOSE YOUR LENS"
-        title="同一个材料，不同的观察方式。"
-        description="先明确问题，再选择方法。尺度是线索，物理假设和所需精度才是关键。"
+        title={ui("同一个材料，不同的观察方式。")}
+        description={ui(
+          "先明确问题，再选择方法。尺度是线索，物理假设和所需精度才是关键。",
+        )}
       />
       <div className="comparison-wrap">
         <table className="comparison-table">
           <thead>
             <tr>
-              <th>方法</th>
-              <th>描述对象</th>
-              <th>典型长度</th>
-              <th>时间含义</th>
-              <th>核心问题</th>
+              <th>{ui("方法")}</th>
+              <th>{ui("描述对象")}</th>
+              <th>{ui("典型长度")}</th>
+              <th>{ui("时间含义")}</th>
+              <th>{ui("核心问题")}</th>
             </tr>
           </thead>
           <tbody>
@@ -989,7 +1051,7 @@ function Compare() {
                     <ArrowUpRight size={13} />
                   </a>
                 </td>
-                <td>{scaleOf(m.scale).name}</td>
+                <td>{ui(scaleOf(m.scale).name)}</td>
                 <td>{m.length}</td>
                 <td>{m.time}</td>
                 <td>{m.tagline}</td>
@@ -1001,18 +1063,21 @@ function Compare() {
       <div className="info-note">
         <Compass size={24} />
         <p>
-          各尺度范围有重叠，算法也常常组合使用。Monte Carlo
-          采样步数通常不是物理时间；电子基态方法中的迭代次数也不是动力学时间。请查看每章的假设与边界。
+          {ui(
+            "各尺度范围有重叠，算法也常常组合使用。Monte Carlo 采样步数通常不是物理时间；电子基态方法中的迭代次数也不是动力学时间。请查看每章的假设与边界。",
+          )}
         </p>
       </div>
       <a href="#/path" className="button secondary">
-        找到适合我的入门路线
+        {ui("找到适合我的入门路线")}
         <ArrowRight size={16} />
       </a>
     </div>
   );
 }
 function Resources() {
+  const { locale, setLocale, ui } = useUI();
+  const methods = methodsFor(locale);
   const refs = useMemo(() => {
     const all = methods.flatMap((m) => m.references);
     return all.filter((r, i) => all.findIndex((x) => x.url === r.url) === i);
@@ -1021,26 +1086,30 @@ function Resources() {
     <div className="page simple-page">
       <PageTitle
         eyebrow="KEEP ASKING WHY"
-        title="沿着经典，继续探索。"
-        description="教材、原始论文与开放文档。交互实验是起点；完整的推导与严谨应用，需要回到这些资料。"
+        title={ui("沿着经典，继续探索。")}
+        description={ui(
+          "教材、原始论文与开放文档。交互实验是起点；完整的推导与严谨应用，需要回到这些资料。",
+        )}
       />
       <div className="info-note">
         <GraduationCap size={24} />
         <p>
-          本站按初学者的学习顺序重述概念，所有动画均为教学模型。部分教材或论文需要机构访问权限，开放文档可直接阅读。
+          {ui(
+            "本站按初学者的学习顺序重述概念，所有动画均为教学模型。部分教材或论文需要机构访问权限，开放文档可直接阅读。",
+          )}
         </p>
       </div>
       <ReferenceList refs={refs} />
       <div className="resources-end">
-        <h2>一起把这份教材变得更好</h2>
-        <p>发现科学表述、代码或体验问题，欢迎在仓库提出。</p>
+        <h2>{ui("一起把这份教材变得更好")}</h2>
+        <p>{ui("发现科学表述、代码或体验问题，欢迎在仓库提出。")}</p>
         <a
           className="button secondary"
           href="https://github.com/Yazhuo-Liu/MultiscaleModeling/issues"
           target="_blank"
           rel="noreferrer"
         >
-          前往 GitHub
+          {ui("前往 GitHub")}
           <ArrowUpRight size={16} />
         </a>
       </div>

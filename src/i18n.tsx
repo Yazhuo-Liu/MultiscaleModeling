@@ -31,8 +31,8 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
       ?.setAttribute(
         "content",
         locale === "zh"
-          ? "从电子到工程结构，沿长度与时间探索多尺度建模。11种方法、递进理论与交互实验。"
-          : "Explore multiscale modeling across length and time: eleven methods, illustrated theory, worked examples and interactive experiments.",
+          ? "从电子到工程结构，沿长度与时间探索多尺度建模。8个基础章节、11种方法、递进推导与交互实验。"
+          : "Explore multiscale modeling across length and time: eight foundation chapters, eleven methods, illustrated derivations and interactive experiments.",
       );
     try {
       localStorage.setItem("multiscale-language", locale);

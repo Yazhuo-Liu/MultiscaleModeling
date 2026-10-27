@@ -7,12 +7,13 @@
     "dev": "vite --host 0.0.0.0",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host 0.0.0.0",
-    "test": "tsx --test src/simulations/*.test.ts src/content/*.test.ts",
+    "test": "tsx --test src/simulations/*.test.ts src/content/*.test.ts src/foundations/*.test.ts",
     "deploy": "node scripts/deploy.mjs",
     "test:browser": "node scripts/smoke-browser.mjs",
     "format": "prettier --write src scripts doc .github index.html vite.config.ts tsconfig.json package.json README.md",
     "test:bilingual": "node scripts/smoke-bilingual.mjs",
-    "test:math": "node scripts/smoke-math.mjs"
+    "test:math": "node scripts/smoke-math.mjs",
+    "test:foundations": "node scripts/smoke-foundations.mjs"
   },
   "dependencies": {
     "@fontsource-variable/dm-sans": "^5.3.0",

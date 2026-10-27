@@ -6,6 +6,8 @@
 
 实验完全在浏览器本机计算，支持 2D 与 3D 查看。网站不需要后端、数据库、密钥或付费服务。教学简化模型用于理解概念；其近似与适用范围在章节中明确说明，不应用于未经验证的工程预测。
 
+新增 **8 个双语基础章节**：多尺度动机、各尺度局限、误差传播、电子结构、H/Fe 原子轨道、共价与金属成键、能带与带隙、形成能与相稳定性。每章包含递进讲解、推导、算例、误区、自检与公开参考。轨道可分层探索并切换 2D/3D，另有相关误差、二聚化能带和形成能凸包交互。入口为 `#/foundations`，方法页也提供对应先修链接。
+
 ## 本地开发
 
 需要 Node.js 24 与 npm，首次安装或更新依赖：
@@ -54,6 +56,8 @@ npm run preview
 - `src/theme.css` 中的 `--reading-size`、`--reading-leading`、`--reading-width` 控制正文；阅读样式仍集中在同一文件。
 
 构建后运行 `npm run test:bilingual`，检查全部英文章节、切换时的实验连续性、语言记忆、手机布局和正文尺寸。`npm test` 同时包含数值与双语内容完整性检查。
+
+基础课程数据位于 `src/content/foundations-*.ts`，轻量目录为 `foundation-index.ts`；`src/foundations/` 保存解析轨道和交互教学模型。阅读界面由 `FoundationsPage.tsx` 组合，图示与交互见 `FoundationFigure.tsx`、`OrbitalExplorer.tsx` 和 `FoundationExperiments.tsx`。布局与图示配色仍集中于 `theme.css`。详见 [基础课程架构](doc/foundations.md)。生产构建后运行 `npm run test:foundations`，验证全部16个语言/章节组合、数学显示、轨道层级、3D与降级、模型控件、语言持久化和手机布局。
 
 ## 公式与推导编辑
 

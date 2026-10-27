@@ -66,9 +66,13 @@ try {
   assert.equal(await page.locator(".method-card").count(), 2);
   await page.getByRole("button", { name: /全部方法/ }).click();
   assert.equal(await page.locator(".method-card").count(), 11);
-  await page.getByRole("textbox", { name: "搜索建模方法" }).fill("Lennard");
+  await page
+    .getByRole("textbox", { name: "搜索方法与基础概念" })
+    .fill("Lennard");
   assert.equal(await page.locator(".nav-method").count(), 0);
-  await page.getByRole("textbox", { name: "搜索建模方法" }).fill("molecular");
+  await page
+    .getByRole("textbox", { name: "搜索方法与基础概念" })
+    .fill("molecular");
   assert.equal(await page.locator(".nav-method").count(), 1);
   await page.getByRole("button", { name: "清除搜索" }).click();
   await mkdir("test-results", { recursive: true });

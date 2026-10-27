@@ -29,7 +29,12 @@ import { methods as methodsZh } from "./content/methods";
 import { methodsEn } from "./content/methods.en";
 import { useLanguage, type Locale } from "./i18n";
 import { uiEn } from "./content/ui-en";
+import {
+  foundationIndex,
+  foundationPrerequisites,
+} from "./content/foundation-index";
 const TheoryReading = lazy(() => import("./components/TheoryReading"));
+const FoundationsPage = lazy(() => import("./components/FoundationsPage"));
 const methodsFor = (locale: Locale) =>
   locale === "zh" ? methodsZh : methodsEn;
 function useUI() {
@@ -101,7 +106,7 @@ function useRoute() {
   return route;
 }
 function App() {
-  const { locale, setLocale, ui } = useUI();
+  const { locale, setLocale, ui, t } = useUI();
   const methods = methodsFor(locale);
   const route = useRoute();
   const [query, setQuery] = useState("");
@@ -119,13 +124,20 @@ function App() {
     }
   });
   const current = methods.find((m) => route === `/method/${m.id}`);
+  const currentFoundation = foundationIndex.find(
+    (f) => route === `/foundation/${f.id}`,
+  );
   useEffect(() => {
     setMobile(false);
     if (current) {
       document.title = `${current.title} · ${ui(ui("尺度之间"))}`;
       setVisited((v) => (v.includes(current.id) ? v : [...v, current.id]));
-    } else document.title = ui("尺度之间 · 多尺度建模入门");
-  }, [route, current, locale]);
+    } else if (currentFoundation)
+      document.title = `${currentFoundation.title[locale]} · ${ui("尺度之间")}`;
+    else if (route === "/foundations")
+      document.title = `${t("基础知识", "Foundations")} · ${ui("尺度之间")}`;
+    else document.title = ui("尺度之间 · 多尺度建模入门");
+  }, [route, current, currentFoundation, locale]);
   useEffect(() => {
     try {
       localStorage.setItem("multiscale-visited", JSON.stringify(visited));
@@ -138,6 +150,11 @@ function App() {
       .toLowerCase()
       .includes(query.toLowerCase());
   });
+  const shownFoundations = foundationIndex.filter((f) =>
+    `${f.title.zh} ${f.title.en} ${f.summary.zh} ${f.summary.en}`
+      .toLowerCase()
+      .includes(query.toLowerCase()),
+  );
   return (
     <div className="app-shell">
       <a
@@ -172,8 +189,11 @@ function App() {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder={ui("搜索建模方法…")}
-            aria-label={ui("搜索建模方法")}
+            placeholder={t(
+              "搜索方法与基础概念…",
+              "Search methods and concepts…",
+            )}
+            aria-label={t("搜索方法与基础概念", "Search methods and concepts")}
           />
           {query && (
             <button aria-label={ui("清除搜索")} onClick={() => setQuery("")}>
@@ -187,6 +207,27 @@ function App() {
             {ui("探索尺度")}
             <span className="nav-dot" />
           </a>
+          <a
+            href="#/foundations"
+            className={`nav-main ${route === "/foundations" || currentFoundation ? "active" : ""}`}
+          >
+            <BookOpen size={18} />
+            {t("基础知识", "Foundations")}
+            <span className="foundation-nav-count">8</span>
+          </a>
+          {(query || currentFoundation) && shownFoundations.length > 0 && (
+            <div className="foundation-nav-lessons">
+              {shownFoundations.map((f) => (
+                <a
+                  className={`nav-method ${currentFoundation?.id === f.id ? "active" : ""}`}
+                  href={`#/foundation/${f.id}`}
+                  key={f.id}
+                >
+                  {f.title[locale]}
+                </a>
+              ))}
+            </div>
+          )}
           <a
             href="#/path"
             className={`nav-main ${route === "/path" ? "active" : ""}`}
@@ -223,8 +264,10 @@ function App() {
                 ))}
             </div>
           ))}
-          {shown.length === 0 && (
-            <p className="no-results">{ui("没有匹配的方法")}</p>
+          {shown.length === 0 && shownFoundations.length === 0 && (
+            <p className="no-results">
+              {t("没有匹配的内容", "No matching content")}
+            </p>
           )}
           <div className="nav-divider" />
           <a
@@ -274,11 +317,13 @@ function App() {
             <ChevronRight size={13} />
             <b>
               {current?.title ||
+                currentFoundation?.title[locale] ||
                 {
                   "/": ui("探索尺度"),
                   "/path": ui("学习路线"),
                   "/compare": ui("方法比较"),
                   "/resources": ui("参考与拓展"),
+                  "/foundations": t("基础知识", "Foundations"),
                 }[route] ||
                 ui("页面未找到")}
             </b>
@@ -303,6 +348,19 @@ function App() {
             <Home />
           ) : route === "/path" ? (
             <LearningPath />
+          ) : route === "/foundations" || currentFoundation ? (
+            <Suspense
+              fallback={
+                <div className="page loading-panel">
+                  {t("正在展开课程…", "Opening the lessons…")}
+                </div>
+              }
+            >
+              <FoundationsPage
+                key={currentFoundation?.id || "index"}
+                id={currentFoundation?.id}
+              />
+            </Suspense>
           ) : route === "/compare" ? (
             <Compare />
           ) : route === "/resources" ? (
@@ -329,7 +387,7 @@ function App() {
   );
 }
 function Home() {
-  const { locale, setLocale, ui } = useUI();
+  const { locale, setLocale, ui, t } = useUI();
   const methods = methodsFor(locale);
   const [filter, setFilter] = useState<ScaleId | "all">("all");
   return (
@@ -351,7 +409,7 @@ function Home() {
             {ui("沿着长度与时间，探索材料背后的建模语言。")}
           </p>
           <div className="hero-actions">
-            <a className="button primary" href="#/method/dft">
+            <a className="button primary" href="#/foundations">
               {ui("开始探索")}
               <ArrowRight size={17} />
             </a>
@@ -465,6 +523,29 @@ function Home() {
           <span>{ui("动手调参，观察规律")}</span>
         </div>
       </div>
+      <a className="foundation-start-banner" href="#/foundations">
+        <span className="foundation-start-icon">
+          <BookOpen size={25} />
+        </span>
+        <div>
+          <span className="eyebrow">
+            {t("建立共同的语言", "BUILD A SHARED LANGUAGE")}
+          </span>
+          <h2>
+            {t(
+              "先弄懂「为什么」，再学习「怎么做」。",
+              "Understand why, then learn how.",
+            )}
+          </h2>
+          <p>
+            {t(
+              "8 个基础章节 · 多尺度与误差 · 原子轨道 · 成键、能带与形成能",
+              "8 foundation chapters · Scales and uncertainty · Orbitals · Bonding, bands and formation energy",
+            )}
+          </p>
+        </div>
+        <ArrowUpRight size={24} />
+      </a>
       <section className="map-section">
         <div className="section-heading">
           <div>
@@ -637,7 +718,7 @@ function ScaleMap() {
   );
 }
 function MethodPage({ method: m }: { method: Method }) {
-  const { locale, ui } = useUI();
+  const { locale, ui, t } = useUI();
   const methods = methodsFor(locale);
   const [tab, setTab] = useState("theory");
   const [copied, setCopied] = useState(false);
@@ -735,6 +816,18 @@ function MethodPage({ method: m }: { method: Method }) {
       <div id="chapter-panel" role="tabpanel" aria-labelledby={`tab-${tab}`}>
         {tab === "theory" && (
           <div className="theory-content">
+            <div className="foundation-prerequisites">
+              <span>
+                <BookOpen size={16} />
+                {t("补充基础", "Build your foundations")}
+              </span>
+              {foundationPrerequisites[m.id].map((id) => (
+                <a href={`#/foundation/${id}`} key={id}>
+                  {foundationIndex.find((f) => f.id === id)!.title[locale]}
+                  <ArrowUpRight size={13} />
+                </a>
+              ))}
+            </div>
             <div className="intuition-callout">
               <div className="callout-icon">
                 <Sparkles size={23} />
@@ -960,7 +1053,7 @@ function MethodPage({ method: m }: { method: Method }) {
   );
 }
 function LearningPath() {
-  const { locale, setLocale, ui } = useUI();
+  const { locale, setLocale, ui, t } = useUI();
   const methods = methodsFor(locale);
   const paths = [
     {
@@ -991,6 +1084,29 @@ function LearningPath() {
           "不必从最小的尺度开始。选一个熟悉的物理问题，让你的第一步更轻松。",
         )}
       />
+      <a className="foundation-start-banner" href="#/foundations">
+        <span className="foundation-start-icon">
+          <BookOpen size={25} />
+        </span>
+        <div>
+          <span className="eyebrow">
+            {t("从零开始", "START FROM THE FOUNDATIONS")}
+          </span>
+          <h2>
+            {t(
+              "模型、误差、电子与材料",
+              "Models, uncertainty, electrons and materials",
+            )}
+          </h2>
+          <p>
+            {t(
+              "先建立直觉，再进入下面的建模路线。",
+              "Build your intuition, then follow a modeling path below.",
+            )}
+          </p>
+        </div>
+        <ArrowUpRight size={24} />
+      </a>
       {paths.map((p, i) => (
         <section key={p.title} className="learning-path">
           <div className="path-heading">

@@ -30,7 +30,7 @@
 附加：截图视觉检查、无 WebGL 时降级、减少动态效果偏好、键盘操作。
 
 ## Git 与发布
-保留用户提交身份（从初始提交读取），不增加 Codex/机器人 co-author。按模块提交并 push。普通 push 仅运行 CI；Pages 发布仅 `workflow_dispatch`，用专门 `npm run deploy` 命令触发。最后通过该命令发布一次；若 GitHub API 或 workflow 权限不可用，明确报告可手动执行的同一入口，不伪称发布成功。
+保留用户提交身份（从初始提交读取），不增加 Codex/机器人 co-author。按模块提交并 push。普通开发 push 仅运行 CI，Pages job 全部跳过；专门的 `npm run deploy` 命令检查干净工作区与远程 main 一致后，以现有用户身份创建 `site: publish <SHA>` 空提交并推送 main，此标记触发一次 Pages 构建和发布。保留 `workflow_dispatch` 作为手动入口。命令只需 Git 访问，无需 GitHub API；失败时保留本地发布提交供重试。最后执行一次发布，并以实际 Actions 与页面结果验证，不伪称发布成功。
 
 ## 实施顺序
 1. 先保存本架构文档与共享接口。

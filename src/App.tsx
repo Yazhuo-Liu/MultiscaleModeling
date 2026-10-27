@@ -1,4 +1,5 @@
 import MathMarkdown from "./components/MathMarkdown";
+import ScaleJourney from "./components/ScaleJourney";
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowUpRight,
@@ -425,83 +426,7 @@ function Home() {
             </span>
           </div>
         </div>
-        <div className="hero-art" aria-hidden="true">
-          <svg viewBox="0 0 420 300">
-            <defs>
-              <pattern
-                id="dots"
-                width="19"
-                height="19"
-                patternUnits="userSpaceOnUse"
-              >
-                <circle cx="1" cy="1" r="1" fill="#cbd5d9" />
-              </pattern>
-              <radialGradient id="sphere">
-                <stop offset="0" stopColor="#fff" />
-                <stop offset=".7" stopColor="#adc6c9" />
-                <stop offset="1" stopColor="#6c959b" />
-              </radialGradient>
-              <radialGradient id="purpleSphere">
-                <stop offset="0" stopColor="#f7f2ff" />
-                <stop offset=".7" stopColor="#beaddc" />
-                <stop offset="1" stopColor="#8a70b5" />
-              </radialGradient>
-            </defs>
-            <rect width="420" height="300" fill="url(#dots)" />
-            <path
-              d="M35 237L205 277L386 186M35 237L35 88M205 277L205 127M386 186L386 37"
-              fill="none"
-              stroke="#d4dde0"
-              strokeWidth="1"
-            />
-            {[0, 1, 2].flatMap((z) =>
-              [0, 1, 2].flatMap((y) =>
-                [0, 1, 2].map((x) => {
-                  const px = 84 + x * 66 + y * 35,
-                    py = 215 - x * 19 + y * 13 - z * 65;
-                  return (
-                    <g key={`${x}${y}${z}`}>
-                      <path
-                        d={`M${px} ${py}${x < 2 ? ` l66 -19 m-66 19` : ""}${y < 2 ? " l35 13 m-35 -13" : ""}${z < 2 ? " l0 -65" : ""}`}
-                        stroke="#b5c9cc"
-                        strokeWidth="2"
-                      />
-                      <circle
-                        cx={px}
-                        cy={py}
-                        r={x === 1 && y === 1 && z === 1 ? 15 : 10}
-                        fill={x === 1 ? "url(#purpleSphere)" : "url(#sphere)"}
-                      />
-                    </g>
-                  );
-                }),
-              ),
-            )}
-            <path d="M291 68L338 43L392 43" fill="none" stroke="#8e7bb0" />
-            <text
-              x="338"
-              y="34"
-              fill="#8e7bb0"
-              fontSize="10"
-              fontFamily="monospace"
-            >
-              a world within
-            </text>
-            <text
-              x="45"
-              y="278"
-              fill="#7e9298"
-              fontSize="10"
-              fontFamily="monospace"
-            >
-              10⁻¹⁰ m → 10⁰ m
-            </text>
-          </svg>
-          <div className="art-note">
-            <Atom size={14} />
-            {ui("不同尺度，同一个世界")}
-          </div>
-        </div>
+        <ScaleJourney />
       </section>
       <div className="intro-stats">
         <div>

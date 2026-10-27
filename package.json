@@ -13,7 +13,8 @@
     "format": "prettier --write src scripts doc .github index.html vite.config.ts tsconfig.json package.json README.md",
     "test:bilingual": "node scripts/smoke-bilingual.mjs",
     "test:math": "node scripts/smoke-math.mjs",
-    "test:foundations": "node scripts/smoke-foundations.mjs"
+    "test:foundations": "node scripts/smoke-foundations.mjs",
+    "test:journey": "node scripts/smoke-journey.mjs"
   },
   "dependencies": {
     "@fontsource-variable/dm-sans": "^5.3.0",

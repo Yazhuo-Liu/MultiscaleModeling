@@ -1,3 +1,4 @@
+import "katex/dist/katex.min.css";
 import "@fontsource-variable/dm-sans";
 import "@fontsource-variable/noto-sans-sc";
 import React from "react";

@@ -1,3 +1,4 @@
+import MathMarkdown from "./components/MathMarkdown";
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowUpRight,
@@ -534,7 +535,7 @@ function Home() {
                 {locale === "zh" && (
                   <div className="card-english">{m.english}</div>
                 )}
-                <p>{m.tagline}</p>
+                <MathMarkdown>{m.tagline}</MathMarkdown>
                 <div className="card-bottom">
                   <span>
                     <FlaskConical size={13} />
@@ -683,7 +684,9 @@ function MethodPage({ method: m }: { method: Method }) {
           </div>
           <h1>{m.title}</h1>
           {locale === "zh" && <p className="method-english">{m.english}</p>}
-          <p className="method-description">{m.description}</p>
+          <MathMarkdown className="method-description">
+            {m.description}
+          </MathMarkdown>
         </div>
         <div className="method-monogram">
           {m.short}
@@ -739,7 +742,7 @@ function MethodPage({ method: m }: { method: Method }) {
               <div>
                 <span className="eyebrow muted">{ui("先建立直觉")}</span>
                 <h2>{m.tagline}</h2>
-                <p>{m.intuition}</p>
+                <MathMarkdown>{m.intuition}</MathMarkdown>
               </div>
             </div>
             <div className="section-heading">
@@ -753,7 +756,7 @@ function MethodPage({ method: m }: { method: Method }) {
                 <section className="concept-card" key={c.title}>
                   <span className="step-number">0{i + 1}</span>
                   <h3>{c.title.replace(/^0\d\s*·\s*/, "")}</h3>
-                  <p>{c.body}</p>
+                  <MathMarkdown>{c.body}</MathMarkdown>
                 </section>
               ))}
             </div>
@@ -761,8 +764,10 @@ function MethodPage({ method: m }: { method: Method }) {
               <div className="eyebrow muted">
                 {ui("THE CORE IDEA / 核心方程")}
               </div>
-              <div className="equation">{m.equation.formula}</div>
-              <p>{m.equation.explanation}</p>
+              <MathMarkdown display className="equation">
+                {m.equation.formula}
+              </MathMarkdown>
+              <MathMarkdown>{m.equation.explanation}</MathMarkdown>
             </section>
             <Suspense fallback={<p>{ui("正在展开理论…")}</p>}>
               <TheoryReading method={m} />
@@ -787,7 +792,7 @@ function MethodPage({ method: m }: { method: Method }) {
               <div>
                 <div className="eyebrow muted">LEARN BY DOING</div>
                 <h2>{m.experiment.title}</h2>
-                <p>{m.experiment.description}</p>
+                <MathMarkdown>{m.experiment.description}</MathMarkdown>
               </div>
             </div>
             <Suspense
@@ -805,7 +810,9 @@ function MethodPage({ method: m }: { method: Method }) {
                 </h3>
                 <ol>
                   {m.experiment.observe.map((x) => (
-                    <li key={x}>{x}</li>
+                    <li key={x}>
+                      <MathMarkdown>{x}</MathMarkdown>
+                    </li>
                   ))}
                 </ol>
               </div>
@@ -814,7 +821,7 @@ function MethodPage({ method: m }: { method: Method }) {
                   <Compass size={17} />
                   {ui("模型的边界")}
                 </h3>
-                <p>{m.experiment.limitations}</p>
+                <MathMarkdown>{m.experiment.limitations}</MathMarkdown>
               </div>
             </div>
           </section>
@@ -834,7 +841,7 @@ function MethodPage({ method: m }: { method: Method }) {
               {m.steps.map((x, i) => (
                 <li key={x}>
                   <span>{String(i + 1).padStart(2, "0")}</span>
-                  {x}
+                  <MathMarkdown>{x}</MathMarkdown>
                 </li>
               ))}
             </ol>
@@ -873,7 +880,9 @@ function MethodPage({ method: m }: { method: Method }) {
                 <h2>{ui("它能回答什么？")}</h2>
                 <ul>
                   {m.applications.map((x) => (
-                    <li key={x}>{x}</li>
+                    <li key={x}>
+                      <MathMarkdown>{x}</MathMarkdown>
+                    </li>
                   ))}
                 </ul>
               </div>
@@ -881,7 +890,9 @@ function MethodPage({ method: m }: { method: Method }) {
                 <h2>{ui("使用前要知道")}</h2>
                 <ul>
                   {m.limitations.map((x) => (
-                    <li key={x}>{x}</li>
+                    <li key={x}>
+                      <MathMarkdown>{x}</MathMarkdown>
+                    </li>
                   ))}
                 </ul>
               </div>
@@ -897,7 +908,7 @@ function MethodPage({ method: m }: { method: Method }) {
                     </span>
                     <div>
                       <h3>{next.title}</h3>
-                      <p>{c.reason}</p>
+                      <MathMarkdown>{c.reason}</MathMarkdown>
                     </div>
                     <ArrowUpRight size={20} />
                   </a>
@@ -1054,7 +1065,9 @@ function Compare() {
                 <td>{ui(scaleOf(m.scale).name)}</td>
                 <td>{m.length}</td>
                 <td>{m.time}</td>
-                <td>{m.tagline}</td>
+                <td>
+                  <MathMarkdown>{m.tagline}</MathMarkdown>
+                </td>
               </tr>
             ))}
           </tbody>

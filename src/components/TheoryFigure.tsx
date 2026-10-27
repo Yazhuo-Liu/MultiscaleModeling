@@ -1,3 +1,4 @@
+import MathMarkdown from "./MathMarkdown";
 import { useId, type ReactNode } from "react";
 import type { MethodId } from "../types";
 import type { Locale } from "../i18n";
@@ -975,11 +976,12 @@ export default function TheoryFigure({ id, locale, title, caption }: Props) {
           viewBox="0 0 640 310"
           xmlns="http://www.w3.org/2000/svg"
           role="img"
-          aria-labelledby={`${uid}-title ${uid}-desc`}
+          aria-labelledby={`${uid}-title`}
+          aria-describedby={`${uid}-caption`}
           fontFamily="var(--font, system-ui, sans-serif)"
         >
           <title id={`${uid}-title`}>{title}</title>
-          <desc id={`${uid}-desc`}>{caption}</desc>
+
           <defs>
             <marker
               id={`${uid}-arrow`}
@@ -996,7 +998,9 @@ export default function TheoryFigure({ id, locale, title, caption }: Props) {
           {graphic}
         </svg>
       </div>
-      <figcaption className="theory-figure-caption">{caption}</figcaption>
+      <figcaption id={`${uid}-caption`} className="theory-figure-caption">
+        <MathMarkdown>{caption}</MathMarkdown>
+      </figcaption>
     </figure>
   );
 }

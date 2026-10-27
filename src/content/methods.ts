@@ -1,6 +1,6 @@
 import type { Method } from "../types";
 
-// Chinese beginner curriculum. Python snippets are independent teaching examples, not browser source.
+// Authored Markdown prose with LaTeX math; Python code stays verbatim.
 export const methods: Method[] = [
   {
     id: "dft",
@@ -20,7 +20,7 @@ export const methods: Method[] = [
     concepts: [
       {
         title: "01 · 从粒子到密度",
-        body: "电子密度 n(r) 表示单位体积内电子的平均数。它积分后等于总电子数 N。Hohenberg–Kohn 定理建立了基态密度与基态性质之间的联系，但并未直接给出可计算的精确能量泛函。",
+        body: "电子密度 $n(\\mathbf r)$ 表示单位体积内电子的平均数。它满足 $\\int n(\\mathbf r)\\,\\mathrm d\\mathbf r=N$，其中 $N$ 为总电子数。Hohenberg–Kohn 定理建立了基态密度与基态性质之间的联系，但并未直接给出可计算的精确能量泛函。",
       },
       {
         title: "02 · Kohn–Sham 辅助系统",
@@ -28,13 +28,14 @@ export const methods: Method[] = [
       },
       {
         title: "03 · 近似决定预测能力",
-        body: "LDA、GGA、杂化泛函是不同精度和代价的近似。平面波截断、k 点、赝势、结构优化和自洽容差都需要收敛检查；基态 DFT 本身没有真实时间步进。",
+        body: "LDA、GGA、杂化泛函是不同精度和代价的近似。平面波截断、$\\mathbf k$ 点、赝势、结构优化和自洽容差都需要收敛检查；基态 DFT 本身没有真实时间步进。",
       },
     ],
     equation: {
-      formula: "E[n] = Tₛ[n] + ∫vₑₓₜ(r)n(r)dr + E_H[n] + E_xc[n]",
+      formula:
+        "\\begin{aligned}E[n] &= T_{\\mathrm s}[n]+\\int v_{\\mathrm{ext}}(\\mathbf r)n(\\mathbf r)\\,\\mathrm d\\mathbf r \\\\ &\\quad + E_{\\mathrm H}[n]+E_{\\mathrm{xc}}[n]\\end{aligned}",
       explanation:
-        "Tₛ 是辅助系统动能，vₑₓₜ 是外势，E_H 是经典库仑能，E_xc 包含剩余交换关联效应。满足 ∫n dr = N 的密度中，基态使能量最小。",
+        "$T_{\\mathrm s}$ 是辅助系统动能，$v_{\\mathrm{ext}}$ 是外势，$E_{\\mathrm H}$ 是经典库仑能，$E_{\\mathrm{xc}}$ 包含剩余交换关联效应。在满足 $\\int n(\\mathbf r)\\,\\mathrm d\\mathbf r=N$ 的密度中，基态使能量最小。",
     },
     steps: [
       "确定原子结构、电子数与边界条件。",
@@ -47,11 +48,11 @@ export const methods: Method[] = [
     experiment: {
       title: "让电子云找到合适的宽度",
       description:
-        "用单电子氢样原子的高斯试探密度做能量最小化，调节核电荷 Z 和初始高斯指数 α，观察径向概率分布与优化过程。",
+        "用单电子氢样原子的高斯试探密度做能量最小化，调节核电荷 $Z$ 和初始高斯指数 $\\alpha$，观察径向概率分布与优化过程。",
       observe: [
         "改变初始高斯指数，观察优化是否趋向相同能量最低点。",
         "核电荷增大时，径向概率峰值是否更靠近原子核？",
-        "Z=1 时，对比最优变分能与精确氢原子基态 −0.5 Hartree；高斯基组不完备带来误差。",
+        "$Z=1$ 时，对比最优变分能与精确氢原子基态 $-0.5\\,\\mathrm{Hartree}$；高斯基组不完备带来误差。",
       ],
       limitations:
         "这是单电子变分教学模型，不求解多电子 Kohn–Sham 方程，也不包含真实材料的交换关联、晶格与能带。动画中的迭代不是物理时间。",
@@ -63,7 +64,7 @@ export const methods: Method[] = [
     ],
     limitations: [
       "近似泛函可能误判强关联和弱相互作用。",
-      "体系大小、基组与 k 点决定计算代价。",
+      "体系大小、基组与 $\\mathbf k$ 点决定计算代价。",
       "静态基态计算不能直接表示扩散的秒级演化。",
     ],
     connections: [
@@ -121,9 +122,10 @@ export const methods: Method[] = [
       },
     ],
     equation: {
-      formula: "F C = S C ε；F = h + J − K",
+      formula:
+        "\\begin{aligned}\\mathbf F\\mathbf C &= \\mathbf S\\mathbf C\\boldsymbol{\\varepsilon} \\\\ \\mathbf F &= \\mathbf h+\\mathbf J-\\mathbf K\\end{aligned}",
       explanation:
-        "C 为轨道系数，S 为基函数重叠矩阵，ε 为轨道能。J、K 的系数随自旋轨道或闭壳层空间轨道约定不同而变；实验采用简化正交基。",
+        "$\\mathbf C$ 为轨道系数矩阵，$\\mathbf S$ 为基函数重叠矩阵，$\\boldsymbol\\varepsilon$ 包含轨道能。$\\mathbf J$、$\\mathbf K$ 的系数随自旋轨道或闭壳层空间轨道约定不同而变；实验采用简化正交基。",
     },
     steps: [
       "选择基函数并计算单电子与双电子积分。",
@@ -136,7 +138,7 @@ export const methods: Method[] = [
     experiment: {
       title: "看平均场逐步自洽",
       description:
-        "用两位点、两个相反自旋电子的 Hubbard 限制性 Hartree–Fock 模型，调节在位排斥 U/t 和位点能量差 Δ/t，观察占据数与自洽残差。",
+        "用两位点、两个相反自旋电子的 Hubbard 限制性 Hartree–Fock 模型，调节在位排斥 $U/t$ 和位点能量差 $\\Delta/t$，观察占据数与自洽残差。",
       observe: [
         "增大位点能量差，电子更偏好哪个位点？",
         "增大在位排斥，两个位点的占据是否趋于均衡？",
@@ -197,7 +199,7 @@ export const methods: Method[] = [
     concepts: [
       {
         title: "01 · 势能给出力",
-        body: "势函数 U(r) 描述原子构型的能量，力是能量对位置的负梯度。Lennard–Jones 势适合理解排斥与吸引，但不能通用地描述金属键、共价键或化学反应。",
+        body: "总势能 $U(\\mathbf r_1,\\ldots,\\mathbf r_N)$ 描述原子构型的能量，力为 $\\mathbf F_i=-\\nabla_i U$。Lennard–Jones 对势 $U_{\\mathrm{LJ}}(r)$ 适合理解排斥与吸引，但不能通用地描述金属键、共价键或化学反应。",
       },
       {
         title: "02 · 积分与时间步",
@@ -209,9 +211,10 @@ export const methods: Method[] = [
       },
     ],
     equation: {
-      formula: "mᵢ r̈ᵢ = −∇ᵢ U；U(r) = 4ε[(σ/r)¹² − (σ/r)⁶]",
+      formula:
+        "\\begin{aligned}m_i\\ddot{\\mathbf r}_i &= -\\nabla_i U \\\\ U_{\\mathrm{LJ}}(r) &= 4\\varepsilon\\left[\\left(\\frac{\\sigma}{r}\\right)^{12}-\\left(\\frac{\\sigma}{r}\\right)^6\\right]\\end{aligned}",
       explanation:
-        "ε 为能量尺度，σ 为长度尺度。LJ 约化单位下 m = ε = σ = 1，时间单位为 σ√(m/ε)。动画速度并不等于真实时间。",
+        "$\\varepsilon$ 为能量尺度，$\\sigma$ 为长度尺度。LJ 约化单位下 $m=\\varepsilon=\\sigma=1$，时间单位为 $\\tau_{\\mathrm{LJ}}=\\sigma\\sqrt{m/\\varepsilon}$。动画速度并不等于真实时间。",
     },
     steps: [
       "初始化粒子位置和速度，去除整体漂移。",
@@ -288,7 +291,7 @@ export const methods: Method[] = [
       },
       {
         title: "02 · Metropolis 接受率",
-        body: "对称提议下，能量降低的改变直接接受；升高 ΔE 的改变以 exp(−ΔE/kBT) 的概率接受。更一般的提议需要 Metropolis–Hastings 修正。",
+        body: "对称提议下，能量降低的改变直接接受；能量升高 $\\Delta E>0$ 的改变以 $\\exp[-\\Delta E/(k_{\\mathrm B}T)]$ 的概率接受。更一般的提议需要 Metropolis–Hastings 修正。",
       },
       {
         title: "03 · 平衡与不确定性",
@@ -296,9 +299,10 @@ export const methods: Method[] = [
       },
     ],
     equation: {
-      formula: "P_accept = min[1, exp(−ΔE / kBT)]；H = −J Σ⟨ij⟩ sᵢsⱼ",
+      formula:
+        "\\begin{aligned}P_{\\mathrm{accept}} &= \\min\\left[1,\\exp\\left(-\\frac{\\Delta E}{k_{\\mathrm B}T}\\right)\\right] \\\\ H &= -J\\sum_{\\langle i,j\\rangle}s_i s_j-h\\sum_i s_i\\end{aligned}",
       explanation:
-        "Ising 模型中 sᵢ = ±1，J > 0 偏好相邻自旋同向。实验使用二维周期格点和无量纲温度 kBT/J。",
+        "Ising 模型中 $s_i=\\pm1$，$J>0$ 偏好相邻自旋同向；$h$ 是每个自旋的外场能量系数，$h=0$ 即零场。实验使用二维周期格点和无量纲温度 $k_{\\mathrm B}T/J$；代码示例取零场。",
     },
     steps: [
       "初始化自旋格点并选择温度。",
@@ -315,7 +319,7 @@ export const methods: Method[] = [
       observe: [
         "低温时大块同向自旋是否逐渐形成？",
         "高温时磁化为何趋近零但仍然波动？",
-        "二维零场无限方格 Ising 模型的临界温度约为 2.269 J/kB，小体系会抹平转变。",
+        "二维零场无限方格 Ising 模型的临界温度约为 $T_{\\mathrm c}\\approx2.269\\,J/k_{\\mathrm B}$，小体系会抹平转变。",
       ],
       limitations:
         "图中演化为 Monte Carlo 采样过程，没有校准的物理时间。有限格点和有限采样不足以精确测量临界指数。",
@@ -367,7 +371,7 @@ export const methods: Method[] = [
     concepts: [
       {
         title: "01 · 线缺陷承载塑性",
-        body: "柏氏矢量 b 表示位错造成的闭合失败，线方向 ξ 描述位错走向。刃型、螺型与混合位错有不同几何关系，滑移通常受晶体学平面约束。",
+        body: "柏氏矢量 $\\mathbf b$ 表示位错造成的闭合失败，单位线方向 $\\boldsymbol\\xi$ 描述位错走向。刃型、螺型与混合位错有不同几何关系，滑移通常受晶体学平面约束。",
       },
       {
         title: "02 · 应力驱动位错",
@@ -379,9 +383,10 @@ export const methods: Method[] = [
       },
     ],
     equation: {
-      formula: "f_PK = (σ · b) × ξ；v = M f；γ̇ = ρ b v̄",
+      formula:
+        "\\begin{aligned}\\mathbf f_{\\mathrm{PK}} &= (\\boldsymbol{\\sigma}\\cdot\\mathbf b)\\times\\boldsymbol{\\xi} \\\\ v &= Mf \\\\ \\dot\\gamma &= \\rho_{\\mathrm m}b\\bar v\\end{aligned}",
       explanation:
-        "f_PK 为单位长度作用力，M 为迁移率。Orowan 关系把可动位错密度 ρ、柏氏矢量长度 b 和平均速度 v̄ 联系到剪切应变率。",
+        "$\\mathbf f_{\\mathrm{PK}}$ 为单位长度作用力，$M$ 为迁移率；$v=Mf$ 是沿允许滑移方向的标量关系。Orowan 关系把可动位错密度 $\\rho_{\\mathrm m}$、柏氏矢量长度 $b=|\\mathbf b|$ 和平均速度 $\\bar v$ 联系到剪切应变率 $\\dot\\gamma$。",
     },
     steps: [
       "指定滑移面、位错位置与符号。",
@@ -398,7 +403,7 @@ export const methods: Method[] = [
       observe: [
         "增大剪应力时，位错线弓出幅度如何变化？",
         "增大线张力时，位错是否更难弯曲？",
-        "对比最大弓出量与小斜率静态极限 τL²/(8Γ)；这段模型不会发生位错环发射。",
+        "实验采用长度归一化为 $1$ 的约化模型，对比最大弓出量与 $\\hat y_{\\max}=\\hat\\tau/(8\\hat\\Gamma)$；实际有量纲模型的对应式为 $y_{\\max}=\\tau bL^2/(8\\Gamma)$。这段模型不会发生位错环发射。",
       ],
       limitations:
         "二维小斜率、常线张力、过阻尼教学模型，固定两端，不包含位错之间的相互作用、线拓扑变化、攀移或交滑移。大斜率时近似失效，不能用于定量预测 Frank–Read 源临界应力。",
@@ -455,7 +460,7 @@ export const methods: Method[] = [
     concepts: [
       {
         title: "01 · 事件与能垒",
-        body: "列出当前状态能发生的跳跃、反应或吸附事件。常用 Arrhenius 速率 k = ν exp(−Ea/kBT)，其中 ν 是尝试频率，Ea 是激活能。",
+        body: "列出当前状态能发生的跳跃、反应或吸附事件。常用 Arrhenius 速率 $k=\\nu\\exp[-E_{\\mathrm a}/(k_{\\mathrm B}T)]$，其中 $\\nu$ 是尝试频率，$E_{\\mathrm a}$ 是激活能。",
       },
       {
         title: "02 · 竞争的时钟",
@@ -467,9 +472,10 @@ export const methods: Method[] = [
       },
     ],
     equation: {
-      formula: "kᵢ = νᵢ exp(−Eᵢ/kBT)；Δt = −ln(u) / Σᵢkᵢ",
+      formula:
+        "\\begin{aligned}k_i &= \\nu_i\\exp\\left(-\\frac{E_i}{k_{\\mathrm B}T}\\right) \\\\ R &= \\sum_i k_i,\\qquad \\Delta t=-\\frac{\\ln u}{R}\\end{aligned}",
       explanation:
-        "u 是 (0,1) 内均匀随机数。事件选择再使用一个独立随机数。若 k 的单位为 s⁻¹，累计时间即为秒。",
+        "$u$ 是区间 $(0,1)$ 内的均匀随机数，$R$ 是所有当前可行事件的总速率。事件选择再使用一个独立随机数。若 $k_i$ 的单位为 $\\mathrm{s}^{-1}$，累计时间即为秒。",
     },
     steps: [
       "列出当前构型的所有允许事件与速率。",
@@ -543,7 +549,7 @@ export const methods: Method[] = [
     concepts: [
       {
         title: "01 · 弥散界面",
-        body: "序参量 φ 把离散的相标签变成连续变量。双阱势让两个相稳定，梯度能惩罚剧烈空间变化，两者共同决定界面宽度和能量。",
+        body: "序参量 $\\phi$ 把离散的相标签变成连续变量。双阱势让两个相稳定，梯度能惩罚剧烈空间变化，两者共同决定界面宽度和能量。",
       },
       {
         title: "02 · 先问守恒不守恒",
@@ -555,9 +561,10 @@ export const methods: Method[] = [
       },
     ],
     equation: {
-      formula: "F[φ] = ∫[¼(φ²−1)² + ½κ|∇φ|²]dV；∂φ/∂t = −M δF/δφ",
+      formula:
+        "\\begin{aligned}F[\\phi] &= \\int\\left[\\frac14(\\phi^2-1)^2+\\frac\\kappa2|\\nabla\\phi|^2\\right]\\,\\mathrm dV \\\\ \\frac{\\partial\\phi}{\\partial t} &= -M\\frac{\\delta F}{\\delta\\phi}\\end{aligned}",
       explanation:
-        "实验采用 Allen–Cahn：∂φ/∂t = M[κ∇²φ − (φ³−φ)]。M > 0 为迁移率，κ > 0 为梯度能系数，周期边界下连续模型使自由能下降。",
+        "实验采用 Allen–Cahn 方程 $\\partial_t\\phi=M[\\kappa\\nabla^2\\phi-(\\phi^3-\\phi)]$。$M>0$ 为迁移率，$\\kappa>0$ 为梯度能系数，周期边界下连续模型使自由能下降。",
     },
     steps: [
       "定义序参量、自由能和守恒性质。",
@@ -630,11 +637,11 @@ export const methods: Method[] = [
     concepts: [
       {
         title: "01 · 把应力投影到滑移系",
-        body: "每个滑移系由滑移方向 s 与滑移面法向 n 决定。分解剪应力 τ = s·σ·n 驱动滑移；单轴加载下得到 Schmid 因子 m = cosλ cosφ。",
+        body: "每个滑移系由单位滑移方向 $\\mathbf s$ 与单位滑移面法向 $\\mathbf n$ 决定。分解剪应力 $\\tau=\\mathbf s\\cdot\\boldsymbol\\sigma\\cdot\\mathbf n$ 驱动滑移；单轴加载下得到 Schmid 因子 $m=\\cos\\lambda\\cos\\varphi$。",
       },
       {
         title: "02 · 从滑移到塑性流动",
-        body: "常用幂律把滑移速率与 τ/g 联系起来，其中 g 为滑移阻力。阻力随累计滑移改变，描述自硬化和潜硬化；有限变形还需处理晶格旋转。",
+        body: "常用幂律把滑移速率与 $\\tau/g$ 联系起来，其中 $g$ 为滑移阻力。阻力随累计滑移改变，描述自硬化和潜硬化；有限变形还需处理晶格旋转。",
       },
       {
         title: "03 · 多晶不是简单平均",
@@ -642,9 +649,10 @@ export const methods: Method[] = [
       },
     ],
     equation: {
-      formula: "τᵅ = sᵅ · σ · nᵅ；γ̇ᵅ = γ̇₀ |τᵅ/gᵅ|ⁿ sign(τᵅ)",
+      formula:
+        "\\begin{aligned}\\tau^{\\alpha} &= \\mathbf s^{\\alpha}\\cdot\\boldsymbol{\\sigma}\\cdot\\mathbf n^{\\alpha} \\\\ \\dot\\gamma^{\\alpha} &= \\dot\\gamma_0\\left|\\frac{\\tau^{\\alpha}}{g^{\\alpha}}\\right|^n\\operatorname{sign}(\\tau^{\\alpha})\\end{aligned}",
       explanation:
-        "α 标识滑移系，gᵅ 是临界滑移阻力，n 控制速率敏感性。单滑移单轴近似下 σ_y = τ_c / |m|，且 |m| ≤ 0.5。",
+        "$\\alpha$ 标识滑移系，$g^\\alpha$ 是临界滑移阻力，$n$ 控制速率敏感性。单滑移单轴近似下 $\\sigma_{\\mathrm y}=\\tau_{\\mathrm c}/|m|$，且 $|m|\\leq1/2$；$m=0$ 的滑移系在该加载方向没有分解剪应力。",
     },
     steps: [
       "定义晶粒取向与允许滑移系。",
@@ -726,13 +734,14 @@ export const methods: Method[] = [
       },
       {
         title: "03 · 参数必须有实验约束",
-        body: "一般形式是 σ=σ(ε,q,T)，内部状态满足 q̇=g(ε̇,q,T)，例如塑性应变、硬化和损伤。摩擦学另有 Dieterich–Ruina 速率状态律 μ=μ₀+a ln(v/v₀)+b ln(θv₀/Dc)，常配 θ̇=1−vθ/Dc（v>0）；本章动画使用 Maxwell 黏弹松弛，未求解该摩擦模型。所有参数均需在目标加载与温度范围内标定。",
+        body: "一般形式是 $\\sigma=\\sigma(\\varepsilon,q,T)$，内部状态满足 $\\dot q=g(\\dot\\varepsilon,q,T)$，例如塑性应变、硬化和损伤。摩擦学另有 Dieterich–Ruina 速率状态律 $\\mu=\\mu_0+a\\ln(v/v_0)+b\\ln(\\theta v_0/D_{\\mathrm c})$，常配 $\\dot\\theta=1-v\\theta/D_{\\mathrm c}$，要求 $v>0$。本章实验使用 Maxwell 黏弹松弛，未求解该摩擦模型。所有参数均需在目标加载与温度范围内标定。",
       },
     ],
     equation: {
-      formula: "ε̇ = σ̇/E + σ/η；σ(t) = σ₀ exp(−t/τ)，τ = η/E",
+      formula:
+        "\\begin{aligned}\\dot\\varepsilon &= \\frac{\\dot\\sigma}{E}+\\frac\\sigma\\eta \\\\ \\sigma(t) &= \\sigma_0\\exp\\left(-\\frac t\\tau\\right),\\qquad \\tau=\\frac\\eta E\\end{aligned}",
       explanation:
-        "Maxwell 模型中 E 为弹性模量，η 为黏度。后一式适用于施加瞬时应变后保持应变不变，σ₀ = Eε₀；τ 是应力松弛的特征时间。",
+        "Maxwell 模型中 $E$ 为弹性模量，$\\eta$ 为黏度。后一式适用于施加瞬时应变后保持应变不变，初始应力为 $\\sigma_0=E\\varepsilon_0$；$\\tau=\\eta/E$ 是应力松弛的特征时间。",
     },
     steps: [
       "明确材料、加载方式和所需时间尺度。",
@@ -745,10 +754,10 @@ export const methods: Method[] = [
     experiment: {
       title: "拉住材料，看应力慢慢消失",
       description:
-        "施加并保持总应变 ε₀=0.02，调节弹性模量 E 和松弛时间 τ，观察 Maxwell 模型的应力衰减。对应黏度为 η=Eτ。",
+        "施加并保持总应变 $\\varepsilon_0=0.02$，调节弹性模量 $E$ 和松弛时间 $\\tau$，观察 Maxwell 模型的应力衰减。对应黏度为 $\\eta=E\\tau$。",
       observe: [
         "经过一个松弛时间，应力为何剩下约 36.8%？",
-        "保持 E 不变并提高 τ（等价于提高黏度），应力下降得更快还是更慢？",
+        "保持 $E$ 不变并提高 $\\tau$（等价于提高黏度），应力下降得更快还是更慢？",
         "保持应变与保持应力是不同实验，不能混淆松弛和蠕变。",
       ],
       limitations:
@@ -815,7 +824,7 @@ export const methods: Method[] = [
       },
       {
         title: "02 · 组装与边界条件",
-        body: "单元刚度叠加到全局矩阵 K，得到 Ku = f。固定端消除刚体运动，自然边界条件施加力；没有足够约束时矩阵可能奇异。",
+        body: "单元刚度叠加到全局矩阵 $\\mathbf K$，得到 $\\mathbf K\\mathbf u=\\mathbf f$。固定端消除刚体运动，自然边界条件施加力；没有足够约束时矩阵可能奇异。",
       },
       {
         title: "03 · 验证与收敛",
@@ -823,9 +832,10 @@ export const methods: Method[] = [
       },
     ],
     equation: {
-      formula: "K u = f；kₑ = (EA/Lₑ) [[1, −1], [−1, 1]]",
+      formula:
+        "\\begin{aligned}\\mathbf K\\mathbf u &= \\mathbf f \\\\ \\mathbf k_e &= \\frac{EA}{L_e}\\begin{bmatrix}1&-1\\\\-1&1\\end{bmatrix}\\end{aligned}",
       explanation:
-        "E 是杨氏模量，A 是截面积，Lₑ 是单元长度。对均匀杆左端固定、右端力 F，解析末端位移为 u(L) = FL/(EA)。",
+        "$E$ 是杨氏模量，$A$ 是截面积，$L_e$ 是单元长度。对均匀杆左端固定、右端施加力 $F$，解析末端位移为 $u(L)=FL/(EA)$。",
     },
     steps: [
       "将几何划分为单元并定义材料与自由度。",
@@ -838,7 +848,7 @@ export const methods: Method[] = [
     experiment: {
       title: "把一根杆拆成有限单元",
       description:
-        "固定 20 个线性杆单元，改变端部拉力与杨氏模量，观察节点位移和杆的拉伸，并与 u(L)=FL/(EA) 的解析结果比较。",
+        "固定 20 个线性杆单元，改变端部拉力与杨氏模量，观察节点位移和杆的拉伸，并与 $u(L)=FL/(EA)$ 的解析结果比较。",
       observe: [
         "载荷加倍时，线性模型的位移是否加倍？",
         "弹性模量增大时，结构变得更硬还是更软？",
@@ -902,7 +912,7 @@ export const methods: Method[] = [
       },
       {
         title: "02 · 时间推进有稳定性要求",
-        body: "显式 Euler 易于理解，但热方程要求时间步足够小。等距二维网格中 r = αΔt/Δx² ≤ 1/4 是经典稳定性条件；步长太大可产生非物理振荡和发散。",
+        body: "显式 Euler 易于理解，但热方程要求时间步足够小。等距二维网格中 $r=\\alpha\\Delta t/\\Delta x^2\\leq1/4$ 是经典稳定性条件；步长太大可产生非物理振荡和发散。",
       },
       {
         title: "03 · 边界条件改变答案",
@@ -911,9 +921,9 @@ export const methods: Method[] = [
     ],
     equation: {
       formula:
-        "∂T/∂t = α∇²T；Tᶰ⁺¹ᵢⱼ = Tᶰᵢⱼ + r( Tᶰᵢ₊₁,ⱼ + Tᶰᵢ₋₁,ⱼ + Tᶰᵢ,ⱼ₊₁ + Tᶰᵢ,ⱼ₋₁ − 4Tᶰᵢⱼ )",
+        "\\begin{aligned}\\frac{\\partial T}{\\partial t} &= \\alpha\\nabla^2 T \\\\ T_{i,j}^{n+1} &= (1-4r)T_{i,j}^{n} \\\\ &\\quad+r\\left(T_{i+1,j}^{n}+T_{i-1,j}^{n}\\right) \\\\ &\\quad+r\\left(T_{i,j+1}^{n}+T_{i,j-1}^{n}\\right),\\qquad r=\\frac{\\alpha\\Delta t}{\\Delta x^2}\\end{aligned}",
       explanation:
-        "α 为热扩散率，r = αΔt/Δx²。公式针对等距二维网格和显式时间推进；单位与边界条件必须在离散前确定。",
+        "$\\alpha$ 为热扩散率，$r=\\alpha\\Delta t/\\Delta x^2$。此式针对 $\\Delta x=\\Delta y$ 的二维网格和显式时间推进；单位与边界条件必须在离散前确定。",
     },
     steps: [
       "设置计算域、网格与初始温度。",

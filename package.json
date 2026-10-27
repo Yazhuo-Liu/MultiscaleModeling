@@ -11,14 +11,19 @@
     "deploy": "node scripts/deploy.mjs",
     "test:browser": "node scripts/smoke-browser.mjs",
     "format": "prettier --write src scripts doc .github index.html vite.config.ts tsconfig.json package.json README.md",
-    "test:bilingual": "node scripts/smoke-bilingual.mjs"
+    "test:bilingual": "node scripts/smoke-bilingual.mjs",
+    "test:math": "node scripts/smoke-math.mjs"
   },
   "dependencies": {
     "@fontsource-variable/dm-sans": "^5.3.0",
     "@fontsource-variable/noto-sans-sc": "^5.3.1",
+    "katex": "^0.19.1",
     "lucide-react": "^0.468.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "react-markdown": "^10.1.0",
+    "rehype-katex": "^7.0.1",
+    "remark-math": "^6.0.0",
     "three": "^0.180.0"
   },
   "devDependencies": {
@@ -29,8 +34,10 @@
     "@types/three": "^0.180.0",
     "@vitejs/plugin-react": "^4.7.0",
     "prettier": "^3.9.10",
+    "remark-parse": "^11.0.0",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3",
+    "unified": "^11.0.5",
     "vite": "^6.3.6"
   }
 }

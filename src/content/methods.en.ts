@@ -1,6 +1,6 @@
 import type { Method } from "../types";
 
-// Complete English curriculum. Numerical examples match the Chinese edition.
+// Authored Markdown prose with LaTeX math; Python code stays verbatim.
 export const methodsEn: Method[] = [
   {
     id: "dft",
@@ -24,7 +24,7 @@ export const methodsEn: Method[] = [
     concepts: [
       {
         title: "01 · From particles to density",
-        body: "The electron density n(r) is the mean number of electrons per unit volume. Its integral equals the total electron number N. The Hohenberg–Kohn theorems connect the ground-state density to ground-state properties, but do not supply a practical expression for the exact energy functional.",
+        body: "The electron density $n(\\mathbf r)$ is the mean number of electrons per unit volume. Its normalization is $\\int n(\\mathbf r)\\,\\mathrm d\\mathbf r=N$, where $N$ is the total electron number. The Hohenberg–Kohn theorems connect the ground-state density to ground-state properties, but do not supply a practical expression for the exact energy functional.",
       },
       {
         title: "02 · The Kohn–Sham auxiliary system",
@@ -32,13 +32,14 @@ export const methodsEn: Method[] = [
       },
       {
         title: "03 · Approximations determine predictive power",
-        body: "LDA, GGA and hybrid functionals offer different balances of accuracy and cost. Plane-wave cutoffs, k-point meshes, pseudopotentials, geometry optimization and self-consistency tolerances all need convergence checks. Ground-state DFT itself does not advance a physical clock.",
+        body: "LDA, GGA and hybrid functionals offer different balances of accuracy and cost. Plane-wave cutoffs, $\\mathbf k$-point meshes, pseudopotentials, geometry optimization and self-consistency tolerances all need convergence checks. Ground-state DFT itself does not advance a physical clock.",
       },
     ],
     equation: {
-      formula: "E[n] = Tₛ[n] + ∫vₑₓₜ(r)n(r)dr + E_H[n] + E_xc[n]",
+      formula:
+        "\\begin{aligned}E[n] &= T_{\\mathrm s}[n]+\\int v_{\\mathrm{ext}}(\\mathbf r)n(\\mathbf r)\\,\\mathrm d\\mathbf r \\\\ &\\quad + E_{\\mathrm H}[n]+E_{\\mathrm{xc}}[n]\\end{aligned}",
       explanation:
-        "Tₛ is the auxiliary-system kinetic energy, vₑₓₜ the external potential, E_H the classical Coulomb energy and E_xc the remaining exchange–correlation energy. Among densities satisfying ∫n dr = N, the ground state minimizes the energy.",
+        "$T_{\\mathrm s}$ is the auxiliary-system kinetic energy, $v_{\\mathrm{ext}}$ the external potential, $E_{\\mathrm H}$ the classical Coulomb energy and $E_{\\mathrm{xc}}$ the remaining exchange–correlation energy. Among densities satisfying $\\int n(\\mathbf r)\\,\\mathrm d\\mathbf r=N$, the ground state minimizes the energy.",
     },
     steps: [
       "Specify the atomic structure, electron number and boundary conditions.",
@@ -51,11 +52,11 @@ export const methodsEn: Method[] = [
     experiment: {
       title: "Find the right width for an electron cloud",
       description:
-        "Minimize the energy of a Gaussian trial density for a one-electron, hydrogen-like atom. Change the nuclear charge Z and initial Gaussian exponent α to observe the radial probability distribution and optimization.",
+        "Minimize the energy of a Gaussian trial density for a one-electron, hydrogen-like atom. Change the nuclear charge $Z$ and initial Gaussian exponent $\\alpha$ to observe the radial probability distribution and optimization.",
       observe: [
         "Change the initial Gaussian exponent. Does optimization approach the same energy minimum?",
         "As nuclear charge increases, does the radial-probability peak move closer to the nucleus?",
-        "At Z = 1, compare the optimized variational energy with the exact hydrogen ground state, −0.5 Hartree. A single Gaussian cannot represent the exact orbital.",
+        "At $Z=1$, compare the optimized variational energy with the exact hydrogen ground state, $-0.5\\,\\mathrm{Hartree}$. A single Gaussian cannot represent the exact orbital.",
       ],
       limitations:
         "This is a one-electron variational teaching model. It does not solve many-electron Kohn–Sham equations or include a real material’s exchange–correlation physics, lattice or band structure. Iterations are not physical time.",
@@ -67,7 +68,7 @@ export const methodsEn: Method[] = [
     ],
     limitations: [
       "Approximate functionals may misrepresent strong correlation and weak interactions.",
-      "System size, basis and k-point sampling determine computational cost.",
+      "System size, the basis and $\\mathbf k$-point sampling determine the computational cost.",
       "A static ground-state calculation does not directly describe diffusion over seconds.",
     ],
     connections: [
@@ -130,9 +131,10 @@ export const methodsEn: Method[] = [
       },
     ],
     equation: {
-      formula: "F C = S C ε; F = h + J − K",
+      formula:
+        "\\begin{aligned}\\mathbf F\\mathbf C &= \\mathbf S\\mathbf C\\boldsymbol{\\varepsilon} \\\\ \\mathbf F &= \\mathbf h+\\mathbf J-\\mathbf K\\end{aligned}",
       explanation:
-        "C contains orbital coefficients, S is the basis overlap matrix and ε contains orbital energies. Coefficients in J and K depend on whether spin-orbital or closed-shell spatial-orbital conventions are used. The experiment uses a simplified orthogonal basis.",
+        "$\\mathbf C$ contains orbital coefficients, $\\mathbf S$ is the basis overlap matrix and $\\boldsymbol\\varepsilon$ contains orbital energies. Coefficients in $\\mathbf J$ and $\\mathbf K$ depend on whether spin-orbital or closed-shell spatial-orbital conventions are used. The experiment uses a simplified orthogonal basis.",
     },
     steps: [
       "Choose basis functions and compute one- and two-electron integrals.",
@@ -145,7 +147,7 @@ export const methodsEn: Method[] = [
     experiment: {
       title: "Watch a mean field become self-consistent",
       description:
-        "Use restricted Hartree–Fock for a two-site Hubbard model containing two electrons of opposite spin. Adjust the on-site repulsion U/t and site-energy difference Δ/t, then observe occupations and the SCF residual.",
+        "Use restricted Hartree–Fock for a two-site Hubbard model containing two electrons of opposite spin. Adjust the on-site repulsion $U/t$ and site-energy difference $\\Delta/t$, then observe occupations and the SCF residual.",
       observe: [
         "As the site-energy difference increases, which site do the electrons prefer?",
         "Does stronger on-site repulsion make the two site occupations more balanced?",
@@ -211,7 +213,7 @@ export const methodsEn: Method[] = [
     concepts: [
       {
         title: "01 · Potential energy gives the forces",
-        body: "A potential U(r) assigns an energy to an atomic configuration; force is its negative position gradient. The Lennard–Jones potential illustrates repulsion and attraction, but is not a universal model of metallic bonding, covalent bonding or chemical reactions.",
+        body: "The total potential energy $U(\\mathbf r_1,\\ldots,\\mathbf r_N)$ assigns an energy to an atomic configuration, with force $\\mathbf F_i=-\\nabla_i U$. The Lennard–Jones pair potential $U_{\\mathrm{LJ}}(r)$ illustrates repulsion and attraction, but is not a universal model of metallic bonding, covalent bonding or chemical reactions.",
       },
       {
         title: "02 · Integration and timestep",
@@ -223,9 +225,10 @@ export const methodsEn: Method[] = [
       },
     ],
     equation: {
-      formula: "mᵢ r̈ᵢ = −∇ᵢ U; U(r) = 4ε[(σ/r)¹² − (σ/r)⁶]",
+      formula:
+        "\\begin{aligned}m_i\\ddot{\\mathbf r}_i &= -\\nabla_i U \\\\ U_{\\mathrm{LJ}}(r) &= 4\\varepsilon\\left[\\left(\\frac{\\sigma}{r}\\right)^{12}-\\left(\\frac{\\sigma}{r}\\right)^6\\right]\\end{aligned}",
       explanation:
-        "ε sets the energy scale and σ the length scale. In LJ reduced units, m = ε = σ = 1, and the time unit is σ√(m/ε). Animation speed is not a physical timescale.",
+        "$\\varepsilon$ sets the energy scale and $\\sigma$ the length scale. In LJ reduced units, $m=\\varepsilon=\\sigma=1$, and the time unit is $\\tau_{\\mathrm{LJ}}=\\sigma\\sqrt{m/\\varepsilon}$. Animation speed is not a physical timescale.",
     },
     steps: [
       "Initialize particle positions and velocities and remove overall drift.",
@@ -304,7 +307,7 @@ export const methodsEn: Method[] = [
       },
       {
         title: "02 · The Metropolis acceptance rule",
-        body: "For symmetric proposals, accept energy-lowering moves and accept an increase ΔE with probability exp(−ΔE/kBT). More general proposal distributions require a Metropolis–Hastings correction.",
+        body: "For symmetric proposals, accept energy-lowering moves and accept an increase $\\Delta E>0$ with probability $\\exp[-\\Delta E/(k_{\\mathrm B}T)]$. More general proposal distributions require a Metropolis–Hastings correction.",
       },
       {
         title: "03 · Equilibration and uncertainty",
@@ -312,9 +315,10 @@ export const methodsEn: Method[] = [
       },
     ],
     equation: {
-      formula: "P_accept = min[1, exp(−ΔE / kBT)]; H = −J Σ⟨ij⟩ sᵢsⱼ",
+      formula:
+        "\\begin{aligned}P_{\\mathrm{accept}} &= \\min\\left[1,\\exp\\left(-\\frac{\\Delta E}{k_{\\mathrm B}T}\\right)\\right] \\\\ H &= -J\\sum_{\\langle i,j\\rangle}s_i s_j-h\\sum_i s_i\\end{aligned}",
       explanation:
-        "In the Ising model, sᵢ = ±1 and J > 0 favors neighboring spins pointing the same way. The experiment uses a periodic two-dimensional lattice and the dimensionless temperature kBT/J.",
+        "In the Ising model, $s_i=\\pm1$ and $J>0$ favors neighboring spins pointing the same way. The coefficient $h$ is the external-field energy per spin; $h=0$ means zero field. The experiment uses a periodic two-dimensional lattice and the dimensionless temperature $k_{\\mathrm B}T/J$. The code example uses zero field.",
     },
     steps: [
       "Initialize the spin lattice and select a temperature.",
@@ -331,7 +335,7 @@ export const methodsEn: Method[] = [
       observe: [
         "At low temperature, do large aligned regions gradually form?",
         "Why does magnetization approach zero at high temperature while still fluctuating?",
-        "The infinite square-lattice, zero-field Ising model has a critical temperature of about 2.269 J/kB. A small system rounds off this transition.",
+        "The infinite square-lattice, zero-field Ising model has a critical temperature of about $T_{\\mathrm c}\\approx2.269\\,J/k_{\\mathrm B}$. A small system rounds off this transition.",
       ],
       limitations:
         "The animation shows Monte Carlo sampling without a calibrated physical clock. A finite lattice and short sampling period are insufficient for a precise determination of critical exponents.",
@@ -389,7 +393,7 @@ export const methodsEn: Method[] = [
     concepts: [
       {
         title: "01 · Line defects carry plasticity",
-        body: "The Burgers vector b measures the closure failure associated with a dislocation, and the line direction ξ describes its orientation. Edge, screw and mixed dislocations have different geometric relationships. Glide is usually constrained to crystallographic planes.",
+        body: "The Burgers vector $\\mathbf b$ measures the closure failure associated with a dislocation, and the unit line direction $\\boldsymbol\\xi$ describes its orientation. Edge, screw and mixed dislocations have different geometric relationships. Glide is usually constrained to crystallographic planes.",
       },
       {
         title: "02 · Stress drives dislocation motion",
@@ -401,9 +405,10 @@ export const methodsEn: Method[] = [
       },
     ],
     equation: {
-      formula: "f_PK = (σ · b) × ξ; v = M f; γ̇ = ρ b v̄",
+      formula:
+        "\\begin{aligned}\\mathbf f_{\\mathrm{PK}} &= (\\boldsymbol{\\sigma}\\cdot\\mathbf b)\\times\\boldsymbol{\\xi} \\\\ v &= Mf \\\\ \\dot\\gamma &= \\rho_{\\mathrm m}b\\bar v\\end{aligned}",
       explanation:
-        "f_PK is force per unit line length and M is mobility. Orowan’s relation connects mobile dislocation density ρ, Burgers-vector magnitude b and mean speed v̄ to plastic shear-strain rate.",
+        "$\\mathbf f_{\\mathrm{PK}}$ is force per unit line length and $M$ is mobility; $v=Mf$ is a scalar law along an allowed glide direction. Orowan’s relation connects mobile dislocation density $\\rho_{\\mathrm m}$, Burgers-vector magnitude $b=|\\mathbf b|$ and mean speed $\\bar v$ to plastic shear-strain rate $\\dot\\gamma$.",
     },
     steps: [
       "Specify slip planes, dislocation positions and signs.",
@@ -420,7 +425,7 @@ export const methodsEn: Method[] = [
       observe: [
         "How does the maximum bow-out change as shear stress increases?",
         "Does greater line tension make the dislocation harder to bend?",
-        "Compare the maximum bow-out with the small-slope static limit τL²/(8Γ). This model does not emit dislocation loops.",
+        "The experiment normalizes line length to $1$. Compare its maximum bow-out with $\\hat y_{\\max}=\\hat\\tau/(8\\hat\\Gamma)$; the dimensional model gives $y_{\\max}=\\tau bL^2/(8\\Gamma)$. This model does not emit dislocation loops.",
       ],
       limitations:
         "A two-dimensional, overdamped, small-slope model with constant line tension and fixed endpoints. It omits dislocation interactions, topology changes, climb and cross-slip. Large slopes invalidate the approximation; it cannot quantitatively predict a Frank–Read source’s critical stress.",
@@ -483,7 +488,7 @@ export const methodsEn: Method[] = [
     concepts: [
       {
         title: "01 · Events and barriers",
-        body: "List the hops, reactions or adsorption events available in the current state. A common choice is the Arrhenius rate k = ν exp(−Ea/kBT), where ν is an attempt frequency and Ea is the activation energy.",
+        body: "List the hops, reactions or adsorption events available in the current state. A common choice is the Arrhenius rate $k=\\nu\\exp[-E_{\\mathrm a}/(k_{\\mathrm B}T)]$, where $\\nu$ is an attempt frequency and $E_{\\mathrm a}$ is the activation energy.",
       },
       {
         title: "02 · Competing clocks",
@@ -495,9 +500,10 @@ export const methodsEn: Method[] = [
       },
     ],
     equation: {
-      formula: "kᵢ = νᵢ exp(−Eᵢ/kBT); Δt = −ln(u) / Σᵢkᵢ",
+      formula:
+        "\\begin{aligned}k_i &= \\nu_i\\exp\\left(-\\frac{E_i}{k_{\\mathrm B}T}\\right) \\\\ R &= \\sum_i k_i,\\qquad \\Delta t=-\\frac{\\ln u}{R}\\end{aligned}",
       explanation:
-        "u is uniformly distributed on (0,1). Use a second, independent random number to select the event. If rates have units of s⁻¹, the accumulated time is in seconds.",
+        "$u$ is uniformly distributed on $(0,1)$ and $R$ is the total rate of all currently available events. Use a second, independent random number to select the event. If $k_i$ has units of $\\mathrm{s}^{-1}$, the accumulated time is in seconds.",
     },
     steps: [
       "List all permitted events and their rates for the current configuration.",
@@ -577,7 +583,7 @@ export const methodsEn: Method[] = [
     concepts: [
       {
         title: "01 · A diffuse interface",
-        body: "An order parameter φ turns a discrete phase label into a continuous variable. A double-well potential stabilizes two phases while gradient energy penalizes sharp spatial variation. Together they set the interface thickness and energy.",
+        body: "An order parameter $\\phi$ turns a discrete phase label into a continuous variable. A double-well potential stabilizes two phases while gradient energy penalizes sharp spatial variation. Together they set the interface thickness and energy.",
       },
       {
         title: "02 · Ask whether the variable is conserved",
@@ -589,9 +595,10 @@ export const methodsEn: Method[] = [
       },
     ],
     equation: {
-      formula: "F[φ] = ∫[¼(φ²−1)² + ½κ|∇φ|²]dV; ∂φ/∂t = −M δF/δφ",
+      formula:
+        "\\begin{aligned}F[\\phi] &= \\int\\left[\\frac14(\\phi^2-1)^2+\\frac\\kappa2|\\nabla\\phi|^2\\right]\\,\\mathrm dV \\\\ \\frac{\\partial\\phi}{\\partial t} &= -M\\frac{\\delta F}{\\delta\\phi}\\end{aligned}",
       explanation:
-        "The experiment uses Allen–Cahn dynamics: ∂φ/∂t = M[κ∇²φ − (φ³−φ)]. M > 0 is mobility and κ > 0 is the gradient-energy coefficient. With periodic boundaries, the continuum model decreases free energy.",
+        "The experiment uses Allen–Cahn dynamics: $\\partial_t\\phi=M[\\kappa\\nabla^2\\phi-(\\phi^3-\\phi)]$. Here $M>0$ is mobility and $\\kappa>0$ is the gradient-energy coefficient. With periodic boundaries, the continuum model decreases free energy.",
     },
     steps: [
       "Choose the order parameter, free energy and conservation properties.",
@@ -670,11 +677,11 @@ export const methodsEn: Method[] = [
     concepts: [
       {
         title: "01 · Resolve stress onto a slip system",
-        body: "Each slip system has a slip direction s and slip-plane normal n. Resolved shear stress τ = s·σ·n drives slip. Under uniaxial loading, this gives the Schmid factor m = cosλ cosφ.",
+        body: "Each slip system has a unit slip direction $\\mathbf s$ and unit slip-plane normal $\\mathbf n$. Resolved shear stress $\\tau=\\mathbf s\\cdot\\boldsymbol\\sigma\\cdot\\mathbf n$ drives slip. Under uniaxial loading, this gives the Schmid factor $m=\\cos\\lambda\\cos\\varphi$.",
       },
       {
         title: "02 · From slip to plastic flow",
-        body: "A common power law relates slip rate to τ/g, where g is slip resistance. This resistance evolves with accumulated slip to describe self- and latent hardening. Finite-deformation models also need to account for lattice rotation.",
+        body: "A common power law relates slip rate to $\\tau/g$, where $g$ is slip resistance. This resistance evolves with accumulated slip to describe self- and latent hardening. Finite-deformation models also need to account for lattice rotation.",
       },
       {
         title: "03 · A polycrystal is not a simple average",
@@ -682,9 +689,10 @@ export const methodsEn: Method[] = [
       },
     ],
     equation: {
-      formula: "τᵅ = sᵅ · σ · nᵅ; γ̇ᵅ = γ̇₀ |τᵅ/gᵅ|ⁿ sign(τᵅ)",
+      formula:
+        "\\begin{aligned}\\tau^{\\alpha} &= \\mathbf s^{\\alpha}\\cdot\\boldsymbol{\\sigma}\\cdot\\mathbf n^{\\alpha} \\\\ \\dot\\gamma^{\\alpha} &= \\dot\\gamma_0\\left|\\frac{\\tau^{\\alpha}}{g^{\\alpha}}\\right|^n\\operatorname{sign}(\\tau^{\\alpha})\\end{aligned}",
       explanation:
-        "α labels a slip system, gᵅ is slip resistance and n controls rate sensitivity. For a single-slip, uniaxial approximation, σ_y = τ_c/|m| and |m| ≤ 0.5.",
+        "$\\alpha$ labels a slip system, $g^\\alpha$ is slip resistance and $n$ controls rate sensitivity. For a single-slip, uniaxial approximation, $\\sigma_{\\mathrm y}=\\tau_{\\mathrm c}/|m|$, with $|m|\\leq1/2$. A system with $m=0$ has no resolved shear stress under that loading direction.",
     },
     steps: [
       "Define grain orientations and permitted slip systems.",
@@ -772,13 +780,14 @@ export const methodsEn: Method[] = [
       },
       {
         title: "03 · Parameters need experimental constraints",
-        body: "A general form is σ = σ(ε,q,T), with q̇ = g(ε̇,q,T) for internal states such as plastic strain, hardening and damage. Friction also has the Dieterich–Ruina rate-and-state law μ = μ₀ + a ln(v/v₀) + b ln(θv₀/Dc), often paired with θ̇ = 1 − vθ/Dc for v > 0. This chapter simulates Maxwell relaxation, not that friction law. Parameters must be calibrated over the intended loading and temperature range.",
+        body: "A general form is $\\sigma=\\sigma(\\varepsilon,q,T)$, with $\\dot q=g(\\dot\\varepsilon,q,T)$ for internal states such as plastic strain, hardening and damage. Friction also has the Dieterich–Ruina rate-and-state law $\\mu=\\mu_0+a\\ln(v/v_0)+b\\ln(\\theta v_0/D_{\\mathrm c})$, often paired with $\\dot\\theta=1-v\\theta/D_{\\mathrm c}$ for $v>0$. This chapter simulates Maxwell relaxation, not that friction law. Parameters must be calibrated over the intended loading and temperature range.",
       },
     ],
     equation: {
-      formula: "ε̇ = σ̇/E + σ/η; σ(t) = σ₀ exp(−t/τ), τ = η/E",
+      formula:
+        "\\begin{aligned}\\dot\\varepsilon &= \\frac{\\dot\\sigma}{E}+\\frac\\sigma\\eta \\\\ \\sigma(t) &= \\sigma_0\\exp\\left(-\\frac t\\tau\\right),\\qquad \\tau=\\frac\\eta E\\end{aligned}",
       explanation:
-        "For the Maxwell model, E is elastic modulus and η is viscosity. The exponential solution applies after an instantaneous strain is imposed and held constant, with σ₀ = Eε₀. The relaxation time is τ = η/E.",
+        "For the Maxwell model, $E$ is elastic modulus and $\\eta$ is viscosity. The exponential solution applies after an instantaneous strain is imposed and held constant, with $\\sigma_0=E\\varepsilon_0$. The relaxation time is $\\tau=\\eta/E$.",
     },
     steps: [
       "Specify the material, loading protocol and relevant timescale.",
@@ -791,10 +800,10 @@ export const methodsEn: Method[] = [
     experiment: {
       title: "Hold the stretch and watch the stress relax",
       description:
-        "Apply and hold total strain ε₀ = 0.02. Adjust elastic modulus E and relaxation time τ to observe Maxwell stress relaxation. The corresponding viscosity is η = Eτ.",
+        "Apply and hold total strain $\\varepsilon_0=0.02$. Adjust elastic modulus $E$ and relaxation time $\\tau$ to observe Maxwell stress relaxation. The corresponding viscosity is $\\eta=E\\tau$.",
       observe: [
         "Why does about 36.8% of the initial stress remain after one relaxation time?",
-        "At fixed E, does increasing τ, and therefore viscosity, make stress decay faster or slower?",
+        "At fixed $E$, does increasing $\\tau$, and therefore viscosity, make stress decay faster or slower?",
         "Holding strain and holding stress are different experiments. Do not confuse stress relaxation with creep.",
       ],
       limitations:
@@ -863,7 +872,7 @@ export const methodsEn: Method[] = [
       },
       {
         title: "02 · Assembly and boundary conditions",
-        body: "Element stiffnesses add into a global matrix K, producing Ku = f. A fixed end removes rigid-body motion; natural boundary conditions prescribe forces. Without sufficient constraints, the stiffness matrix can be singular.",
+        body: "Element stiffnesses add into a global matrix $\\mathbf K$, producing $\\mathbf K\\mathbf u=\\mathbf f$. A fixed end removes rigid-body motion; natural boundary conditions prescribe forces. Without sufficient constraints, the stiffness matrix can be singular.",
       },
       {
         title: "03 · Verification and convergence",
@@ -871,9 +880,10 @@ export const methodsEn: Method[] = [
       },
     ],
     equation: {
-      formula: "K u = f; kₑ = (EA/Lₑ) [[1, −1], [−1, 1]]",
+      formula:
+        "\\begin{aligned}\\mathbf K\\mathbf u &= \\mathbf f \\\\ \\mathbf k_e &= \\frac{EA}{L_e}\\begin{bmatrix}1&-1\\\\-1&1\\end{bmatrix}\\end{aligned}",
       explanation:
-        "E is Young’s modulus, A the cross-sectional area and Lₑ the element length. A uniform bar fixed at its left end and pulled by force F at its right end has analytical tip displacement u(L) = FL/(EA).",
+        "$E$ is Young’s modulus, $A$ the cross-sectional area and $L_e$ the element length. A uniform bar fixed at its left end and pulled by force $F$ at its right end has analytical tip displacement $u(L)=FL/(EA)$.",
     },
     steps: [
       "Mesh the geometry and define materials and degrees of freedom.",
@@ -886,7 +896,7 @@ export const methodsEn: Method[] = [
     experiment: {
       title: "Build a bar from finite elements",
       description:
-        "Use 20 linear bar elements. Change the end force and Young’s modulus, observe nodal displacements and stretching, and compare with the analytical solution u(L) = FL/(EA).",
+        "Use 20 linear bar elements. Change the end force and Young’s modulus, observe nodal displacements and stretching, and compare with the analytical solution $u(L)=FL/(EA)$.",
       observe: [
         "Does doubling the force double the displacement in this linear model?",
         "Does increasing Young’s modulus make the structure stiffer or softer?",
@@ -952,7 +962,7 @@ export const methodsEn: Method[] = [
       },
       {
         title: "02 · Time stepping has a stability condition",
-        body: "Explicit Euler is easy to understand, but the heat equation requires a sufficiently small timestep. For an equally spaced two-dimensional grid, r = αΔt/Δx² ≤ 1/4 is the standard stability bound. A larger step can cause unphysical oscillations or divergence.",
+        body: "Explicit Euler is easy to understand, but the heat equation requires a sufficiently small timestep. For an equally spaced two-dimensional grid, $r=\\alpha\\Delta t/\\Delta x^2\\leq1/4$ is the standard stability bound. A larger step can cause unphysical oscillations or divergence.",
       },
       {
         title: "03 · Boundary conditions change the answer",
@@ -961,9 +971,9 @@ export const methodsEn: Method[] = [
     ],
     equation: {
       formula:
-        "∂T/∂t = α∇²T; Tᶰ⁺¹ᵢⱼ = Tᶰᵢⱼ + r( Tᶰᵢ₊₁,ⱼ + Tᶰᵢ₋₁,ⱼ + Tᶰᵢ,ⱼ₊₁ + Tᶰᵢ,ⱼ₋₁ − 4Tᶰᵢⱼ )",
+        "\\begin{aligned}\\frac{\\partial T}{\\partial t} &= \\alpha\\nabla^2 T \\\\ T_{i,j}^{n+1} &= (1-4r)T_{i,j}^{n} \\\\ &\\quad+r\\left(T_{i+1,j}^{n}+T_{i-1,j}^{n}\\right) \\\\ &\\quad+r\\left(T_{i,j+1}^{n}+T_{i,j-1}^{n}\\right),\\qquad r=\\frac{\\alpha\\Delta t}{\\Delta x^2}\\end{aligned}",
       explanation:
-        "α is thermal diffusivity and r = αΔt/Δx². This formula applies to an equally spaced two-dimensional grid with explicit time stepping. Specify units and boundary conditions before discretization.",
+        "$\\alpha$ is thermal diffusivity and $r=\\alpha\\Delta t/\\Delta x^2$. This formula applies to a two-dimensional grid with $\\Delta x=\\Delta y$ and explicit time stepping. Specify units and boundary conditions before discretization.",
     },
     steps: [
       "Set the domain, grid and initial temperature.",

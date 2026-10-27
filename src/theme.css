@@ -3685,3 +3685,355 @@ html[lang="en"] .method-hero h1 {
     flex-wrap: wrap;
   }
 }
+
+/* Markdown, accessible mathematics, and progressive derivations. */
+.math-markdown {
+  min-width: 0;
+  max-width: 100%;
+}
+.math-prose {
+  overflow-wrap: anywhere;
+}
+.math-prose > p {
+  margin: 0;
+}
+.math-prose > p + p {
+  margin-top: 1em;
+}
+.math-prose a {
+  color: var(--accent-dark);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.math-prose strong {
+  color: #3c5750;
+  font-weight: 600;
+}
+.math-prose code {
+  font-family: var(--mono);
+  font-size: 0.9em;
+  background: #edf2ef;
+  border-radius: 4px;
+  padding: 0.12em 0.3em;
+}
+.math-prose pre {
+  overflow: auto;
+  max-width: 100%;
+  padding: 16px;
+  background: #edf2ef;
+  border-radius: 7px;
+}
+.math-prose-inline {
+  display: inline;
+}
+.math-markdown .katex {
+  font-size: 1.08em;
+}
+.math-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 8px 3px;
+  overscroll-behavior-x: contain;
+}
+.math-display .katex-display {
+  margin: 0.55em 0;
+  width: max-content;
+  min-width: 100%;
+}
+.math-display .katex-display > .katex {
+  white-space: nowrap;
+  text-align: center;
+}
+.math-prose > .katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 8px 0;
+}
+.math-inline {
+  display: inline;
+}
+.equation,
+.theory-formula {
+  white-space: normal;
+}
+.equation.math-display {
+  font-size: 21px;
+  padding: 26px 10px;
+}
+.theory-formula {
+  padding: 18px 20px;
+  font-size: 19px;
+}
+.theory-formula .math-display {
+  padding: 0;
+}
+.math-markdown .katex-error {
+  color: #a7433c;
+  font-family: var(--mono);
+  font-size: 0.85em;
+  white-space: pre-wrap;
+}
+.concept-card > .math-markdown {
+  grid-column: 2;
+}
+.method-card > .math-markdown {
+  flex: 1;
+  margin: 13px 0 18px;
+}
+.method-card > .math-markdown p {
+  margin: 0;
+}
+.theory-section > .math-markdown + .math-markdown {
+  margin-top: 16px;
+}
+.equation-card > .math-prose {
+  border-top: 1px solid var(--line);
+  padding-top: 19px;
+}
+.equation-card > .math-prose p {
+  border: 0;
+  padding-top: 0;
+}
+.method-description > p {
+  font: inherit;
+  color: inherit;
+  line-height: inherit;
+}
+.symbol-glossary dt {
+  min-width: 0;
+  overflow-x: auto;
+  padding-bottom: 3px;
+}
+.symbol-glossary > div {
+  grid-template-columns: 110px minmax(0, 1fr);
+}
+.symbol-glossary dd .math-markdown {
+  font-size: 15px;
+}
+.algorithm-steps li > .math-markdown {
+  flex: 1;
+}
+.algorithm-steps li > .math-markdown p {
+  font: inherit;
+  line-height: inherit;
+}
+.derivation-path {
+  margin: 45px 0;
+  padding-top: 34px;
+  border-top: 1px solid #dce5df;
+  scroll-margin-top: 24px;
+}
+.derivation-heading h2 {
+  font-size: 27px;
+  margin: 14px 0 18px;
+}
+.derivation-heading > .math-markdown {
+  max-width: var(--reading-width);
+}
+.derivation-map {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 26px 0 34px;
+  border: 1px solid #dce5df;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #f2f6f3;
+}
+.derivation-map a {
+  display: flex;
+  gap: 10px;
+  padding: 17px 16px;
+  align-items: baseline;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #4e7060;
+  border-right: 1px solid #dce5df;
+}
+.derivation-map a:last-child {
+  border: 0;
+}
+.derivation-map a:hover {
+  background: #e8f0ea;
+}
+.derivation-map span {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: #8ba191;
+}
+.derivation-stage {
+  --stage-color: #537d68;
+  --stage-bg: #eff5f0;
+  max-width: 850px;
+  margin: 32px auto;
+  border: 1px solid #dfe7e1;
+  border-radius: 13px;
+  background: #fff;
+  padding: 27px 30px;
+  scroll-margin-top: 24px;
+}
+.derivation-stage.stage-general {
+  --stage-color: #557d97;
+  --stage-bg: #f0f5f8;
+}
+.derivation-stage.stage-extension {
+  --stage-color: #947744;
+  --stage-bg: #faf6ed;
+}
+.derivation-stage-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--stage-color);
+  margin-bottom: 14px;
+}
+.derivation-stage-label > span {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  background: var(--stage-bg);
+  font-family: var(--mono);
+  font-size: 12px;
+}
+.derivation-stage > h3 {
+  font-size: 23px;
+  line-height: 1.55;
+  margin-bottom: 22px;
+}
+.derivation-assumptions {
+  padding: 17px 20px;
+  background: var(--stage-bg);
+  border-radius: 8px;
+  margin: 0 0 25px;
+}
+.derivation-assumptions h4 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--stage-color);
+  margin: 0 0 10px;
+}
+.derivation-assumptions ul {
+  margin: 0;
+  padding-left: 20px;
+}
+.derivation-assumptions li,
+.derivation-assumptions p {
+  font-size: 15px;
+  line-height: 1.85;
+}
+.derivation-assumptions li + li {
+  margin-top: 7px;
+}
+.derivation-steps {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+.derivation-step {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  gap: 13px;
+  padding: 23px 0;
+  border-bottom: 1px solid #edf0ee;
+}
+.derivation-step:first-child {
+  padding-top: 0;
+}
+.derivation-step:last-child {
+  border-bottom: 0;
+}
+.derivation-step-number {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--stage-color);
+  padding-top: 5px;
+}
+.derivation-step-content {
+  min-width: 0;
+}
+.derivation-step-content > .math-display {
+  font-size: 18px;
+  background: #f8faf9;
+  border-radius: 7px;
+  padding: 11px 15px;
+  margin-top: 17px;
+}
+.derivation-step-content > .math-display .katex-display {
+  margin: 0.4em 0;
+}
+.derivation-takeaway {
+  margin-top: 9px;
+  border-left: 3px solid var(--stage-color);
+  padding: 7px 0 7px 19px;
+}
+.derivation-takeaway strong {
+  display: block;
+  color: var(--stage-color);
+  font-size: 14px;
+  margin-bottom: 9px;
+}
+.derivation-takeaway p {
+  font-size: 15px;
+}
+.self-check details > .math-prose {
+  margin-top: 14px;
+}
+@media (max-width: 700px) {
+  .concept-card > .math-markdown {
+    grid-column: 1/-1;
+    margin-top: 8px;
+  }
+  .concept-card > .math-markdown p {
+    margin-top: 0;
+  }
+  .equation.math-display {
+    font-size: 18px;
+    padding: 20px 2px;
+  }
+  .theory-formula {
+    padding: 13px 10px;
+    font-size: 18px;
+  }
+  .symbol-glossary > div {
+    grid-template-columns: 84px minmax(0, 1fr);
+    gap: 12px;
+  }
+  .derivation-heading h2 {
+    font-size: 24px;
+  }
+  .derivation-map {
+    grid-template-columns: 1fr;
+  }
+  .derivation-map a {
+    border-right: 0;
+    border-bottom: 1px solid #dce5df;
+    padding: 13px 17px;
+    font-size: 14px;
+  }
+  .derivation-stage {
+    padding: 22px 17px;
+    border-radius: 10px;
+  }
+  .derivation-stage > h3 {
+    font-size: 22px;
+  }
+  .derivation-assumptions {
+    padding: 16px;
+  }
+  .derivation-step {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+  .derivation-step-number {
+    font-size: 12px;
+  }
+  .derivation-step-content > .math-display {
+    font-size: 17px;
+    padding: 10px;
+  }
+  .derivation-takeaway {
+    padding-left: 14px;
+  }
+}

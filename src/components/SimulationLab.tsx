@@ -1,3 +1,4 @@
+import MathMarkdown from "./MathMarkdown";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Play,
@@ -1000,7 +1001,7 @@ export default function SimulationLab({ method }: { method: Method }) {
         <p>
           {simulationDescription(locale, method.id, definition.description)}
         </p>
-        <p>{method.experiment.limitations}</p>
+        <MathMarkdown>{method.experiment.limitations}</MathMarkdown>
       </details>
     </div>
   );

@@ -3,7 +3,19 @@ import type { Locale } from "../i18n";
 import { microscopicTheory } from "./theory-microscopic";
 import { mesoscopicTheory } from "./theory-mesoscopic";
 import { continuumTheory } from "./theory-continuum";
+export interface DerivationStage {
+  level: "simple" | "general" | "extension";
+  title: string;
+  assumptions: string[];
+  steps: { explanation: string; formula: string }[];
+  conclusion: string;
+}
 export interface TheoryLesson {
+  derivation: {
+    title: string;
+    introduction: string;
+    stages: DerivationStage[];
+  };
   objectives: string[];
   sections: {
     title: string;

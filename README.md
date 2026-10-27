@@ -55,6 +55,22 @@ npm run preview
 
 构建后运行 `npm run test:bilingual`，检查全部英文章节、切换时的实验连续性、语言记忆、手机布局和正文尺寸。`npm test` 同时包含数值与双语内容完整性检查。
 
+## 公式与推导编辑
+
+正文通过 Markdown 与 LaTeX 排版。行内数学使用 `$...$`，独立段落也支持 `$$...$$`。内容存放在 TypeScript 中时，推荐 `String.raw`，避免反斜线被 JavaScript 转义：
+
+```ts
+paragraphs: [String.raw`串联时总应变为 $\varepsilon=\varepsilon_e+\varepsilon_v$。`],
+formula: String.raw`\dot{\sigma}+\frac{\sigma}{\tau}=E\dot{\varepsilon}`,
+symbols: [{ symbol: String.raw`\tau`, meaning: String.raw`松弛时间，$\tau=\eta/E$。` }]
+```
+
+`formula` 和 `symbol` 字段只填写 LaTeX，不带美元分隔符；正文、算例、说明、答案和图注使用带分隔符的 Markdown。Python 示例保持代码文本，不参与公式转换。排版样式集中于 `theme.css`；字体随站点打包。
+
+每章 `derivation.stages` 按 `simple` → `general` → `extension` 排列，每阶段分别记录假设、逐步解释与等式、结论。扩展阶段应说明新增自由度或近似条件，不能把不同适用范围的公式直接并列。
+
+`npm test` 严格编译所有正文与公式，并检查推导结构；构建后运行 `npm run test:math`，检查中英文数学显示、MathML、手机布局和实验回归。公共 `MathMarkdown` 组件不解释原始 HTML，KaTeX 不启用受信任 HTML 命令。
+
 ## 显式发布
 
 普通 push 只运行验证，**不会重新发布网站**。准备发布时，将修改提交并推送至 `main`，然后运行：

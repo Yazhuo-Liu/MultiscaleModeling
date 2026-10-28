@@ -96,7 +96,7 @@ try {
   for (const id of ids) {
     await page.goto(`${base}#/method/${id}`);
     await page.locator(".concept-card").first().waitFor();
-    assert.equal(await page.locator(".concept-card").count(), 3);
+    assert.ok((await page.locator(".concept-card").count()) >= 3);
     await page.getByRole("tab", { name: "算法与代码" }).click();
     assert.ok(
       (await page.locator("pre code").innerText()).includes("import numpy"),
@@ -109,13 +109,13 @@ try {
     await page.getByRole("tab", { name: "应用与延伸" }).click();
     assert.ok((await page.locator(".references a").count()) >= 2);
     await page.getByRole("tab", { name: "交互实验" }).click();
-    await page.locator(".lab-canvas").waitFor();
+    await page.locator(".lab-viewport canvas").waitFor();
     await page.locator(".lab-playback").scrollIntoViewIfNeeded();
     await page.getByRole("button", { name: "前进一步", exact: true }).click();
     await page.waitForFunction(() =>
       document.querySelector(".lab-step")?.textContent?.includes("1 步"),
     );
-    const slider = page.locator("input[type=range]").first();
+    const slider = page.locator(".lab-controls input[type=range]").first();
     await slider.focus();
     await slider.press("ArrowRight");
     await page.waitForFunction(() =>
@@ -131,13 +131,13 @@ try {
     const stopped = await page.locator(".lab-step").innerText();
     await page.waitForTimeout(150);
     assert.equal(await page.locator(".lab-step").innerText(), stopped);
-    await page.getByRole("button", { name: "3D", exact: true }).click();
-    await page.locator(".lab-three canvas").waitFor();
+    await page.locator(".lab-mode button").nth(1).click();
+    await page.locator(".lab-viewport canvas").waitFor();
     await page.waitForTimeout(120);
-    const bounds = await page.locator(".lab-three canvas").boundingBox();
+    const bounds = await page.locator(".lab-viewport canvas").boundingBox();
     assert.ok(bounds.width > 100 && bounds.height > 100);
     if (id === "md") {
-      const canvas = page.locator(".lab-three canvas");
+      const canvas = page.locator(".lab-viewport canvas");
       await canvas.scrollIntoViewIfNeeded();
       const before = await canvas.screenshot();
       const rect = await canvas.boundingBox();
@@ -163,7 +163,7 @@ try {
         fullPage: true,
       });
     }
-    await page.getByRole("button", { name: "2D", exact: true }).click();
+    await page.locator(".lab-mode button").first().click();
     await page.getByRole("button", { name: "重置参数与实验" }).click();
     assert.ok((await page.locator(".lab-step").innerText()).includes("0 步"));
     if (id === "fdm") {
@@ -172,7 +172,7 @@ try {
       assert.equal((await down).suggestedFilename(), "fdm-snapshot.csv");
     }
     console.log(
-      `PASS ${id}: theory/code/references, step/parameters/play/pause/reset, 2D/3D`,
+      `PASS ${id}: theory/code/references, step/parameters/play/pause/reset, projection/perspective views`,
     );
   }
   for (const route of ["path", "compare", "resources"]) {
@@ -223,7 +223,6 @@ try {
   });
   await fallback.goto(`${base}#/method/md`);
   await fallback.getByRole("tab", { name: "交互实验" }).click();
-  await fallback.getByRole("button", { name: "3D", exact: true }).click();
   await fallback.locator(".lab-canvas").waitFor();
   assert.ok(
     (await fallback.locator(".lab-view-hint").innerText()).includes(

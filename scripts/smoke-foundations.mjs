@@ -212,7 +212,9 @@ try {
   );
   await chapter(page, "atomic-orbitals");
   const explorer = page.locator(".orbital-explorer");
-  assert.equal(await explorer.getAttribute("data-orbital-level"), "shells");
+  assert.equal(await explorer.getAttribute("data-orbital-level"), "shape");
+  assert.equal(await explorer.getAttribute("data-orbital-view"), "3d");
+  await page.locator(".orbital-stage-tabs button").first().click();
   await explorer
     .getByRole("button", { name: "Fe 铁原子", exact: true })
     .click();
@@ -353,11 +355,6 @@ try {
     };
   });
   await fallback.goto(`${base}#/foundation/atomic-orbitals`);
-  await fallback.locator(".orbital-stage-tabs button").nth(2).click();
-  await fallback
-    .locator(".orbital-explorer")
-    .getByRole("button", { name: "3D", exact: true })
-    .click();
   await fallback.locator('.orbital-explorer [role="status"]').waitFor();
   assert.equal(
     await fallback

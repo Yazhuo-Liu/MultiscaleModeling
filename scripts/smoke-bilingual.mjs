@@ -196,7 +196,7 @@ try {
     await page
       .getByRole("tab", { name: "Interactive lab", exact: true })
       .click();
-    await page.locator(".lab-canvas").waitFor();
+    await page.locator(".lab-viewport canvas").waitFor();
     await page
       .getByRole("button", { name: "Step forward", exact: true })
       .click();
@@ -205,15 +205,15 @@ try {
     await englishOnly(page, `${id} lab`);
     await noClutter(page, `${id} lab`);
     if (id === "md" || id === "phase-field") {
-      await page.getByRole("button", { name: "3D", exact: true }).click();
-      await page.locator(".lab-three canvas").waitFor();
+      await page.locator(".lab-mode button").nth(1).click();
+      await page.locator(".lab-viewport canvas").waitFor();
       assert.match(
-        await page.locator(".lab-three canvas").getAttribute("aria-label"),
+        await page.locator(".lab-viewport canvas").getAttribute("aria-label"),
         /Three-dimensional/,
       );
     }
     if (id === "md") {
-      const slider = page.locator("input[type=range]").first();
+      const slider = page.locator(".lab-controls input[type=range]").first();
       await slider.focus();
       await slider.press("ArrowRight");
       await page
@@ -228,7 +228,7 @@ try {
       const readouts = await page
         .locator(".lab-metric strong")
         .allTextContents();
-      await page.locator(".lab-three canvas").evaluate((node) => {
+      await page.locator(".lab-viewport canvas").evaluate((node) => {
         window.__bilingualCanvas = node;
       });
       await switchTo(page, "zh");
@@ -248,7 +248,7 @@ try {
       );
       assert.equal(
         await page
-          .locator(".lab-three canvas")
+          .locator(".lab-viewport canvas")
           .evaluate((node) => window.__bilingualCanvas === node),
         true,
         "3D canvas survives language switch",
@@ -261,7 +261,7 @@ try {
       );
       assert.equal(
         await page
-          .locator(".lab-three canvas")
+          .locator(".lab-viewport canvas")
           .evaluate((node) => window.__bilingualCanvas === node),
         true,
       );
@@ -330,7 +330,7 @@ try {
           exact: true,
         })
         .click();
-      await page.locator(".lab-canvas").waitFor();
+      await page.locator(".lab-viewport canvas").waitFor();
       await noOverflow(page, `${locale} ${id} mobile lab`);
       await page
         .getByRole("button", {

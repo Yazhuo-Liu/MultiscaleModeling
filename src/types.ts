@@ -62,6 +62,10 @@ export interface SimulationFrame {
   points?: Point3[];
   edges?: [number, number][];
   grid?: { width: number; height: number; values: number[] };
+  /** Cartesian volume; x varies fastest: x + width * (y + height * z). */
+  volume?: { width: number; height: number; depth: number; values: number[] };
+  /** Side length of a centered cubic simulation box, in the model's units. */
+  box?: number;
   curves?: { name: string; points: [number, number][] }[];
   metrics: { label: string; value: number; unit?: string }[];
 }

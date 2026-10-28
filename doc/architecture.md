@@ -13,12 +13,17 @@
 - 基础课程：`#/foundations` 与 `#/foundation/:id` 提供八个双语先修章节，覆盖多尺度动机、局限、误差、电子结构、轨道、成键、能带和形成能。详细计划及科学边界见 [foundations.md](foundations.md)。
 - 首页逐层放大：构件 → 裂纹 → 晶粒 → 位错 → 原子，连续相机与选区跟踪，沿原路循环缩放；支持手动探索、实际画面可见性暂停及减少动态效果下主动播放。详细计划见 [scale-journey.md](scale-journey.md)。
 
+- 真正三维：H/Fe波函数的空间等值面与剖面，108粒子三维MD和24³体网格相场；与低维模型的立体图示区分。详见 [true-3d.md](true-3d.md)。
+
 ## 实现与文件职责
 
 - React + TypeScript + Vite，hash 路由适配 GitHub Pages 子路径与直接刷新。
 - `src/content/methods.ts`：结构化课程数据，11 种方法均遵循 `Method` 接口。
 - `src/simulations/`：纯 TypeScript 数值算法，无 DOM 依赖；可单独测试。
 - `src/components/SimulationLab.tsx`：实验控件、Canvas 2D、Three.js 3D、参数重置、暂停、读数。小规模模型限制规模；运行采用帧预算、暂停卸载清理，避免长期阻塞浏览器。
+- `src/foundations/orbital-volume.ts`：完整三维波函数、概率采样及球对称等值面求根；`src/visualization/isosurface.ts`：体数据的marching-tetrahedra等值面。
+- `src/components/OrbitalVolumeView.tsx` / `OrbitalDensitySlice.tsx`：同一波函数的三维/截面/径向显示；`SpatialVolumeView.tsx`：真实xyz粒子和三维相界。
+- `src/simulations/spatial.ts`：独立三维求解器，保留原二维例子；`SimulationFrame.volume`保存完整xyz网格。
 - `src/App.tsx`：页面、导航、尺度地图与章节组合。
 - `src/theme.css`：全部视觉样式与设计变量。后续改变配色、字体、布局首先只修改此文件。
 - `doc/`：架构、科学模型边界、操作与发布说明。

@@ -14,10 +14,17 @@ import {
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { createSimulation, simulationDefinitions } from "../simulations";
+import {
+  createSpatialSimulation,
+  spatialSimulationDefinitions,
+  type SpatialMethodId,
+} from "../simulations/spatial";
+import SpatialVolumeView from "./SpatialVolumeView";
 import { useLanguage, type Locale } from "../i18n";
 import {
   translateSimulationText,
   simulationDescription,
+  spatialSimulationDescription,
 } from "../content/simulation-i18n";
 import type {
   Method,
@@ -234,9 +241,11 @@ function CanvasView({
       const [ymin, ymax] = limits(points.map((p) => p.y));
       if (!pointBounds.current || frame.time === 0)
         pointBounds.current = {
-          x: (xmin + xmax) / 2,
-          y: (ymin + ymax) / 2,
-          range: Math.max(xmax - xmin, ymax - ymin, 1) * 1.3,
+          x: frame.box ? 0 : (xmin + xmax) / 2,
+          y: frame.box ? 0 : (ymin + ymax) / 2,
+          range: frame.box
+            ? frame.box * 1.15
+            : Math.max(xmax - xmin, ymax - ymin, 1) * 1.3,
         };
       const bounds = pointBounds.current;
       const scale = Math.min(iw, ih) / bounds.range;
@@ -293,8 +302,8 @@ function CanvasView({
       className="lab-canvas"
       role="img"
       aria-label={t(
-        "实时模拟的二维视图，数值结果见下方读数",
-        "Two-dimensional simulation; numerical results are listed below",
+        "模拟结果的二维视图，数值结果见下方读数",
+        "Two-dimensional view of simulation results; numerical values are listed below",
       )}
     />
   );
@@ -690,6 +699,18 @@ function exportFrame(frame: SimulationFrame, name: string, locale: Locale) {
       v,
     ]),
   );
+  frame.volume?.values.forEach((v, i) => {
+    const { width, height, depth } = frame.volume!;
+    const box = frame.box ?? width;
+    rows.push([
+      "volume",
+      i,
+      (((i % width) + 0.5) / width - 0.5) * box,
+      (((Math.floor(i / width) % height) + 0.5) / height - 0.5) * box,
+      ((Math.floor(i / (width * height)) + 0.5) / depth - 0.5) * box,
+      v,
+    ]);
+  });
   frame.curves?.forEach((c) =>
     c.points.forEach(([x, y], i) =>
       rows.push([label(c.name), i, x, y, "", ""]),
@@ -715,15 +736,23 @@ export default function SimulationLab({ method }: { method: Method }) {
   const { locale, t } = useLanguage();
   const number = (n: number) => formatNumber(n, locale);
   const label = (value: string) => translateSimulationText(locale, value);
-  const definition = simulationDefinitions[method.id];
+  const supportsSpatial = method.id === "md" || method.id === "phase-field";
+  const [dimension, setDimension] = useState<2 | 3>(3);
+  const spatial = supportsSpatial && dimension === 3;
+  const definition = spatial
+    ? spatialSimulationDefinitions[method.id as SpatialMethodId]
+    : simulationDefinitions[method.id];
   const defaults = useMemo(
     () =>
       Object.fromEntries(definition.controls.map((c) => [c.key, c.initial])),
     [definition],
   );
   const model = useMemo(
-    () => createSimulation(method.id, defaults),
-    [method.id, defaults],
+    () =>
+      spatial
+        ? createSpatialSimulation(method.id as SpatialMethodId, defaults)
+        : createSimulation(method.id, defaults),
+    [method.id, defaults, spatial],
   );
   const [params, setParams] = useState(defaults);
   const [frame, setFrame] = useState(() => model.reset(defaults));
@@ -732,7 +761,9 @@ export default function SimulationLab({ method }: { method: Method }) {
   );
   const [running, setRunning] = useState(false);
   const [speed, setSpeed] = useState(1);
-  const [mode, setMode] = useState<"2d" | "3d">("2d");
+  const [mode, setMode] = useState<"2d" | "3d">(spatial ? "3d" : "2d");
+  const [sliceIndex, setSliceIndex] = useState(12);
+  const [showSlice, setShowSlice] = useState(false);
   const [webglFailed, setWebglFailed] = useState(false);
   const [visible, setVisible] = useState(true);
   const [steps, setSteps] = useState(0);
@@ -753,7 +784,12 @@ export default function SimulationLab({ method }: { method: Method }) {
     setSteps(0);
     setRunning(false);
     setError("");
+    setSliceIndex(12);
+    setShowSlice(false);
   }, [defaults, model, method.id]);
+  useEffect(() => {
+    setMode(spatial && !webglFailed ? "3d" : "2d");
+  }, [spatial, method.id, webglFailed]);
   useEffect(() => {
     const element = root.current;
     if (!element) return;
@@ -768,9 +804,10 @@ export default function SimulationLab({ method }: { method: Method }) {
     if (!running || !visible) return;
     let animation = 0,
       last = 0;
+    const interval = spatial && method.id === "phase-field" ? 120 : 60;
     const tick = (time: number) => {
       animation = requestAnimationFrame(tick);
-      if (document.hidden || time - last < 60) return;
+      if (document.hidden || time - last < interval) return;
       last = time;
       try {
         setFrame(model.step(speed));
@@ -782,7 +819,7 @@ export default function SimulationLab({ method }: { method: Method }) {
     };
     animation = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(animation);
-  }, [model, running, speed, visible]);
+  }, [model, running, speed, visible, spatial, method.id]);
   const reset = (next = defaults) => {
     const initialFrame = model.reset(next);
     setParams(next);
@@ -790,6 +827,8 @@ export default function SimulationLab({ method }: { method: Method }) {
     setFieldRange(fieldExtent(method.id, initialFrame));
     setSteps(0);
     setError("");
+    setSliceIndex(12);
+    setShowSlice(false);
   };
   const step = () => {
     try {
@@ -799,8 +838,57 @@ export default function SimulationLab({ method }: { method: Method }) {
       setError("计算未能完成，请重置实验。");
     }
   };
+  const displayFrame = useMemo(() => {
+    if (!frame.volume) return frame;
+    const volume = frame.volume;
+    const index = Math.max(0, Math.min(volume.depth - 1, sliceIndex));
+    const offset = volume.width * volume.height * index;
+    return {
+      ...frame,
+      grid: {
+        width: volume.width,
+        height: volume.height,
+        values: volume.values.slice(
+          offset,
+          offset + volume.width * volume.height,
+        ),
+      },
+    };
+  }, [frame, sliceIndex]);
   return (
-    <div className="simulation-lab" ref={root}>
+    <div
+      className="simulation-lab"
+      ref={root}
+      data-model-dimension={spatial ? "3" : "2"}
+    >
+      {supportsSpatial && (
+        <div className="lab-model-selector">
+          <span>{t("计算模型", "Model dimension")}</span>
+          <div role="group" aria-label={t("计算模型维度", "Model dimension")}>
+            {([2, 3] as const).map((value) => (
+              <button
+                key={value}
+                data-testid={`lab-dimension-${value}`}
+                aria-pressed={dimension === value}
+                onClick={() => {
+                  setRunning(false);
+                  setDimension(value);
+                }}
+              >
+                {value === 3
+                  ? t("三维模型", "3D model")
+                  : t("二维模型", "2D model")}
+              </button>
+            ))}
+          </div>
+          <small>
+            {t(
+              "切换模型会重新开始",
+              "Changing the model restarts the experiment",
+            )}
+          </small>
+        </div>
+      )}
       <div className="lab-workspace">
         <div className="lab-display">
           <div className="lab-display-toolbar">
@@ -815,7 +903,11 @@ export default function SimulationLab({ method }: { method: Method }) {
                 onClick={() => setMode("2d")}
               >
                 <Scan size={15} />
-                2D
+                {spatial
+                  ? frame.volume
+                    ? t("截面", "Slice")
+                    : t("投影", "Projection")
+                  : "2D"}
               </button>
               <button
                 className={mode === "3d" ? "active" : ""}
@@ -824,7 +916,7 @@ export default function SimulationLab({ method }: { method: Method }) {
                 onClick={() => setMode("3d")}
               >
                 <Box size={15} />
-                3D
+                {spatial ? "3D" : t("立体图示", "Perspective")}
               </button>
             </div>
             <span className="lab-step">
@@ -835,10 +927,19 @@ export default function SimulationLab({ method }: { method: Method }) {
           <div className="lab-viewport">
             {mode === "2d" ? (
               <CanvasView
-                frame={frame}
+                frame={displayFrame}
                 definition={definition}
                 methodId={method.id}
                 fieldRange={fieldRange}
+              />
+            ) : spatial ? (
+              <SpatialVolumeView
+                key={method.id}
+                frame={frame}
+                sliceIndex={sliceIndex}
+                showSlice={showSlice}
+                active={visible}
+                onError={onWebglError}
               />
             ) : (
               <ThreeView
@@ -850,16 +951,72 @@ export default function SimulationLab({ method }: { method: Method }) {
               />
             )}
           </div>
+          {spatial && frame.volume && (
+            <div className="lab-volume-controls">
+              {mode === "3d" && (
+                <label className="lab-volume-toggle">
+                  <input
+                    data-testid="lab-volume-slice-enabled"
+                    type="checkbox"
+                    checked={showSlice}
+                    onChange={(event) => setShowSlice(event.target.checked)}
+                  />
+                  <span>{t("显示剖切面", "Show section plane")}</span>
+                </label>
+              )}
+              <label>
+                <span>
+                  {t("剖切深度", "Section depth")} · z ={" "}
+                  {number(
+                    ((Math.min(sliceIndex, frame.volume.depth - 1) + 0.5) /
+                      frame.volume.depth -
+                      0.5) *
+                      (frame.box ?? frame.volume.depth),
+                  )}{" "}
+                  Δx
+                </span>
+                <input
+                  data-testid="lab-volume-slice"
+                  aria-label={t("剖面 z 层", "Slice z layer")}
+                  type="range"
+                  min="0"
+                  max={frame.volume.depth - 1}
+                  step="1"
+                  value={Math.min(sliceIndex, frame.volume.depth - 1)}
+                  onChange={(event) => {
+                    setSliceIndex(Number(event.target.value));
+                    setShowSlice(true);
+                  }}
+                />
+              </label>
+            </div>
+          )}
           <div className="lab-view-hint">
             {mode === "3d" ? (
               <>
                 {t("拖拽旋转 · 滚轮缩放", "Drag to rotate · Scroll to zoom")}
-                {frame.grid
-                  ? ` · ${t("高度表示场值", "Height represents field value")}`
-                  : definition.view === "curves"
-                    ? ` · ${label(axisLabels[method.id]?.x ?? "x")} / ${label(axisLabels[method.id]?.y ?? "y")}`
-                    : ` · ${t("二维模型", "Planar model")}`}
+                {spatial
+                  ? frame.volume
+                    ? ` · ${t("φ = 0 三维相界 · 移动剖面查看内部", "φ = 0 spatial interface · move the section to inspect the interior")}`
+                    : ` · ${t("真实 x、y、z 运动 · 周期模拟盒", "Physical x, y, z motion · periodic simulation box")}`
+                  : frame.grid
+                    ? ` · ${t("二维场值高度图", "Height plot of a two-dimensional field")}`
+                    : definition.view === "curves"
+                      ? ` · ${t("曲线图示", "Curve presentation")} · ${label(axisLabels[method.id]?.x ?? "x")} / ${label(axisLabels[method.id]?.y ?? "y")}`
+                      : ` · ${t("二维平面模型", "Two-dimensional planar model")}`}
               </>
+            ) : spatial ? (
+              frame.volume ? (
+                t(
+                  "三维体数据的 xy 截面 · 固定色标 −1 至 +1",
+                  "An xy section of the 3D volume · fixed color range −1 to +1",
+                )
+              ) : (
+                t(
+                  "三维粒子的 xy 投影；z 方向仍参与计算",
+                  "xy projection of 3D particles; z still participates in the dynamics",
+                )
+              )
             ) : frame.grid ? (
               t("固定色标", "Fixed color scale")
             ) : definition.view === "curves" ? (
@@ -999,9 +1156,17 @@ export default function SimulationLab({ method }: { method: Method }) {
           {t("模型、坐标与单位说明", "Model, axes and units")}
         </summary>
         <p>
-          {simulationDescription(locale, method.id, definition.description)}
+          {spatial
+            ? spatialSimulationDescription(
+                locale,
+                method.id as SpatialMethodId,
+                definition.description,
+              )
+            : simulationDescription(locale, method.id, definition.description)}
         </p>
-        <MathMarkdown>{method.experiment.limitations}</MathMarkdown>
+        {!spatial && (
+          <MathMarkdown>{method.experiment.limitations}</MathMarkdown>
+        )}
       </details>
     </div>
   );

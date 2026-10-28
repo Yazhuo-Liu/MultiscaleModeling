@@ -18,6 +18,7 @@ const text: Record<string, string> = {
   "位点能量差 Δ / t": "Site energy difference Δ / t",
   初始约化温度: "Initial reduced temperature",
   二维数密度: "2D number density",
+  三维数密度: "3D number density",
   "约化温度 kBT / J": "Reduced temperature kBT / J",
   "外场 h / J": "External field h / J",
   "约化剪应力 τ": "Reduced shear stress τ",
@@ -62,6 +63,7 @@ const text: Record<string, string> = {
   单轨迹位移平方: "Squared displacement (one trajectory)",
   平均自由能: "Mean free energy",
   正相面积比例: "Positive-phase area fraction",
+  正相体积分数: "Positive-phase volume fraction",
   "平均序参量（不守恒）": "Mean order parameter (nonconserved)",
   "中线温度 T*（x*）": "Centerline temperature T* (x*)",
   "最高温度 T*": "Maximum temperature T*",
@@ -114,4 +116,18 @@ export function simulationDescription(
   original: string,
 ): string {
   return locale === "zh" ? original : descriptions[id];
+}
+
+const spatialDescriptions = {
+  md: "108 three-dimensional Lennard–Jones particles start from 3 × 3 × 3 FCC cells. All three directions contribute to forces, velocities, positions and periodic boundaries. Velocity Verlet uses Δt = 0.002 τLJ; the potential is truncated and shifted at 2.5σ. Initial temperature uses 3(N−1) degrees of freedom. There is no thermostat, and an FCC initial arrangement need not remain solid. Number density is in σ⁻³; the box length follows from particle count and density.",
+  "phase-field":
+    "A 24 × 24 × 24 three-dimensional Allen–Cahn volume, with six spatial neighbors, periodic boundaries in all three directions and a double-well free energy. Explicit steps use Δt = 0.015 and Δx = 1. The φ = 0 isosurface marks the phase interface; the movable section displays the actual data at that depth. The order parameter is nonconserved. All quantities are reduced; this model does not describe diffusion of a conserved concentration.",
+};
+
+export function spatialSimulationDescription(
+  locale: Locale,
+  id: "md" | "phase-field",
+  original: string,
+): string {
+  return locale === "zh" ? original : spatialDescriptions[id];
 }

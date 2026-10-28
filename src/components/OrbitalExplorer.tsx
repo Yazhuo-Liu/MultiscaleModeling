@@ -1,634 +1,69 @@
-import { useCallback, useEffect, useId, useRef, useState } from "react";
-import * as THREE from "three";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { useCallback, useEffect, useId, useMemo, useState } from "react";
 import { useLanguage } from "../i18n";
 import MathMarkdown from "./MathMarkdown";
+import OrbitalVolumeView from "./OrbitalVolumeView";
+import {
+  OrbitalDensitySlice,
+  OrbitalRadialPlot,
+  type SliceAxis,
+} from "./OrbitalDensitySlice";
 import {
   GROUND_SUBSHELLS,
-  HYDROGEN_EXTENT,
-  HYDROGEN_ORBITALS,
-  IRON_ORBITALS,
-  ORBITAL_LATEX,
-  hydrogenRadialProbability,
-  hydrogenWavefunction,
   hundOccupancy,
-  ironAngularAmplitude,
-  ironAngularSurface,
-  ironSlicePlane,
-  sampleHydrogen,
   shellPopulation,
   type Atom,
-  type HydrogenOrbital,
-  type IronOrbital,
 } from "../foundations/orbitals";
-
-const POSITIVE = "var(--orbital-positive, #397fa4)";
-const NEGATIVE = "var(--orbital-negative, #ce8657)";
-const INK = "var(--figure-ink, #5e6875)";
-const GRID = "var(--figure-grid, #a9b2bc)";
-type Level = "shells" | "subshells" | "shape";
-
-function orbitalPalette(element: Element) {
-  const style = getComputedStyle(element);
-  const color = (name: string, fallback: string) =>
-    style.getPropertyValue(name).trim() || fallback;
-  return {
-    positive: color("--orbital-positive", "#397fa4"),
-    negative: color("--orbital-negative", "#ce8657"),
-    background: color("--orbital-bg", "#f6f8fa"),
-    ink: color("--figure-ink", "#5e6875"),
-    grid: color("--figure-grid", "#a9b2bc"),
-  };
-}
-
-function rgbBytes(color: string) {
-  const rgb = new THREE.Color(color).getRGB(
-    new THREE.Color(),
-    THREE.SRGBColorSpace,
-  );
-  return [rgb.r * 255, rgb.g * 255, rgb.b * 255];
-}
-
-function OrbitalSlice({
-  atom,
-  hydrogen,
-  iron,
-}: {
-  atom: Atom;
-  hydrogen: HydrogenOrbital;
-  iron: IronOrbital;
-}) {
-  const canvas = useRef<HTMLCanvasElement>(null);
-  const { t, locale } = useLanguage();
-  useEffect(() => {
-    const element = canvas.current;
-    const ctx = element?.getContext("2d");
-    if (!element || !ctx) return;
-    const draw = () => {
-      const palette = orbitalPalette(element);
-      const positiveRGB = rgbBytes(palette.positive),
-        negativeRGB = rgbBytes(palette.negative),
-        backgroundRGB = rgbBytes(palette.background);
-      const w = 600,
-        h = 440,
-        cx = 300,
-        cy = 210,
-        half = 176;
-      ctx.clearRect(0, 0, w, h);
-      ctx.fillStyle = palette.background;
-      ctx.fillRect(0, 0, w, h);
-      const extent = hydrogen === "1s" ? 4 : 12;
-      if (atom === "H") {
-        const size = 352;
-        const pixels = ctx.createImageData(size, size);
-        const maxPsi =
-          hydrogen === "1s"
-            ? hydrogenWavefunction(hydrogen, 0, 0, 0)
-            : hydrogen === "2s"
-              ? hydrogenWavefunction(hydrogen, 0, 0, 0)
-              : hydrogenWavefunction(hydrogen, 0, 0, 2);
-        for (let j = 0; j < size; j++)
-          for (let i = 0; i < size; i++) {
-            const x = (((i + 0.5) / size) * 2 - 1) * extent;
-            const z = (1 - ((j + 0.5) / size) * 2) * extent;
-            const psi = hydrogenWavefunction(hydrogen, x, 0, z);
-            // A declared logarithmic density color scale makes weak tails visible.
-            const alpha =
-              Math.log1p((100 * psi * psi) / (maxPsi * maxPsi)) / Math.log(101);
-            const rgb = psi >= 0 ? positiveRGB : negativeRGB;
-            const offset = (j * size + i) * 4;
-            for (let c = 0; c < 3; c++)
-              pixels.data[offset + c] = Math.round(
-                backgroundRGB[c] * (1 - alpha) + rgb[c] * alpha,
-              );
-            pixels.data[offset + 3] = 255;
-          }
-        ctx.putImageData(pixels, cx - half, cy - half);
-        if (hydrogen === "2s") {
-          ctx.beginPath();
-          ctx.arc(cx, cy, (2 / extent) * half, 0, 2 * Math.PI);
-          ctx.strokeStyle = palette.ink;
-          ctx.setLineDash([4, 4]);
-          ctx.stroke();
-          ctx.setLineDash([]);
-        }
-      } else {
-        const plane = ironSlicePlane(iron);
-        let currentSign = 0;
-        const finish = () => {
-          ctx.lineTo(cx, cy);
-          ctx.closePath();
-          ctx.globalAlpha = 0.32;
-          ctx.fill();
-          ctx.globalAlpha = 1;
-          ctx.stroke();
-        };
-        for (let i = 0; i <= 720; i++) {
-          const angle = (2 * Math.PI * i) / 720;
-          const u = Math.cos(angle),
-            v = Math.sin(angle);
-          const amplitude =
-            plane === "xy"
-              ? ironAngularAmplitude(iron, u, v, 0)
-              : plane === "yz"
-                ? ironAngularAmplitude(iron, 0, u, v)
-                : ironAngularAmplitude(iron, u, 0, v);
-          const sign = amplitude >= 0 ? 1 : -1;
-          if (sign !== currentSign) {
-            if (currentSign) finish();
-            ctx.beginPath();
-            ctx.moveTo(cx, cy);
-            ctx.fillStyle = sign > 0 ? palette.positive : palette.negative;
-            ctx.strokeStyle = sign > 0 ? palette.positive : palette.negative;
-            ctx.lineWidth = 2;
-            currentSign = sign;
-          }
-          const radius = 250 * Math.abs(amplitude);
-          ctx.lineTo(cx + radius * u, cy - radius * v);
-        }
-        finish();
-      }
-      ctx.strokeStyle = palette.grid;
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(cx - half - 10, cy);
-      ctx.lineTo(cx + half + 14, cy);
-      ctx.moveTo(cx, cy + half + 10);
-      ctx.lineTo(cx, cy - half - 14);
-      ctx.stroke();
-      ctx.fillStyle = palette.ink;
-      const fontSize = Math.min(
-        30,
-        Math.max(15, (15 * w) / Math.max(element.clientWidth, 250)),
-      );
-      ctx.font = `${fontSize}px system-ui`;
-      const plane = atom === "H" ? "xz" : ironSlicePlane(iron);
-      ctx.fillText(plane[0], cx + half + 20, cy + 5);
-      ctx.fillText(plane[1], cx + 10, Math.max(fontSize + 4, cy - half - 20));
-      if (atom === "H") {
-        ctx.textAlign = "center";
-        for (const fraction of [-1, -0.5, 0.5, 1]) {
-          const x = cx + fraction * half;
-          ctx.beginPath();
-          ctx.moveTo(x, cy - 3);
-          ctx.lineTo(x, cy + 3);
-          ctx.stroke();
-          ctx.fillText(String(fraction * extent), x, cy + 22);
-        }
-        ctx.fillText(t("坐标单位：a₀", "Coordinates in a₀"), cx, h - 15);
-      } else {
-        ctx.textAlign = "center";
-        ctx.fillText(t("角向振幅示意", "Angular amplitude only"), cx, h - 15);
-      }
-      ctx.textAlign = "left";
-    };
-    draw();
-    const observer = new ResizeObserver(draw);
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, [atom, hydrogen, iron, locale]);
-  return (
-    <canvas
-      ref={canvas}
-      className="orbital-slice"
-      width={600}
-      height={440}
-      role="img"
-      aria-label={
-        atom === "H"
-          ? t(
-              "氢原子轨道在 xz 平面上的截面，颜色区分相位，深浅按概率密度的对数色阶显示",
-              "Hydrogen orbital in the xz plane: color shows phase; intensity uses a logarithmic density scale",
-            )
-          : t(
-              "铁原子 d 轨道角向振幅的二维截面，颜色区分相位",
-              "Two-dimensional section of a d orbital's angular amplitude; colors distinguish phase",
-            )
-      }
-    >
-      {t("轨道截面", "Orbital section")}
-    </canvas>
-  );
-}
-
-function RadialPlot({ orbital }: { orbital: HydrogenOrbital }) {
-  const { t } = useLanguage();
-  const extent = HYDROGEN_EXTENT[orbital];
-  const points = Array.from({ length: 241 }, (_, i) => [
-    (i / 240) * extent,
-    hydrogenRadialProbability(orbital, (i / 240) * extent),
-  ]);
-  const maximum = Math.max(...points.map((p) => p[1])) * 1.12;
-  const x = (r: number) => 50 + (r / extent) * 290;
-  const y = (value: number) => 192 - (value / maximum) * 142;
-  const path = points
-    .map(
-      (p, i) => `${i ? "L" : "M"}${x(p[0]).toFixed(2)},${y(p[1]).toFixed(2)}`,
-    )
-    .join(" ");
-  const peak = orbital === "1s" ? 1 : orbital === "2s" ? 3 + Math.sqrt(5) : 4;
-  return (
-    <div className="orbital-radial">
-      <h4>{t("径向概率", "Radial probability")}</h4>
-      <MathMarkdown
-        display
-      >{String.raw`P(r)=r^2\int |\psi(r,\theta,\phi)|^2\,d\Omega`}</MathMarkdown>
-      <svg
-        viewBox="0 0 370 245"
-        role="img"
-        aria-label={t(
-          "氢原子径向概率曲线；横轴为距核距离，纵轴为每单位半径的概率",
-          "Hydrogen radial probability: radius on the horizontal axis; probability per unit radius vertically",
-        )}
-      >
-        <path d="M50 42V192H345" fill="none" stroke={GRID} />
-        <path
-          d={`${path} L340,192 L50,192 Z`}
-          fill={POSITIVE}
-          fillOpacity={0.095}
-        />
-        <path d={path} fill="none" stroke={POSITIVE} strokeWidth="2.5" />
-        {[0, 0.5, 1].map((f) => (
-          <g key={f}>
-            <text
-              x="42"
-              y={y(f * maximum) + 4}
-              textAnchor="end"
-              fontSize="11"
-              fill={INK}
-            >
-              {(f * maximum).toFixed(2)}
-            </text>
-            <path d={`M47 ${y(f * maximum)}h3`} stroke={GRID} />
-          </g>
-        ))}
-        {[0, 0.25, 0.5, 0.75, 1].map((f) => (
-          <text
-            key={f}
-            x={x(f * extent)}
-            y="212"
-            textAnchor="middle"
-            fontSize="12"
-            fill={INK}
-          >
-            {f * extent}
-          </text>
-        ))}
-        <path
-          d={`M${x(peak)} ${y(hydrogenRadialProbability(orbital, peak))}V192`}
-          stroke={POSITIVE}
-          strokeDasharray="4 4"
-        />
-        {orbital === "2s" && (
-          <g>
-            <circle cx={x(2)} cy={192} r="4" fill={NEGATIVE} />
-            <text
-              x={x(2)}
-              y="173"
-              fontSize="11"
-              textAnchor="middle"
-              fill={NEGATIVE}
-            >
-              2a₀
-            </text>
-          </g>
-        )}
-        <text x="50" y="25" fontSize="12" fill={INK}>
-          P(r) / a₀⁻¹
-        </text>
-        <text x="340" y="236" textAnchor="end" fontSize="12" fill={INK}>
-          r / a₀
-        </text>
-      </svg>
-      <MathMarkdown>
-        {orbital === "1s"
-          ? t(
-              "$1s$ 的密度在核处最大，但 $P(r)$ 在 $r=a_0$ 达到峰值：球壳体积也在增加。",
-              "$1s$ density is greatest at the nucleus, but $P(r)$ peaks at $r=a_0$: spherical-shell volume matters too.",
-            )
-          : orbital === "2s"
-            ? t(
-                "$2s$ 在 $r=2a_0$ 有径向节点；节点两侧相位相反，概率仍非负。",
-                "$2s$ has a radial node at $r=2a_0$. Phase changes across it, while probability stays nonnegative.",
-              )
-            : t(
-                "$2p_z$ 的径向概率在 $r=4a_0$ 最大，没有径向节点；$z=0$ 平面是角节点。",
-                "$2p_z$ radial probability peaks at $r=4a_0$ and has no radial node. The $z=0$ plane is an angular node.",
-              )}
-      </MathMarkdown>
-    </div>
-  );
-}
-
-function disposeObject(object: THREE.Object3D) {
-  object.traverse((child) => {
-    const mesh = child as THREE.Mesh;
-    mesh.geometry?.dispose();
-    if (mesh.material)
-      for (const material of Array.isArray(mesh.material)
-        ? mesh.material
-        : [mesh.material]) {
-        const mapped = material as THREE.MeshBasicMaterial;
-        mapped.map?.dispose();
-        material.dispose();
-      }
-  });
-}
-
-interface SceneState {
-  scene: THREE.Scene;
-  camera: THREE.PerspectiveCamera;
-  renderer: THREE.WebGLRenderer;
-  controls: OrbitControls;
-  object: THREE.Object3D | null;
-  render: () => void;
-}
-function OrbitalScene({
-  atom,
-  hydrogen,
-  iron,
-  resetToken,
-  onUnavailable,
-}: {
-  atom: Atom;
-  hydrogen: HydrogenOrbital;
-  iron: IronOrbital;
-  resetToken: number;
-  onUnavailable: () => void;
-}) {
-  const host = useRef<HTMLDivElement>(null);
-  const engine = useRef<SceneState | null>(null);
-  const { t } = useLanguage();
-  useEffect(() => {
-    const container = host.current;
-    if (!container) return;
-    let renderer: THREE.WebGLRenderer;
-    try {
-      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
-    } catch {
-      onUnavailable();
-      return;
-    }
-    const palette = orbitalPalette(container);
-    renderer.setClearColor(palette.background);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-    container.appendChild(renderer.domElement);
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
-    camera.up.set(0, 0, 1);
-    camera.position.set(3.6, -4.8, 3);
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = false;
-    controls.enablePan = false;
-    controls.minDistance = 2.4;
-    controls.maxDistance = 13;
-    scene.add(new THREE.AmbientLight(0xffffff, 1.7));
-    const lamp = new THREE.DirectionalLight(0xffffff, 2.2);
-    lamp.position.set(3, -4, 5);
-    scene.add(lamp);
-    const axes = new THREE.Group();
-    for (let axis = 0; axis < 3; axis++) {
-      const point = new THREE.Vector3();
-      point.setComponent(axis, 2);
-      const geometry = new THREE.BufferGeometry().setFromPoints([
-        new THREE.Vector3(),
-        point,
-      ]);
-      axes.add(
-        new THREE.Line(
-          geometry,
-          new THREE.LineBasicMaterial({
-            color: palette.grid,
-            transparent: true,
-            opacity: 0.65,
-          }),
-        ),
-      );
-      const label = document.createElement("canvas");
-      label.width = 64;
-      label.height = 64;
-      const ctx = label.getContext("2d");
-      if (ctx) {
-        ctx.font = "32px system-ui";
-        ctx.fillStyle = palette.ink;
-        ctx.textAlign = "center";
-        ctx.fillText("xyz"[axis], 32, 44);
-      }
-      const sprite = new THREE.Sprite(
-        new THREE.SpriteMaterial({
-          map: new THREE.CanvasTexture(label),
-          transparent: true,
-          depthTest: false,
-        }),
-      );
-      sprite.position.copy(point).multiplyScalar(1.07);
-      sprite.scale.set(0.22, 0.22, 0.22);
-      axes.add(sprite);
-    }
-    scene.add(axes);
-    let frame = 0,
-      disposed = false;
-    const render = () => {
-      if (disposed || frame) return;
-      frame = requestAnimationFrame(() => {
-        frame = 0;
-        if (!disposed) {
-          renderer.render(scene, camera);
-          container.dataset.camera = JSON.stringify({
-            position: camera.position.toArray(),
-            target: controls.target.toArray(),
-            quaternion: camera.quaternion.toArray(),
-            zoom: camera.zoom,
-          });
-        }
-      });
-    };
-    controls.addEventListener("change", render);
-    const resize = () => {
-      const width = Math.max(container.clientWidth, 200),
-        height = Math.max(container.clientHeight, 280);
-      renderer.setSize(width, height);
-      camera.aspect = width / height;
-      camera.updateProjectionMatrix();
-      render();
-    };
-    const observer = new ResizeObserver(resize);
-    observer.observe(container);
-    const lose = (event: Event) => {
-      event.preventDefault();
-      onUnavailable();
-    };
-    renderer.domElement.addEventListener("webglcontextlost", lose);
-    const keys = (event: KeyboardEvent) => {
-      if (
-        ![
-          "ArrowLeft",
-          "ArrowRight",
-          "ArrowUp",
-          "ArrowDown",
-          "+",
-          "=",
-          "-",
-          "r",
-          "R",
-        ].includes(event.key)
-      )
-        return;
-      event.preventDefault();
-      if (event.key.toLowerCase() === "r") {
-        camera.position.set(3.6, -4.8, 3);
-        controls.target.set(0, 0, 0);
-      } else if (["+", "=", "-"].includes(event.key)) {
-        const next =
-          camera.position.length() * (event.key === "-" ? 1.12 : 1 / 1.12);
-        camera.position.setLength(Math.min(13, Math.max(2.4, next)));
-      } else {
-        const vector = camera.position.clone();
-        if (event.key === "ArrowLeft" || event.key === "ArrowRight")
-          vector.applyAxisAngle(
-            new THREE.Vector3(0, 0, 1),
-            event.key === "ArrowLeft" ? 0.14 : -0.14,
-          );
-        else {
-          const side = new THREE.Vector3()
-            .crossVectors(vector, camera.up)
-            .normalize();
-          vector.applyAxisAngle(side, event.key === "ArrowUp" ? 0.12 : -0.12);
-        }
-        camera.position.copy(vector);
-      }
-      controls.update();
-      render();
-    };
-    container.addEventListener("keydown", keys);
-    engine.current = {
-      scene,
-      camera,
-      renderer,
-      controls,
-      object: null,
-      render,
-    };
-    container.dataset.ready = "true";
-    resize();
-    controls.update();
-    return () => {
-      disposed = true;
-      cancelAnimationFrame(frame);
-      observer.disconnect();
-      container.removeEventListener("keydown", keys);
-      renderer.domElement.removeEventListener("webglcontextlost", lose);
-      controls.removeEventListener("change", render);
-      controls.dispose();
-      disposeObject(scene);
-      renderer.dispose();
-      renderer.forceContextLoss();
-      renderer.domElement.remove();
-      engine.current = null;
-    };
-  }, [onUnavailable]);
-  useEffect(() => {
-    const state = engine.current;
-    if (!state) return;
-    if (state.object) {
-      state.scene.remove(state.object);
-      disposeObject(state.object);
-    }
-    const palette = orbitalPalette(host.current!);
-    const positive = new THREE.Color(palette.positive),
-      negative = new THREE.Color(palette.negative);
-    const geometry = new THREE.BufferGeometry();
-    if (atom === "H") {
-      const points = sampleHydrogen(hydrogen),
-        positions: number[] = [],
-        colors: number[] = [];
-      const scale = hydrogen === "1s" ? 2.5 : 9;
-      for (const p of points) {
-        positions.push(p.x / scale, p.y / scale, p.z / scale);
-        const color = p.phase > 0 ? positive : negative;
-        colors.push(color.r, color.g, color.b);
-      }
-      geometry.setAttribute(
-        "position",
-        new THREE.Float32BufferAttribute(positions, 3),
-      );
-      geometry.setAttribute(
-        "color",
-        new THREE.Float32BufferAttribute(colors, 3),
-      );
-      state.object = new THREE.Points(
-        geometry,
-        new THREE.PointsMaterial({
-          size: 0.031,
-          vertexColors: true,
-          transparent: true,
-          opacity: 0.62,
-          depthWrite: false,
-        }),
-      );
-    } else {
-      const surface = ironAngularSurface(iron),
-        colors: number[] = [];
-      geometry.setAttribute(
-        "position",
-        new THREE.Float32BufferAttribute(surface.positions, 3),
-      );
-      geometry.setIndex(surface.indices);
-      for (const phase of surface.phases) {
-        const color = phase > 0 ? positive : negative;
-        colors.push(color.r, color.g, color.b);
-      }
-      geometry.setAttribute(
-        "color",
-        new THREE.Float32BufferAttribute(colors, 3),
-      );
-      geometry.computeVertexNormals();
-      state.object = new THREE.Mesh(
-        geometry,
-        new THREE.MeshPhongMaterial({
-          vertexColors: true,
-          side: THREE.DoubleSide,
-          shininess: 35,
-        }),
-      );
-    }
-    state.scene.add(state.object);
-    state.render();
-  }, [atom, hydrogen, iron]);
-  useEffect(() => {
-    const state = engine.current;
-    if (state) {
-      state.camera.position.set(3.6, -4.8, 3);
-      state.controls.target.set(0, 0, 0);
-      state.controls.update();
-      state.render();
-    }
-  }, [resetToken]);
-  return (
-    <div
-      ref={host}
-      className="orbital-scene"
-      tabIndex={0}
-      role="img"
-      aria-label={t(
-        "三维轨道；拖动旋转、滚轮缩放，或聚焦后用方向键旋转、加减键缩放、R复位",
-        "3D orbital: drag to rotate and scroll to zoom; when focused, use arrow keys to rotate, plus/minus to zoom and R to reset",
-      )}
-    />
-  );
-}
+import {
+  getOrbitalModel,
+  VOLUME_HYDROGEN_ORBITALS as HYDROGEN_ORBITALS,
+  VOLUME_IRON_ORBITALS as IRON_ORBITALS,
+  type VolumeHydrogenOrbital as HydrogenOrbital,
+  type VolumeIronOrbital as IronOrbital,
+} from "../foundations/orbital-volume";
+const orbitalLatex = (orbital: HydrogenOrbital | IronOrbital) =>
+  orbital.startsWith("2p")
+    ? `2p_${orbital.at(-1)}`
+    : orbital === "dz2"
+      ? "3d_{z^2}"
+      : orbital === "dx2-y2"
+        ? "3d_{x^2-y^2}"
+        : orbital.startsWith("d")
+          ? `3d_{${orbital.slice(1)}}`
+          : orbital;
 
 export function OrbitalExplorer() {
   const { t } = useLanguage();
   const id = useId();
   const [atom, setAtom] = useState<Atom>("H");
-  const [level, setLevel] = useState<Level>("shells");
+  const [level, setLevel] = useState<"shells" | "subshells" | "shape">("shape");
   const [shell, setShell] = useState<number | null>(null);
-  const [hydrogen, setHydrogen] = useState<HydrogenOrbital>("1s");
+  const [hydrogen, setHydrogen] = useState<HydrogenOrbital>("2pz");
   const [iron, setIron] = useState<IronOrbital>("dz2");
-  const [view, setView] = useState<"2d" | "3d">("2d");
+  const [view, setView] = useState<"2d" | "3d">("3d");
   const [unavailable, setUnavailable] = useState(false);
   const [resetToken, setResetToken] = useState(0);
+  const [representation, setRepresentation] = useState<"surface" | "cloud">(
+    "surface",
+  );
+  const [densityFraction, setDensityFraction] = useState(0.08);
+  const [renderDensity, setRenderDensity] = useState(0.08);
+  const [sliceAxis, setSliceAxis] = useState<SliceAxis>("y");
+  const [slicePosition, setSlicePosition] = useState(0);
+  const [showSlice, setShowSlice] = useState(false);
+  const [cutaway, setCutaway] = useState(false);
+  const model = useMemo(
+    () => getOrbitalModel(atom, atom === "H" ? hydrogen : iron),
+    [atom, hydrogen, iron],
+  );
+  useEffect(() => {
+    setDensityFraction(model.defaultDensityFraction);
+    setRenderDensity(model.defaultDensityFraction);
+    setSlicePosition(0);
+  }, [model]);
+  useEffect(() => {
+    const timer = setTimeout(() => setRenderDensity(densityFraction), 160);
+    return () => clearTimeout(timer);
+  }, [densityFraction]);
   const fail = useCallback(() => {
     setUnavailable(true);
     setView("2d");
@@ -637,7 +72,11 @@ export function OrbitalExplorer() {
     setAtom(value);
     setShell(null);
   };
-  const levels: { value: Level; zh: string; en: string }[] = [
+  const levels: {
+    value: "shells" | "subshells" | "shape";
+    zh: string;
+    en: string;
+  }[] = [
     { value: "shells", zh: "电子层", en: "Shells" },
     { value: "subshells", zh: "亚层与占据", en: "Subshells & filling" },
     { value: "shape", zh: "轨道形状", en: "Orbital shapes" },
@@ -839,38 +278,35 @@ export function OrbitalExplorer() {
             <label htmlFor={`${id}-orbital`}>
               {t("选择轨道", "Select an orbital")}
             </label>
-            {atom === "H" ? (
-              <select
-                id={`${id}-orbital`}
-                value={hydrogen}
-                onChange={(e) => setHydrogen(e.target.value as HydrogenOrbital)}
-              >
-                {HYDROGEN_ORBITALS.map((o) => (
-                  <option key={o} value={o}>
-                    {o === "2pz" ? "2p_z" : o}
-                    {o === "1s"
-                      ? t(" · 基态", " · ground state")
-                      : t(" · 激发态", " · excited state")}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <select
-                id={`${id}-orbital`}
-                value={iron}
-                onChange={(e) => setIron(e.target.value as IronOrbital)}
-              >
-                {IRON_ORBITALS.map((o) => (
-                  <option key={o} value={o}>
-                    {o === "dz2"
+            <select
+              id={`${id}-orbital`}
+              data-testid="orbital-select"
+              value={atom === "H" ? hydrogen : iron}
+              onChange={(e) =>
+                atom === "H"
+                  ? setHydrogen(e.target.value as HydrogenOrbital)
+                  : setIron(e.target.value as IronOrbital)
+              }
+            >
+              {(atom === "H" ? HYDROGEN_ORBITALS : IRON_ORBITALS).map((o) => (
+                <option key={o} value={o}>
+                  {o.startsWith("2p")
+                    ? `2p_${o.at(-1)}`
+                    : o === "dz2"
                       ? "3d_z²"
                       : o === "dx2-y2"
                         ? "3d_x²−y²"
-                        : `3${o.replace("d", "d_")}`}
-                  </option>
-                ))}
-              </select>
-            )}
+                        : o.startsWith("d")
+                          ? `3d_${o.slice(1)}`
+                          : o}
+                  {atom === "H"
+                    ? o === "1s"
+                      ? t(" · 基态", " · ground state")
+                      : t(" · 激发态", " · excited state")
+                    : ""}
+                </option>
+              ))}
+            </select>
             <div
               className="orbital-view-switch"
               role="group"
@@ -902,30 +338,150 @@ export function OrbitalExplorer() {
               </button>
             )}
           </div>
-          <div
-            className={`orbital-visual-grid${atom === "Fe" ? " orbital-visual-single" : ""}`}
-          >
+          <div className="orbital-volume-controls">
+            {view === "3d" && (
+              <>
+                <div
+                  className="orbital-representation"
+                  role="group"
+                  aria-label={t(
+                    "三维呈现方式",
+                    "Three-dimensional representation",
+                  )}
+                >
+                  <button
+                    type="button"
+                    data-testid="orbital-representation-surface"
+                    aria-pressed={representation === "surface"}
+                    onClick={() => setRepresentation("surface")}
+                  >
+                    {t("密度等值面", "Density isosurfaces")}
+                  </button>
+                  <button
+                    type="button"
+                    data-testid="orbital-representation-cloud"
+                    aria-pressed={representation === "cloud"}
+                    onClick={() => setRepresentation("cloud")}
+                  >
+                    {t("概率云", "Probability cloud")}
+                  </button>
+                </div>
+                {representation === "surface" && (
+                  <label className="orbital-density-control">
+                    <span>
+                      {t("等值面密度阈值", "Isosurface density threshold")}
+                    </span>
+                    <input
+                      data-testid="orbital-density"
+                      type="range"
+                      min="-5"
+                      max="-0.3"
+                      step="0.1"
+                      value={Math.log10(densityFraction)}
+                      onChange={(e) =>
+                        setDensityFraction(10 ** Number(e.currentTarget.value))
+                      }
+                      aria-label={t(
+                        "等值面密度阈值，对数刻度",
+                        "Isosurface density threshold, logarithmic scale",
+                      )}
+                      aria-valuetext={`${Number((100 * densityFraction).toPrecision(3))}%`}
+                    />
+                    <output>
+                      {Number((100 * densityFraction).toPrecision(3))}% ρₘₐₓ
+                    </output>
+                  </label>
+                )}
+              </>
+            )}
+            <div className="orbital-section-controls">
+              {view === "3d" && (
+                <label className="orbital-check">
+                  <input
+                    data-testid="orbital-slice-enabled"
+                    type="checkbox"
+                    checked={showSlice}
+                    onChange={(e) => setShowSlice(e.target.checked)}
+                  />
+                  {t("显示密度剖面", "Show density slice")}
+                </label>
+              )}
+              <label className="orbital-plane-control">
+                <span>{t("截面方向", "Slice orientation")}</span>
+                <select
+                  data-testid="orbital-slice-axis"
+                  value={sliceAxis}
+                  onChange={(e) => setSliceAxis(e.target.value as SliceAxis)}
+                >
+                  <option value="x">yz</option>
+                  <option value="y">xz</option>
+                  <option value="z">xy</option>
+                </select>
+              </label>
+              <label className="orbital-slice-position-control">
+                <span>{t("剖面位置", "Slice position")}</span>
+                <input
+                  data-testid="orbital-slice-position"
+                  type="range"
+                  min="-1"
+                  max="1"
+                  step="0.02"
+                  value={slicePosition}
+                  disabled={view === "3d" && !showSlice && !cutaway}
+                  onChange={(e) =>
+                    setSlicePosition(Number(e.currentTarget.value))
+                  }
+                  aria-label={t("移动剖面位置", "Move the slice")}
+                  aria-valuetext={`${sliceAxis} = ${Number((slicePosition * model.extent).toFixed(2))} a₀`}
+                />
+                <output>
+                  {sliceAxis} ={" "}
+                  {Number((slicePosition * model.extent).toFixed(2))} a₀
+                </output>
+              </label>
+              {view === "3d" && (
+                <label className="orbital-check">
+                  <input
+                    data-testid="orbital-cutaway"
+                    type="checkbox"
+                    checked={cutaway}
+                    onChange={(e) => setCutaway(e.target.checked)}
+                  />
+                  {t("剖开观察内部", "Cut away to see inside")}
+                </label>
+              )}
+            </div>
+          </div>
+          <div className="orbital-visual-grid">
             <figure className="orbital-figure">
               <div className="orbital-current">
                 <MathMarkdown inlineMath>
-                  {ORBITAL_LATEX[atom === "H" ? hydrogen : iron]}
+                  {orbitalLatex(atom === "H" ? hydrogen : iron)}
                 </MathMarkdown>
                 <span>
-                  {atom === "H"
-                    ? view === "3d"
-                      ? t("概率点云", "Probability cloud")
-                      : t("空间密度截面", "Spatial-density section")
-                    : t("角向振幅", "Angular amplitude")}
+                  {view === "2d"
+                    ? t("空间密度截面", "Spatial-density section")
+                    : representation === "surface"
+                      ? t("三维密度等值面", "3D density isosurfaces")
+                      : t("三维概率云", "3D probability cloud")}
                 </span>
               </div>
               <div className="orbital-viewport">
                 {view === "2d" ? (
-                  <OrbitalSlice atom={atom} hydrogen={hydrogen} iron={iron} />
+                  <OrbitalDensitySlice
+                    model={model}
+                    axis={sliceAxis}
+                    position={slicePosition}
+                  />
                 ) : (
-                  <OrbitalScene
-                    atom={atom}
-                    hydrogen={hydrogen}
-                    iron={iron}
+                  <OrbitalVolumeView
+                    model={model}
+                    representation={representation}
+                    densityFraction={renderDensity}
+                    sliceAxis={sliceAxis}
+                    slicePosition={slicePosition}
+                    showSlice={showSlice}
+                    cutaway={cutaway}
                     resetToken={resetToken}
                     onUnavailable={fail}
                   />
@@ -946,54 +502,52 @@ export function OrbitalExplorer() {
               </div>
               <figcaption>
                 <MathMarkdown>
-                  {atom === "H"
-                    ? view === "2d"
+                  {view === "2d"
+                    ? t(
+                        "截面来自同一三维波函数；深浅采用相对密度的对数色阶，以便观察较弱的尾部。改变截面方向和位置，可以找到节点。",
+                        "The section comes from the same three-dimensional wavefunction. A logarithmic relative-density scale reveals weak tails. Change its orientation and position to find nodes.",
+                      )
+                    : representation === "surface"
                       ? t(
-                          "截面取 $y=0$；色相区分相位，深浅采用相对概率密度的对数色阶以显示较弱的尾部。",
-                          "Section at $y=0$. Hue distinguishes phase; a logarithmic relative-density scale reveals weak tails.",
+                          "表面满足 $|\\psi(x,y,z)|^2=\\rho_{\\mathrm{iso}}$，两种颜色区分波函数正负。降低阈值会显出更远的区域；百分比是相对于最大密度，**不是表面内包含的概率**。",
+                          "Surfaces satisfy $|\\psi(x,y,z)|^2=\\rho_{\\mathrm{iso}}$; the two colors distinguish wavefunction signs. Lower thresholds reveal more distant regions. The percentage is relative to maximum density, **not enclosed probability**.",
                         )
                       : t(
-                          `散点按 $|\\psi|^2$ 抽样，仅显示 $r\\leq${HYDROGEN_EXTENT[hydrogen]}a_0$（包含超过 99.99% 的概率）。各轨道分别缩放以便观察，物理长度见径向图。点不是同时存在的电子，也不是运动轨迹。`,
-                          `Points sample $|\\psi|^2$, shown for $r\\leq${HYDROGEN_EXTENT[hydrogen]}a_0$ (over 99.99% of probability). Each orbital is scaled for viewing; use the radial plot for physical distances. Points are not simultaneous electrons or trajectories.`,
-                        )
-                    : t(
-                        "表面半径正比于 $|Y_{2m}|$，只展示角向振幅；它不是 Fe 的定量电子密度等值面，也不包含真实径向尺度。",
-                        "Surface radius is proportional to $|Y_{2m}|$: angular amplitude only. This is not a quantitative Fe density isosurface and has no physical radial scale.",
-                      )}
+                          `点按 $|\\psi(x,y,z)|^2$ 在三维空间采样，截断半径为 $${model.extent}a_0$。点代表可能的测量位置，不是同时存在的许多电子，也不是运动轨迹。`,
+                          `Points sample $|\\psi(x,y,z)|^2$ in three-dimensional space, with a cutoff radius of $${model.extent}a_0$. They represent possible measurement positions, not many simultaneous electrons or trajectories.`,
+                        )}
                 </MathMarkdown>
               </figcaption>
               {view === "3d" && (
                 <p className="orbital-help">
                   {t(
-                    "拖动旋转 · 滚轮缩放。键盘聚焦图形后，方向键旋转，+/− 缩放，R 复位。",
-                    "Drag to rotate · scroll to zoom. With the figure focused: arrows rotate, +/− zoom, R resets.",
+                    "拖动旋转 · 滚轮缩放 · 剖开可查看内部节点。聚焦图形后，方向键旋转，+/− 缩放，R 复位。",
+                    "Drag to rotate · scroll to zoom · cut away to inspect internal nodes. When focused: arrows rotate, +/− zoom, R resets.",
                   )}
                 </p>
               )}
             </figure>
-            {atom === "H" && <RadialPlot orbital={hydrogen} />}
+            <OrbitalRadialPlot model={model} />
           </div>
           {unavailable && (
             <p className="orbital-note" role="status">
               {t(
-                "当前设备的 3D 显示不可用，可继续探索 2D 截面。",
-                "3D is unavailable on this device; the 2D sections remain available.",
+                "当前设备的 3D 显示不可用，可继续探索同一波函数的 2D 截面。",
+                "3D is unavailable on this device; explore 2D sections of the same wavefunction instead.",
               )}
             </p>
           )}
-          {atom === "Fe" && (
-            <MathMarkdown className="orbital-note">
-              {iron === "dz2"
-                ? t(
-                    "$d_{z^2}$ 的三维形状含轴向双叶和赤道环，角节点为两个锥面。金属 Fe 的 $3d/4s$ 态会形成杂化能带，不能直接套用这张自由原子图。",
-                    "$d_{z^2}$ has two axial lobes and an equatorial ring; its angular nodes are two cones. Metallic Fe has hybridized $3d/4s$ bands, so the isolated-atom picture cannot be copied directly.",
-                  )
-                : t(
-                    "这里选用实 $d$ 轨道基底；相位整体反转不改变概率密度。多电子屏蔽、关联和晶体环境会改变真实 Fe 的径向分布与能级。",
-                    "These are real $d$ basis functions. Reversing the overall phase leaves density unchanged. Screening, correlation and crystal surroundings change real Fe radial distributions and energies.",
-                  )}
-            </MathMarkdown>
-          )}
+          <MathMarkdown className="orbital-model-note">
+            {atom === "H"
+              ? t(
+                  "**模型：孤立氢原子的解析波函数。** $1s$ 是基态；选择 $2s$ 或 $2p$ 查看激发态，不表示基态电子同时占据这些轨道。所有图形都来自 $\\psi=R_{nl}(r)Y_{lm}(\\theta,\\phi)$，坐标单位为玻尔半径 $a_0$。",
+                  "**Model: analytic wavefunctions of isolated hydrogen.** $1s$ is the ground state; $2s$ and $2p$ are excited states, not additional ground-state occupancies. Every view comes from $\\psi=R_{nl}(r)Y_{lm}(\\theta,\\phi)$, with coordinates in Bohr radii $a_0$.",
+                )
+              : t(
+                  `**模型：自由中性 Fe 的 Slater 屏蔽类氢近似。** $3d$ 取 $Z_{\\mathrm{eff}}=6.25$，$4s$ 取 $3.75$，径向函数与球谐函数共同构成三维分布。当前轨道有 ${model.radialNodes.length} 个径向节点、${model.l} 个角节点。这是单个轨道的教学近似，不是自洽 HF/DFT、Fe 原子总电子密度或金属能带。`,
+                  `**Model: Slater-screened hydrogenic approximation for isolated neutral Fe.** $Z_{\\mathrm{eff}}=6.25$ for $3d$ and $3.75$ for $4s$; a radial function and spherical harmonic form the full spatial distribution. This orbital has ${model.radialNodes.length} radial and ${model.l} angular nodes. It is a single-orbital teaching approximation, not self-consistent HF/DFT, total Fe electron density, or metallic bands.`,
+                )}
+          </MathMarkdown>
         </div>
       )}
     </section>

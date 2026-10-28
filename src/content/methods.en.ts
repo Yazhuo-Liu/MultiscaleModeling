@@ -223,6 +223,10 @@ export const methodsEn: Method[] = [
         title: "03 · Statistics require sampling",
         body: "Temperature follows from kinetic energy after removing collective motion; pressure depends on momentum transport and interactions. Equilibrate first, then sample a trajectory long compared with relevant correlation times and examine size and timestep sensitivity.",
       },
+      {
+        title: "04 · Three dimensions add physical degrees of freedom",
+        body: "The accompanying one-dimensional two-particle code introduces the integration steps. The 3D experiment instead stores three components of position, velocity, and force per particle, evaluates interactions using spatial separation $\\mathbf r_{ij}$, and applies periodic boundaries along x, y, and z. After removing overall drift, $T=2K/[d(N-1)k_B]$, with $d=2$ or $d=3$ for the respective model. Rotating the camera cannot add these physical degrees of freedom.",
+      },
     ],
     equation: {
       formula:
@@ -241,14 +245,14 @@ export const methodsEn: Method[] = [
     experiment: {
       title: "Watch Lennard–Jones particles move",
       description:
-        "Change the initial reduced temperature or two-dimensional number density. Switch between a 2D particle plot and a rotatable 3D view to examine local structure and thermal motion.",
+        "The default is a full 3D model: 108 particles start in 3×3×3 FCC cells and move along x, y, and z with periodic boundaries. The original 2D model remains available for comparison. Changing model dimension resets the calculation; switching between the spatial view and planar projection only changes how the same data are observed.",
       observe: [
-        "At low initial temperature, do particles retain a recognizable near-neighbor structure?",
-        "Increase the initial kinetic energy and compare the amplitude of particle motion.",
-        "Track energy changes and distinguish physical exchange between kinetic and potential energy from numerical drift.",
+        "Rotate the view to inspect particles at different depths, then project the same spatial coordinates onto a plane.",
+        "Change the initial reduced temperature and compare motion in all three directions. FCC describes the initial configuration, not a guarantee that crystalline order persists.",
+        "Monitor kinetic/potential energy exchange and total-energy drift, and compare local structure at different number densities.",
       ],
       limitations:
-        "A finite-particle model with a simplified potential and teaching boundary conditions. It does not represent a particular material. Converting reduced temperature and time requires material parameters; a 3D display does not turn the planar model into a fully three-dimensional molecular simulation.",
+        "This truncated-and-shifted Lennard–Jones teaching model is not an Fe potential and does not represent metallic bonding. Density has units $\\sigma^{-3}$ in 3D and $\\sigma^{-2}$ in 2D; equal numerical values do not specify equivalent physical states. Finite size, short trajectories, and timestep affect results. There is no thermostat after initialization. The accompanying one-dimensional code introduces integration and is not the complete 3D experiment implementation.",
     },
     applications: [
       "Atomic diffusion and heat transport",
@@ -593,6 +597,10 @@ export const methodsEn: Method[] = [
         title: "03 · Free energy and kinetics",
         body: "Free energy may couple temperature, stress, elasticity and multicomponent chemistry. Interface thickness, mesh spacing, timestep and mobility require consistent calibration. An attractive pattern is not automatically a quantitative prediction.",
       },
+      {
+        title: "04 · From a section to a three-dimensional microstructure",
+        body: "A 2D grid Laplacian uses four neighbors; a 3D volume adds the front and back neighbors. Sum all six neighbor values, subtract six times the central value, and divide by the squared grid spacing. Different z layers have their own field values and evolve together through gradient coupling. The interface is the $\\phi=0$ surface within that volume, not height assigned to a 2D order-parameter plot.",
+      },
     ],
     equation: {
       formula:
@@ -606,19 +614,19 @@ export const methodsEn: Method[] = [
       "Discretize the Laplacian and update the order parameter.",
       "Check free energy, interface resolution and timestep sensitivity.",
     ],
-    code: '# Dimensionless Allen-Cahn, 2D periodic boundaries; dx=1\nimport numpy as np\nrng = np.random.default_rng(5)\nphi = 0.1*rng.standard_normal((48, 48))\nkappa, mobility, dt = 1.0, 1.0, 0.05\nfor _ in range(400):\n    lap = sum(np.roll(phi,s,axis=a) for a in (0,1) for s in (-1,1))-4*phi\n    phi += dt*mobility*(kappa*lap-phi**3+phi)\nprint("Order-parameter range:", phi.min(), phi.max())\nprint("Mean order parameter:", phi.mean(), "(not conserved in this model)")',
+    code: '# 3D Allen-Cahn teaching example: periodic boundaries, dx=1\nimport numpy as np\nrng = np.random.default_rng(5)\nphi = 0.1*rng.standard_normal((24, 24, 24))\nkappa, mobility, dt = 1.0, 1.0, 0.015\nfor _ in range(400):\n    lap = sum(np.roll(phi, s, axis=a)\n              for a in (0, 1, 2) for s in (-1, 1)) - 6*phi\n    phi += dt*mobility*(kappa*lap - phi**3 + phi)\nprint("Order-parameter range:", phi.min(), phi.max())\nprint("Positive-phase volume fraction:", np.mean(phi > 0))\n# phi[:, :, 12] is one volume section; the phi=0 isosurface is the interface.',
     codeLanguage: "Python · NumPy",
     experiment: {
       title: "Watch small domains shrink and large domains grow",
       description:
-        "Evolve an Allen–Cahn field from small random perturbations and observe the emerging pattern and curvature-driven interface motion.",
+        "The default evolves an Allen–Cahn field on a $24^3$ volume grid with a six-neighbor Laplacian coupling all three spatial directions. The 3D view shows the $\\phi=0$ interface; changing slice depth reveals different interior sections. The original 2D model remains available for comparison, and changing model dimension resets the calculation.",
       observe: [
-        "Why do small regions often disappear first?",
-        "Change mobility to distinguish the speed of evolution from the free-energy minimum.",
-        "In the 3D height view, inspect smooth interfaces. Height represents the order parameter, not the material’s physical surface.",
+        "Why do small domains often disappear first? Rotate the view to distinguish isolated domains from connected structures extending through the volume.",
+        "Change mobility to distinguish evolution speed from the free-energy minimum, and check whether mean free energy decreases.",
+        "Move the section through different depths and compare the interior patterns with the same three-dimensional interface.",
       ],
       limitations:
-        "A two-dimensional, nonconserved scalar field with a dimensionless double-well free energy. It is not conserved-composition Cahn–Hilliard decomposition and includes neither calibrated material parameters nor polycrystal orientations.",
+        "A two- or three-dimensional nonconserved scalar field with a dimensionless double-well free energy. The 3D grid remains coarse, and resolution affects fine structures. This is not conserved-composition Cahn–Hilliard decomposition; it has no calibrated material parameters, elastic coupling, or polycrystal orientations. Similar-looking geometry does not replace material calibration.",
     },
     applications: [
       "Solidification dendrites and phase transformations",

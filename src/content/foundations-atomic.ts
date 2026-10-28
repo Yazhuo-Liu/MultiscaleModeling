@@ -449,13 +449,14 @@ export const atomicFoundations = {
   "atomic-orbitals": {
     zh: {
       title: "原子轨道：从氢到 Fe 的分层图景",
-      subtitle: "电子层、亚层、占据、节点，以及空间密度与径向概率",
-      lead: "从电子层展开到亚层，再选择一个轨道观察形状，可以逐步读懂原子图示。氢提供可解析的单电子起点；Fe 展示多电子占据、交换与环境如何使问题变复杂。始终记住：轨道图展示概率或振幅结构，不给出电子运动路线。",
-      readMinutes: 20,
+      subtitle: "电子层与占据、真正的三维轨道、节点与概率",
+      lead: "从电子层展开到亚层，再旋转、剖切一个三维轨道，可以逐步读懂原子图示。氢展示可解析的单电子波函数；Fe 展示带有屏蔽近似的 3d 与 4s 空间分布。图上的每个位置对应三个空间坐标，但三维图形的完整性不等于多电子模型的精确性。轨道也不是电子运动路线。",
+      readMinutes: 27,
       objectives: [
         "沿“原子→电子层→亚层→轨道”解释量子数与容纳电子数。",
         "用 1s、2s 和 2p 区分相位、节点、空间概率密度与径向概率。",
         "读懂自由中性 Fe 的电子组态，并辨认它与金属 Fe 能带的区别。",
+        "区分三维密度、剖切面、等值阈值与包围概率，并说明 Fe 屏蔽模型的边界。",
       ],
       sections: [
         {
@@ -483,13 +484,13 @@ export const atomicFoundations = {
           id: "hydrogen-shapes",
           title: "2. 氢轨道：形状、相位与节点",
           paragraphs: [
-            "对于无外场、固定质子的非相对论氢原子，1s、2s、2p 可以解析求出。1s 球对称且没有节点；2s 仍球对称，但在 $r=2a_0$ 有一个球形径向节点；选择 z 方向的 $2p_z$ 有两个异相位叶瓣，并在 $z=0$ 平面上为零。下面用 $a_0$ 表示玻尔半径。",
+            "对于无外场、固定质子的非相对论氢原子，1s、2s、2p 可以解析求出。1s 球对称且没有节点；2s 在 $r=2a_0$ 有一个球形径向节点。$2p_x,2p_y,2p_z$ 分别沿三个坐标方向，具有两个异相位叶瓣，节点分别为 $x=0,y=0,z=0$ 平面。下式中 $r=\\sqrt{x^2+y^2+z^2}$，$a_0$ 为玻尔半径；函数直接定义在三维空间，而不是把一个截面拉伸。",
             "两种轨道颜色通常表示波函数的相对正负相位，而不是正负电荷。一个轨道整体乘以 $-1$ 不改变密度；不同轨道叠加时，相对相位却会影响干涉和成键。若用等值面显示轨道，等值面的阈值由人为选定，不是电子云的硬边界。",
           ],
           equation:
-            "\\begin{aligned}\\psi_{1s}&=\\frac{e^{-r/a_0}}{\\sqrt{\\pi a_0^3}}\\\\\\psi_{2s}&=\\frac{(2-r/a_0)e^{-r/(2a_0)}}{4\\sqrt{2\\pi a_0^3}}\\\\\\psi_{2p_z}&=\\frac{(r/a_0)e^{-r/(2a_0)}\\cos\\theta}{4\\sqrt{2\\pi a_0^3}}\\end{aligned}",
+            "\\begin{aligned}\\psi_{1s}&=\\frac{e^{-r/a_0}}{\\sqrt{\\pi a_0^3}}\\\\\\psi_{2s}&=\\frac{(2-r/a_0)e^{-r/(2a_0)}}{4\\sqrt{2\\pi a_0^3}}\\\\\\psi_{2p_\\alpha}&=\\frac{(x_\\alpha/a_0)e^{-r/(2a_0)}}{4\\sqrt{2\\pi a_0^3}},\\quad x_\\alpha\\in\\{x,y,z\\}\\end{aligned}",
           equationNote:
-            "这三个函数都归一化为单电子概率 1。对该氢模型，$E_n=-13.6\\,\\mathrm{eV}/n^2$；相对论、有限质子质量和外场会修正更精确能级。",
+            "这些函数都归一化为单电子概率 1。对该氢模型，$E_n=-13.6\\,\\mathrm{eV}/n^2$；相对论、有限质子质量和外场会修正更精确能级。三种实 2p 轨道在无外场时简并，可以选择其他等价的方向基。",
           bullets: [
             "对这里展示的实氢轨道，径向节点数为 $n-l-1$；角节点数为 $l$。这里不把无穷远或由体积因子产生的 $r=0$ 径向概率零点算成径向节点。",
             "$d_{z^2}$ 的角节点是锥面，图形包含轴向叶瓣与赤道环；不是所有 d 轨道都长成相同的四叶形。",
@@ -543,10 +544,43 @@ export const atomicFoundations = {
           },
         },
         {
-          id: "atom-to-solid",
-          title: "5. 从自由 Fe 原子到金属 Fe：哪些图景必须改变？",
+          id: "iron-radial-model",
+          title: "5. Fe 的三维近似：角向形状还需要径向函数",
           paragraphs: [
-            "Fe 有 26 个相互作用电子，不能把氢公式中的核电荷换成 26，就宣称得到了真实 Fe 的能级与径向分布。屏蔽、交换和关联改变径向函数与有效作用。d 轨道的角向形状适合帮助识别对称性，但示意角向振幅不等于计算所得的完整 Fe 概率密度等值面。",
+            "只有 $r_{\\mathrm{surface}}\\propto|Y_{2m}|$ 的叶瓣图展示的是角向振幅，不是完整轨道。本实验对五个实 3d 轨道及 4s 使用归一化的氢样径向函数乘球谐函数，得到可在任意 $(x,y,z)$ 处求值的 $\\psi=R_{nl}Y_{lm}$。这是带屏蔽的孤立原子教学模型；五个 3d 轨道有相同径向函数而方向不同，4s 为球对称分布。",
+            "屏蔽电荷按 Slater 分组规则估算。对一个 3d 电子，18 个内层电子各屏蔽 1，同组其余 5 个电子各屏蔽 0.35，故 $Z_{\\mathrm{eff}}=6.25$。对一个 4s 电子，前两层的 10 个电子各贡献 1，第三层 14 个电子各贡献 0.85，另一个 4s 电子贡献 0.35，得到 $Z_{\\mathrm{eff}}=3.75$。这些数是模型参数，不是测得的原子核电荷。",
+            "氢样模型保留 $n-l-1$ 个径向节点：3d 没有内部径向节点，4s 有三个球形径向节点。4s 的内层结构较细，球对称性允许直接求等密度半径并形成球面；3d 则在完整三维采样网格上提取等值面。二者都根据三维函数构造，不将二维图片旋转或拉伸当作计算。",
+          ],
+          equation:
+            "\\begin{aligned}\\psi_{nlm}(\\mathbf r)&=R_{nl}^{(Z_{\\mathrm{eff}})}(r)Y_{lm}(\\theta,\\varphi),\\qquad \\rho=\\frac{2Z_{\\mathrm{eff}}r}{na_0}\\\\R_{nl}(r)&=\\left(\\frac{2Z_{\\mathrm{eff}}}{na_0}\\right)^{3/2}\\sqrt{\\frac{(n-l-1)!}{2n(n+l)!}}\\ e^{-\\rho/2}\\rho^l L_{n-l-1}^{2l+1}(\\rho)\\end{aligned}",
+          equationNote:
+            "$L_{n-l-1}^{2l+1}$ 是关联 Laguerre 多项式，$Y_{lm}$ 取归一化实角函数。这里把 Slater 的屏蔽估计用于氢样径向函数，并非直接使用无径向节点的 Slater 型基函数。归一化描述单个轨道，不把这一个轨道当成 Fe 的全部 26 个电子。",
+          table: {
+            headers: ["模型轨道", "有效核电荷", "径向节点", "角节点"],
+            rows: [
+              ["五个 3d", "$6.25$", "0", "2；平面或锥面取决于实轨道"],
+              ["4s", "$3.75$", "3 个球面", "0"],
+            ],
+          },
+        },
+        {
+          id: "reading-3d",
+          title: "6. 如何读三维轨道：等值面、概率云与剖切",
+          paragraphs: [
+            "等值面连接密度相同的空间位置。控制中的阈值 $\\eta$ 是相对最大密度 $n_{\\max}$ 的比例；例如 $\\eta=0.05$ 表示表面处密度为最大值的 5%，不表示表面包住 5% 或 95% 的电子概率。改变阈值会改变表面大小，某些较弱叶瓣或内外层表面可能出现、合并或消失。颜色仍只表示实波函数的正负相位。",
+            "概率云按 $|\\psi|^2$ 在有限绘图区内采样；点多的区域更可能找到电子，点不是一组同时存在的电子，也不描画轨迹。图形的计算范围会截去很小的远端尾部。密度等值面本身不携带“里面总共有多少概率”的答案，后者必须对体积积分。",
+            "xy、xz、yz 剖切面固定一个坐标，另外两个坐标仍来自同一个三维波函数。移动剖切位置可以穿过节点、叶瓣和球壳。例如 $2p_z$ 的中心 xy 截面恰好位于角节点，整面为零；把剖面沿 z 移开才出现密度。4s 的径向节点则在过核截面中成为三个圆，而离核截面未必穿过全部节点。",
+          ],
+          equation:
+            "\\mathcal S_\\eta=\\{\\mathbf r:|\\psi(\\mathbf r)|^2=\\eta\\,n_{\\max}\\},\\qquad P_\\eta=\\int_{|\\psi|^2\\geq\\eta n_{\\max}}|\\psi(\\mathbf r)|^2\\,d^3r",
+          equationNote:
+            "$P_\\eta$ 是对满足阈值条件的全部区域积分，可能包含不连通的叶瓣或球壳；一般不等于 $\\eta$ 或 $1-\\eta$。显示框与有限网格还带来截断、采样和网格误差。",
+        },
+        {
+          id: "atom-to-solid",
+          title: "7. 从自由 Fe 原子到金属 Fe：哪些图景必须改变？",
+          paragraphs: [
+            "Fe 有 26 个相互作用电子，不能把氢公式中的核电荷换成 26，就宣称得到了真实 Fe 的能级与径向分布。即使引入这里的常数 $Z_{\\mathrm{eff}}$，屏蔽仍只是粗略平均，交换、关联和自洽轨道弛豫也没有求解。当前 Fe 图形是完整三维的近似单轨道密度，却不是精确 Fe 原子的 HF/DFT 结果，更不是金属 Fe 的总电子密度。",
             "很多 Fe 原子组成晶体后，邻近轨道发生耦合，原子的 3d、4s 等成分进入延展的、相互杂化的能带。能量依赖波矢和自旋，费米能级附近的占据关系到导电与磁性。孤立原子有几个未配对电子，不能直接当成金属中每个原子的磁矩；需要在实际晶体结构和电子态中求解。",
           ],
           equation:
@@ -597,6 +631,14 @@ export const atomicFoundations = {
               "\\left[-\\frac{\\hbar^2}{2m_e}\\frac{d^2}{dr^2}+\\frac{\\hbar^2l(l+1)}{2m_er^2}+V_{\\mathrm{eff}}(r)\\right]u_{nl}(r)=\\varepsilon_{nl}u_{nl}(r),\\qquad u_{nl}=rR_{nl}",
             note: "这是局域球对称有效势模型的径向方程，不是精确 Fe 多电子方程。完整 HF 交换等作用也不能总写成同一个局域势。",
           },
+          {
+            title: "一个可计算的近似：先估计屏蔽，再构造完整轨道",
+            explanation:
+              "用自由中性 Fe 的占据数计算屏蔽常数，得到轨道依赖的 $Z_{\\mathrm{eff}}$。将其代入前面的归一化 $R_{nl}$，再乘实球谐函数，即可计算任意三维位置的振幅。常数屏蔽并不恢复完整多电子相互作用。",
+            formula:
+              "\\begin{aligned}Z_{\\mathrm{eff}}(3d)&=26-[18+5(0.35)]=6.25\\\\Z_{\\mathrm{eff}}(4s)&=26-[10+14(0.85)+1(0.35)]=3.75\\end{aligned}",
+            note: "对 4s，径向多项式为 $L_3^1(\\rho)=4-6\\rho+2\\rho^2-\\rho^3/6$，三个正根给出三个径向节点；3d 的径向多项式为常数，因此没有内部径向节点。",
+          },
         ],
       },
       example: {
@@ -645,6 +687,11 @@ export const atomicFoundations = {
           answer:
             "径向分布已经对所有方向积分，只保留半径信息。两个叶瓣和它们之间的节点平面来自角函数；要同时观察空间图与径向图才能区分二者。",
         },
+        {
+          question: "把等值面阈值设为最大密度的 5%，是否表示包住 95% 的概率？",
+          answer:
+            "不是。阈值约束的是表面上的局部密度，概率是对三维体积的积分。必须计算 $P_\\eta=\\int_{|\\psi|^2\\geq\\eta n_{\\max}}|\\psi|^2\\,d^3r$ 才能判断对应概率，二者没有简单的 5% 与 95% 关系。",
+        },
       ],
       connections: [
         {
@@ -673,17 +720,25 @@ export const atomicFoundations = {
           detail:
             "自由中性 Fe 与离子的基态组态和原子数据；不要与金属 Fe 的能带混同。",
         },
+        {
+          label: "J. C. Slater · Atomic Shielding Constants (1930)",
+          url: "https://doi.org/10.1103/PhysRev.36.57",
+          detail:
+            "有效核电荷的经验屏蔽分组规则。此处将屏蔽估计与氢样径向函数组合，是教学近似，不等同于真实 Fe 的自洽电子结构。",
+        },
       ],
     },
     en: {
       title: "Atomic orbitals: a layered view from hydrogen to Fe",
-      subtitle: "Shells, subshells, occupations, nodes, and radial probability",
-      lead: "Expand an atom into shells, open a subshell, then inspect an individual orbital. Hydrogen provides an analytic one-electron starting point; Fe shows how occupation, exchange, and environment make the problem richer. Orbital pictures describe probability or amplitude structure, not electron trajectories.",
-      readMinutes: 20,
+      subtitle:
+        "Shells and occupations, full 3D orbitals, nodes, and probability",
+      lead: "Open an atom into shells and subshells, then rotate and slice a three-dimensional orbital. Hydrogen supplies analytic one-electron wavefunctions; Fe illustrates screened approximations to 3d and 4s spatial distributions. Every displayed location has three spatial coordinates, but a complete 3D shape does not make a many-electron model exact. An orbital is not an electron trajectory.",
+      readMinutes: 27,
       objectives: [
         "Use atom → shell → subshell → orbital to explain quantum numbers and electron capacities.",
         "Distinguish phase, nodes, spatial probability density, and radial probability using 1s, 2s, and 2p.",
         "Read the configuration of free neutral Fe and distinguish it from the bands of metallic Fe.",
+        "Distinguish a 3D density, a section, an isovalue, and enclosed probability, and explain the limits of the screened Fe model.",
       ],
       sections: [
         {
@@ -724,13 +779,13 @@ export const atomicFoundations = {
           id: "hydrogen-shapes",
           title: "2. Hydrogen orbitals: shapes, phases, and nodes",
           paragraphs: [
-            "For nonrelativistic hydrogen with a fixed proton and no external field, 1s, 2s, and 2p have analytic solutions. The spherical 1s state has no nodes. The spherical 2s state has a radial nodal sphere at $r=2a_0$. A z-oriented $2p_z$ orbital has two opposite-phase lobes separated by the nodal plane $z=0$. Here $a_0$ denotes the Bohr radius.",
+            "For nonrelativistic hydrogen with a fixed proton and no external field, 1s, 2s, and 2p have analytic solutions. The spherical 1s state has no nodes; 2s has a radial nodal sphere at $r=2a_0$. The $2p_x,2p_y,2p_z$ states lie along the three coordinate directions, each with two opposite-phase lobes and a nodal plane at $x=0,y=0,z=0$, respectively. Below, $r=\\sqrt{x^2+y^2+z^2}$ and $a_0$ is the Bohr radius: these are functions of three spatial coordinates, not extruded sections.",
             "Two orbital colors usually indicate relative wavefunction phase, not positive and negative electric charge. Multiplying an entire orbital by $-1$ leaves its density unchanged, but relative phase affects interference and bonding when orbitals are combined. An isosurface uses a chosen threshold; it is not a hard edge of an electron cloud.",
           ],
           equation:
-            "\\begin{aligned}\\psi_{1s}&=\\frac{e^{-r/a_0}}{\\sqrt{\\pi a_0^3}}\\\\\\psi_{2s}&=\\frac{(2-r/a_0)e^{-r/(2a_0)}}{4\\sqrt{2\\pi a_0^3}}\\\\\\psi_{2p_z}&=\\frac{(r/a_0)e^{-r/(2a_0)}\\cos\\theta}{4\\sqrt{2\\pi a_0^3}}\\end{aligned}",
+            "\\begin{aligned}\\psi_{1s}&=\\frac{e^{-r/a_0}}{\\sqrt{\\pi a_0^3}}\\\\\\psi_{2s}&=\\frac{(2-r/a_0)e^{-r/(2a_0)}}{4\\sqrt{2\\pi a_0^3}}\\\\\\psi_{2p_\\alpha}&=\\frac{(x_\\alpha/a_0)e^{-r/(2a_0)}}{4\\sqrt{2\\pi a_0^3}},\\quad x_\\alpha\\in\\{x,y,z\\}\\end{aligned}",
           equationNote:
-            "Each function is normalized to one-electron probability 1. For this hydrogen model, $E_n=-13.6\\,\\mathrm{eV}/n^2$; relativistic effects, finite proton mass, and external fields modify more precise energy levels.",
+            "Each function is normalized to one-electron probability 1. For this hydrogen model, $E_n=-13.6\\,\\mathrm{eV}/n^2$; relativity, finite proton mass, and external fields modify precise levels. The three real 2p states are degenerate without external fields, and equivalent directional bases may be chosen.",
           bullets: [
             "For the real hydrogen orbitals shown here, there are $n-l-1$ radial nodes and $l$ angular nodes. Infinity and the zero of radial probability at $r=0$ caused by the volume factor are not counted as radial nodes.",
             "The angular nodes of $d_{z^2}$ are cones; its shape includes axial lobes and an equatorial ring. Not every d orbital is the same four-lobed shape.",
@@ -790,10 +845,55 @@ export const atomicFoundations = {
           },
         },
         {
-          id: "atom-to-solid",
-          title: "5. From a free Fe atom to metallic Fe: what must change?",
+          id: "iron-radial-model",
+          title:
+            "5. A 3D Fe approximation: angular shape needs a radial function",
           paragraphs: [
-            "Fe has 26 interacting electrons. Replacing hydrogen's nuclear charge by 26 does not produce accurate Fe energies or radial distributions. Screening, exchange, and correlation change radial functions and effective interactions. Angular d-orbital shapes help identify symmetry, but an angular-amplitude sketch is not a calculated full Fe probability-density isosurface.",
+            "A lobe plot with $r_{\\mathrm{surface}}\\propto|Y_{2m}|$ displays angular amplitude, not a full orbital. For five real 3d states and 4s, this experiment multiplies a normalized hydrogenic radial function by a spherical harmonic, giving $\\psi=R_{nl}Y_{lm}$ at any $(x,y,z)$. This is a screened, isolated-atom teaching model. The five 3d states share a radial function but have different orientations; 4s is spherical.",
+            "Screening is estimated with Slater grouping rules. For a 3d electron, 18 inner electrons contribute 1 each and the other five electrons in its group contribute 0.35 each, giving $Z_{\\mathrm{eff}}=6.25$. For a 4s electron, the 10 electrons in the first two shells contribute 1 each, the 14 third-shell electrons contribute 0.85 each, and the other 4s electron contributes 0.35, giving $Z_{\\mathrm{eff}}=3.75$. These are model parameters, not measured nuclear charges.",
+            "The hydrogenic model retains $n-l-1$ radial nodes: 3d has no interior radial node, while 4s has three spherical radial nodes. The fine inner structure of 4s can be resolved by directly finding equal-density radii and constructing spherical surfaces; 3d surfaces are extracted from a full three-dimensional sampling grid. Both representations come from spatial wavefunctions rather than rotating or extruding a two-dimensional picture.",
+          ],
+          equation:
+            "\\begin{aligned}\\psi_{nlm}(\\mathbf r)&=R_{nl}^{(Z_{\\mathrm{eff}})}(r)Y_{lm}(\\theta,\\varphi),\\qquad \\rho=\\frac{2Z_{\\mathrm{eff}}r}{na_0}\\\\R_{nl}(r)&=\\left(\\frac{2Z_{\\mathrm{eff}}}{na_0}\\right)^{3/2}\\sqrt{\\frac{(n-l-1)!}{2n(n+l)!}}\\ e^{-\\rho/2}\\rho^l L_{n-l-1}^{2l+1}(\\rho)\\end{aligned}",
+          equationNote:
+            "$L_{n-l-1}^{2l+1}$ is an associated Laguerre polynomial and $Y_{lm}$ is a normalized real angular function. Slater screening estimates are used inside hydrogenic radial functions; these are not nodeless Slater-type basis functions. Normalization describes one orbital, not all 26 electrons of Fe.",
+          table: {
+            headers: [
+              "Model orbital",
+              "Effective charge",
+              "Radial nodes",
+              "Angular nodes",
+            ],
+            rows: [
+              [
+                "Five 3d states",
+                "$6.25$",
+                "0",
+                "2; planes or cones depending on the real orbital",
+              ],
+              ["4s", "$3.75$", "3 spherical surfaces", "0"],
+            ],
+          },
+        },
+        {
+          id: "reading-3d",
+          title:
+            "6. Read a 3D orbital: isosurfaces, probability clouds, and slices",
+          paragraphs: [
+            "An isosurface joins positions having equal density. The control threshold $\\eta$ is a fraction of maximum density $n_{\\max}$: $\\eta=0.05$ places the surface at 5% of peak density, not around 5% or 95% of electron probability. Changing the threshold changes apparent size; weaker lobes or inner and outer shells may appear, merge, or disappear. Color continues to indicate the sign of the real wavefunction.",
+            "A probability cloud samples $|\\psi|^2$ inside a finite drawing region. Denser point clusters indicate more likely positions, not many simultaneously present electrons or trajectories. A small amount of probability in distant tails lies beyond the drawing region. An isosurface alone does not give the probability enclosed; that requires a volume integral.",
+            "An xy, xz, or yz section fixes one coordinate and evaluates the same three-dimensional wavefunction along the other two. Moving a section reveals nodes, lobes, and shells. For example, the central xy section of $2p_z$ lies exactly on its angular node and vanishes everywhere; moving the plane along z reveals density. The three radial nodal spheres of 4s become three circles in a section through the nucleus, while an offset section may miss some of them.",
+          ],
+          equation:
+            "\\mathcal S_\\eta=\\{\\mathbf r:|\\psi(\\mathbf r)|^2=\\eta\\,n_{\\max}\\},\\qquad P_\\eta=\\int_{|\\psi|^2\\geq\\eta n_{\\max}}|\\psi(\\mathbf r)|^2\\,d^3r",
+          equationNote:
+            "$P_\\eta$ integrates over every region satisfying the density threshold, potentially including disconnected lobes or shells. It generally equals neither $\\eta$ nor $1-\\eta$. Finite drawing bounds and grids also introduce truncation, sampling, and discretization errors.",
+        },
+        {
+          id: "atom-to-solid",
+          title: "7. From a free Fe atom to metallic Fe: what must change?",
+          paragraphs: [
+            "Fe has 26 interacting electrons. Replacing hydrogen nuclear charge by 26 does not produce accurate Fe energies or radial distributions. Even the constant $Z_{\\mathrm{eff}}$ used here provides only averaged screening; exchange, correlation, and self-consistent orbital relaxation are not solved. The Fe graphic is a full three-dimensional approximate single-orbital density, not an accurate atomic HF/DFT result or the total electron density of metallic Fe.",
             "In a crystal, neighboring orbitals couple, and atomic 3d, 4s, and other character contributes to extended, hybridized bands. Energies depend on wavevector and spin; occupation near the Fermi level affects conduction and magnetism. The number of unpaired electrons in an isolated atom cannot simply be identified with the magnetic moment per atom in a metal. The actual crystal structure and electronic state must be considered.",
           ],
           equation:
@@ -846,6 +946,15 @@ export const atomicFoundations = {
               "\\left[-\\frac{\\hbar^2}{2m_e}\\frac{d^2}{dr^2}+\\frac{\\hbar^2l(l+1)}{2m_er^2}+V_{\\mathrm{eff}}(r)\\right]u_{nl}(r)=\\varepsilon_{nl}u_{nl}(r),\\qquad u_{nl}=rR_{nl}",
             note: "This radial equation assumes a local spherical effective potential; it is not the exact Fe many-electron equation. Full HF exchange, for example, cannot generally be represented by one common local potential.",
           },
+          {
+            title:
+              "A computable approximation: estimate screening, then build the full orbital",
+            explanation:
+              "Use the occupation of free neutral Fe to obtain an orbital-dependent $Z_{\\mathrm{eff}}$. Insert it into the normalized $R_{nl}$ above and multiply by a real spherical harmonic to evaluate amplitude at any three-dimensional location. Constant screening does not recover the full many-electron interaction.",
+            formula:
+              "\\begin{aligned}Z_{\\mathrm{eff}}(3d)&=26-[18+5(0.35)]=6.25\\\\Z_{\\mathrm{eff}}(4s)&=26-[10+14(0.85)+1(0.35)]=3.75\\end{aligned}",
+            note: "For 4s, the radial polynomial is $L_3^1(\\rho)=4-6\\rho+2\\rho^2-\\rho^3/6$; its three positive roots give three radial nodes. The 3d radial polynomial is constant, so there is no interior radial node.",
+          },
         ],
       },
       example: {
@@ -897,6 +1006,12 @@ export const atomicFoundations = {
           answer:
             "The radial distribution has already integrated over all directions. The lobes and their separating nodal plane belong to the angular function. Inspect both spatial and radial views to distinguish these features.",
         },
+        {
+          question:
+            "Does an isovalue of 5% of peak density enclose 95% of the probability?",
+          answer:
+            "No. The threshold specifies local density on a surface, while probability is a volume integral. Evaluate $P_\\eta=\\int_{|\\psi|^2\\geq\\eta n_{\\max}}|\\psi|^2\\,d^3r$ to find the probability of that region; there is no general 5%-to-95% relationship.",
+        },
       ],
       connections: [
         {
@@ -928,6 +1043,12 @@ export const atomicFoundations = {
           url: "https://physics.nist.gov/PhysRefData/Handbook/Tables/irontable1.htm",
           detail:
             "Ground configurations and atomic data for free neutral Fe and ions, distinct from bands in metallic Fe.",
+        },
+        {
+          label: "J. C. Slater · Atomic Shielding Constants (1930)",
+          url: "https://doi.org/10.1103/PhysRev.36.57",
+          detail:
+            "Empirical grouping rules for atomic screening. Here their effective charges are combined with hydrogenic radial functions for teaching, not a self-consistent electronic-structure calculation of Fe.",
         },
       ],
     },

@@ -324,6 +324,14 @@ async function inspectMath(page, label) {
     );
   }
 }
+async function openNumericalView(page) {
+  await page.locator(".simulation-lab").waitFor();
+  const details = page.getByTestId("lab-numerical-details");
+  if (await details.count()) {
+    if (!(await details.evaluate((node) => node.open)))
+      await details.locator(":scope > summary").click();
+  }
+}
 try {
   browser = await chromium.launch({
     executablePath,
@@ -379,6 +387,7 @@ try {
         await page.getByRole("tab", { name: tabName, exact: true }).click();
         if (tabName === "交互实验" || tabName === "Interactive lab") {
           if (id === "mc") await page.getByTestId("mc-example-ising").click();
+          await openNumericalView(page);
           await page
             .locator(".lab-canvas, .lab-spatial canvas, .lab-three canvas")
             .waitFor();

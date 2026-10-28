@@ -104,6 +104,14 @@ const switchTo = async (page, locale) => {
   );
 };
 let browser;
+async function openNumericalView(page) {
+  await page.locator(".simulation-lab").waitFor();
+  const details = page.getByTestId("lab-numerical-details");
+  if (await details.count()) {
+    if (!(await details.evaluate((node) => node.open)))
+      await details.locator(":scope > summary").click();
+  }
+}
 try {
   browser = await chromium.launch({
     executablePath,
@@ -198,6 +206,7 @@ try {
       .getByRole("tab", { name: "Interactive lab", exact: true })
       .click();
     if (id === "mc") await page.getByTestId("mc-example-ising").click();
+    await openNumericalView(page);
     await page.locator(".lab-viewport canvas").waitFor();
     await page
       .getByRole("button", { name: "Step forward", exact: true })
@@ -208,6 +217,7 @@ try {
     await noClutter(page, `${id} lab`);
     if (id === "md" || id === "phase-field") {
       await page.locator(".lab-mode button").nth(1).click();
+      await openNumericalView(page);
       await page.locator(".lab-viewport canvas").waitFor();
       assert.match(
         await page.locator(".lab-viewport canvas").getAttribute("aria-label"),
@@ -334,6 +344,7 @@ try {
           exact: true,
         })
         .click();
+      await openNumericalView(page);
       await page.locator(".lab-viewport canvas").waitFor();
       await noOverflow(page, `${locale} ${id} mobile lab`);
       await page

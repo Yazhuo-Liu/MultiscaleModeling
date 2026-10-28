@@ -20,7 +20,6 @@ interface SceneState {
   atoms: Map<number, THREE.Mesh>;
   vacancy: THREE.Group;
   trail: THREE.Line;
-  taggedTrail: THREE.Line;
   hop: THREE.Line;
   plane: THREE.Mesh;
   trap: THREE.Mesh;
@@ -28,6 +27,7 @@ interface SceneState {
   box: THREE.LineSegments;
   hostMaterial: THREE.MeshStandardMaterial;
   fadedMaterial: THREE.MeshStandardMaterial;
+  movingMaterial: THREE.MeshStandardMaterial;
   render: () => void;
 }
 
@@ -61,7 +61,7 @@ export default function VacancyLatticeView({
       css.getPropertyValue(name).trim() || backup;
     const palette = {
       host: color("--vacancy-atom", "#4b9995"),
-      tagged: color("--vacancy-tagged", "#8663bd"),
+      moving: color("--vacancy-moving", "#63bdb0"),
       vacancy: color("--vacancy-hole", "#d9962d"),
       line: color("--vacancy-line", "#b5cecc"),
       background: color("--vacancy-background", "#f3f8f7"),
@@ -96,8 +96,8 @@ export default function VacancyLatticeView({
     fadedMaterial.transparent = true;
     fadedMaterial.opacity = 0.37;
     fadedMaterial.depthWrite = false;
-    const taggedMaterial = new THREE.MeshStandardMaterial({
-      color: palette.tagged,
+    const movingMaterial = new THREE.MeshStandardMaterial({
+      color: palette.moving,
       roughness: 0.22,
       metalness: 0.3,
       depthTest: false,
@@ -106,18 +106,10 @@ export default function VacancyLatticeView({
     for (const atom of live.current.frame.atoms) {
       const mesh = new THREE.Mesh(
         sphere,
-        atom.id === frame.taggedId
-          ? taggedMaterial
-          : atom.site[2] === 2
-            ? hostMaterial
-            : fadedMaterial,
+        atom.site[2] === 2 ? hostMaterial : fadedMaterial,
       );
       mesh.position.copy(xyz(atom.site));
       mesh.userData.site = atom.site;
-      if (atom.id === frame.taggedId) {
-        mesh.scale.setScalar(1.35);
-        mesh.renderOrder = 4;
-      }
       atoms.set(atom.id, mesh);
       scene.add(mesh);
     }
@@ -181,9 +173,8 @@ export default function VacancyLatticeView({
         }),
       );
     const trail = line(palette.trail),
-      taggedTrail = line(palette.tagged),
       hop = line(palette.vacancy);
-    for (const object of [trail, taggedTrail, hop]) {
+    for (const object of [trail, hop]) {
       object.renderOrder = 3;
       scene.add(object);
     }
@@ -232,7 +223,6 @@ export default function VacancyLatticeView({
       atoms,
       vacancy,
       trail,
-      taggedTrail,
       hop,
       plane,
       trap,
@@ -240,6 +230,7 @@ export default function VacancyLatticeView({
       box,
       hostMaterial,
       fadedMaterial,
+      movingMaterial,
       render,
     };
     controls.addEventListener("change", render);
@@ -327,7 +318,7 @@ export default function VacancyLatticeView({
       });
       materials.add(hostMaterial);
       materials.add(fadedMaterial);
-      materials.add(taggedMaterial);
+      materials.add(movingMaterial);
       geometries.forEach((g) => g.dispose());
       materials.forEach((m) => m.dispose());
       renderer.dispose();
@@ -347,16 +338,19 @@ export default function VacancyLatticeView({
     for (const atom of frame.atoms) {
       const mesh = s.atoms.get(atom.id)!;
       mesh.position.copy(xyz(atom.site));
-      if (atom.id !== frame.taggedId)
-        mesh.material =
-          mode === "2d" || atom.site[2] === 2
-            ? s.hostMaterial
-            : s.fadedMaterial;
-      if (
-        frame.move?.accepted &&
-        frame.move.atomId === atom.id &&
-        progress < 1
-      ) {
+      const exchanging = Boolean(
+        frame.move?.accepted && frame.move.atomId === atom.id && progress < 1,
+      );
+      mesh.material = exchanging
+        ? s.movingMaterial
+        : mode === "2d" || atom.site[2] === slice
+          ? s.hostMaterial
+          : s.fadedMaterial;
+      mesh.scale.setScalar(
+        exchanging ? 1 + 0.18 * Math.sin(Math.PI * progress) : 1,
+      );
+      mesh.renderOrder = exchanging ? 4 : 0;
+      if (exchanging && frame.move) {
         mesh.position.lerpVectors(
           xyz(frame.move.to),
           xyz(frame.move.from),
@@ -370,33 +364,36 @@ export default function VacancyLatticeView({
           frame.move?.accepted &&
           progress < 1);
     }
-    s.vacancy.position.copy(xyz(frame.vacancy));
-    if (frame.move?.accepted && progress < 1)
-      s.vacancy.position.lerpVectors(
-        xyz(frame.move.from),
-        xyz(frame.move.to),
-        progress,
-      );
-    updateLine(
-      s.trail,
-      mode === "3d"
-        ? frame.vacancyTrail
-        : frame.vacancyTrail.filter((p) => p[2] === slice),
-    );
-    updateLine(
-      s.taggedTrail,
-      mode === "3d"
-        ? frame.taggedTrail
-        : frame.taggedTrail.filter((p) => p[2] === slice),
-    );
-    s.trail.visible = s.trail.visible && mode === "3d"; // Filtering disjoint slice visits must not imply a connecting in-plane hop.
-    s.taggedTrail.visible = s.taggedTrail.visible && mode === "3d";
+    const moving = frame.move?.accepted && progress < 1;
+    const displayVacancy =
+      moving && frame.move
+        ? (frame.move.from.map(
+            (v, i) => v + progress * (frame.move!.to[i] - v),
+          ) as LatticeSite)
+        : frame.vacancy;
+    s.vacancy.position.copy(xyz(displayVacancy));
+    // Do not draw a completed path ahead of an exchange that is still moving.
+    const visited = moving
+      ? [...frame.vacancyTrail.slice(0, -1), displayVacancy]
+      : frame.vacancyTrail;
+    updateLine(s.trail, visited);
+    // A slice can contain disconnected portions of the 3D path: never join them.
+    s.trail.visible = s.trail.visible && mode === "3d";
     updateLine(
       s.hop,
-      frame.move && !frame.move.boundary
-        ? [frame.move.from, frame.move.to]
-        : [],
+      moving && frame.move ? [frame.move.from, frame.move.to] : [],
     );
+    if (host.current) {
+      host.current.dataset.highlightedAtom = moving
+        ? String(frame.move!.atomId)
+        : "";
+      host.current.dataset.vacancyDisplay = JSON.stringify(displayVacancy);
+      const exchanging =
+        frame.move?.atomId != null ? s.atoms.get(frame.move.atomId) : null;
+      host.current.dataset.exchangeAtomDisplay = exchanging
+        ? JSON.stringify(exchanging.position.toArray().map((x) => x + 2))
+        : "";
+    }
     s.plane.visible = mode === "3d";
     s.trap.visible =
       frame.parameters.trap > 0 && (mode === "3d" || slice === 2);
@@ -424,11 +421,49 @@ export default function VacancyLatticeView({
     if (fallback && host.current) {
       host.current.dataset.ready = "true";
       host.current.dataset.renderer = "svg";
+      const moving = frame.move?.accepted && progress < 1;
+      const vacancyPosition =
+        moving && frame.move
+          ? frame.move.from.map(
+              (v, i) => v + progress * (frame.move!.to[i] - v),
+            )
+          : frame.vacancy;
+      const atom = frame.atoms.find((a) => a.id === frame.move?.atomId);
+      const atomPosition =
+        moving && frame.move
+          ? frame.move.to.map(
+              (v, i) => v + progress * (frame.move!.from[i] - v),
+            )
+          : atom?.site;
+      host.current.dataset.highlightedAtom = moving
+        ? String(frame.move!.atomId)
+        : "";
+      host.current.dataset.vacancyDisplay = JSON.stringify(vacancyPosition);
+      host.current.dataset.exchangeAtomDisplay = atomPosition
+        ? JSON.stringify(atomPosition)
+        : "";
     }
-  }, [fallback]);
+  }, [fallback, frame, progress]);
   const radius = 18,
     left = 76,
     step = 72;
+  const moving = frame.move?.accepted && progress < 1;
+  const displayedVacancy =
+    moving && frame.move
+      ? (frame.move.from.map(
+          (v, i) => v + progress * (frame.move!.to[i] - v),
+        ) as LatticeSite)
+      : frame.vacancy;
+  const displayedAtoms = frame.atoms.map((atom) => ({
+    ...atom,
+    moving: Boolean(moving && frame.move?.atomId === atom.id),
+    displaySite:
+      moving && frame.move?.atomId === atom.id
+        ? (frame.move.to.map(
+            (v, i) => v + progress * (frame.move!.from[i] - v),
+          ) as LatticeSite)
+        : atom.site,
+  }));
   return (
     <div
       className="vacancy-scene"
@@ -436,8 +471,8 @@ export default function VacancyLatticeView({
       tabIndex={0}
       role="img"
       aria-label={t(
-        "三维原子晶格：拖动旋转，方向键转动，加减键缩放。金色圆环是空位，紫色球是被追踪原子。",
-        "Atomic lattice: drag or use arrow keys to rotate, plus/minus to zoom. Gold rings mark the vacancy; the purple sphere is the tracked atom.",
+        "三维原子晶格：拖动旋转，方向键转动，加减键缩放。金色圆环和路径标记空位；只有正在交换的邻近原子会暂时变亮。",
+        "Atomic lattice: drag or use arrow keys to rotate, plus/minus to zoom. Gold rings and the trail mark the vacancy; only the neighbour currently exchanging is briefly highlighted.",
       )}
       data-z-spread="4"
       data-mode={mode}
@@ -451,24 +486,20 @@ export default function VacancyLatticeView({
             "Lattice slice at the vacancy layer",
           )}
         >
-          {frame.atoms
-            .filter((a) => a.site[2] === frame.vacancy[2])
+          {displayedAtoms
+            .filter((a) => a.site[2] === frame.vacancy[2] || a.moving)
             .map((a) => (
               <circle
                 key={a.id}
-                cx={left + a.site[0] * step}
-                cy={45 + a.site[1] * step}
+                cx={left + a.displaySite[0] * step}
+                cy={45 + a.displaySite[1] * step}
                 r={radius}
-                className={
-                  a.id === frame.taggedId
-                    ? "vacancy-svg-tagged"
-                    : "vacancy-svg-atom"
-                }
+                className={a.moving ? "vacancy-svg-moving" : "vacancy-svg-atom"}
               />
             ))}
           <circle
-            cx={left + frame.vacancy[0] * step}
-            cy={45 + frame.vacancy[1] * step}
+            cx={left + displayedVacancy[0] * step}
+            cy={45 + displayedVacancy[1] * step}
             r={radius + 3}
             className="vacancy-svg-hole"
           />

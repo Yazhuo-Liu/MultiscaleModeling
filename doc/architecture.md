@@ -20,6 +20,7 @@
 - React + TypeScript + Vite，hash 路由适配 GitHub Pages 子路径与直接刷新。
 - `src/content/methods.ts`：结构化课程数据，11 种方法均遵循 `Method` 接口。
 - `src/simulations/`：纯 TypeScript 数值算法，无 DOM 依赖；可单独测试。
+- `src/components/QuantumScene.tsx`、`MesoscopicScene.tsx`、`ContinuumScene.tsx`：电子、介观与连续体方法的材料主视图，读取同一数值帧；点击选择、局部解释、2D/3D显示与真实求解维度明确区分。细节见 [phenomenon-scenes.md](phenomenon-scenes.md)。
 - `src/components/SimulationLab.tsx`：实验控件、Canvas 2D、Three.js 3D、参数重置、暂停、读数。小规模模型限制规模；运行采用帧预算、暂停卸载清理，避免长期阻塞浏览器。
 - `src/foundations/orbital-volume.ts`：完整三维波函数、概率采样及球对称等值面求根；`src/visualization/isosurface.ts`：体数据的marching-tetrahedra等值面。
 - `src/components/OrbitalVolumeView.tsx` / `OrbitalDensitySlice.tsx`：同一波函数的三维/截面/径向显示；`SpatialVolumeView.tsx`：真实xyz粒子和三维相界。

@@ -23,7 +23,7 @@ export const simulationDefinitions: Record<MethodId, SimulationDefinition> = {
         min: 0.1,
         max: 3,
         step: 0.1,
-        initial: 0.3,
+        initial: 1.2,
         unit: "a₀⁻²",
       },
     ],

@@ -45,6 +45,14 @@ const executablePath =
   process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ||
   (existsSync("/usr/bin/chromium") ? "/usr/bin/chromium" : undefined);
 let browser;
+async function openNumericalView(page) {
+  await page.locator(".simulation-lab").waitFor();
+  const details = page.getByTestId("lab-numerical-details");
+  if (await details.count()) {
+    if (!(await details.evaluate((node) => node.open)))
+      await details.locator(":scope > summary").click();
+  }
+}
 try {
   browser = await chromium.launch({
     executablePath,
@@ -111,6 +119,7 @@ try {
     assert.ok((await page.locator(".references a").count()) >= 2);
     await page.getByRole("tab", { name: "交互实验" }).click();
     if (id === "mc") await page.getByTestId("mc-example-ising").click();
+    await openNumericalView(page);
     await page.locator(".lab-viewport canvas").waitFor();
     await page.locator(".lab-playback").scrollIntoViewIfNeeded();
     await page.getByRole("button", { name: "前进一步", exact: true }).click();
@@ -134,6 +143,7 @@ try {
     await page.waitForTimeout(150);
     assert.equal(await page.locator(".lab-step").innerText(), stopped);
     await page.locator(".lab-mode button").nth(1).click();
+    await openNumericalView(page);
     await page.locator(".lab-viewport canvas").waitFor();
     await page.waitForTimeout(120);
     const bounds = await page.locator(".lab-viewport canvas").boundingBox();

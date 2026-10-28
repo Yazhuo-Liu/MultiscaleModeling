@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { useLanguage } from "../i18n";
@@ -15,6 +15,7 @@ function colors(element: Element) {
     background: read("--spatial-background", "#f6f9fa"),
     line: read("--spatial-line", "#9eb9b5"),
     ink: read("--spatial-ink", "#536c74"),
+    reference: read("--spatial-reference", "#b18b5c"),
   };
 }
 
@@ -43,6 +44,8 @@ interface SceneState {
   camera: THREE.PerspectiveCamera;
   controls: OrbitControls;
   particles: THREE.InstancedMesh | null;
+  startingSites: THREE.InstancedMesh | null;
+  offsets: THREE.LineSegments | null;
   surface: THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial> | null;
   slice: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial> | null;
   render: () => void;
@@ -55,18 +58,76 @@ export default function SpatialVolumeView({
   showSlice,
   active,
   onError,
+  resetToken = 0,
 }: {
   frame: SimulationFrame;
   sliceIndex: number;
   showSlice: boolean;
   active: boolean;
   onError: () => void;
+  resetToken?: number;
 }) {
   const host = useRef<HTMLDivElement>(null);
   const state = useRef<SceneState | null>(null);
   const activeRef = useRef(active);
   activeRef.current = active;
   const { t, locale } = useLanguage();
+  const [compareStart, setCompareStart] = useState(false);
+  const [wireframe, setWireframe] = useState(false);
+  const reference = useRef<{
+    token: number;
+    box: number | undefined;
+    time: number;
+    energy: number;
+    points: [number, number, number][];
+  } | null>(null);
+  // Reference positions belong to the current view; resetting a model captures
+  // its new initial state. Switching language does not replace this reference.
+  if (
+    !reference.current ||
+    frame.time === 0 ||
+    reference.current.token !== resetToken ||
+    reference.current.box !== frame.box ||
+    frame.time < reference.current.time ||
+    reference.current.points.length !== (frame.points?.length ?? 0)
+  ) {
+    reference.current = {
+      token: resetToken,
+      box: frame.box,
+      time: frame.time,
+      energy: frame.metrics[0]?.value ?? 0,
+      points: frame.points?.map((p) => [p.x, p.y, p.z]) ?? [],
+    };
+  }
+  const first = reference.current;
+  const offsets =
+    frame.points?.map((p, i) =>
+      [p.x, p.y, p.z].map((value, axis) => {
+        const delta = value - first.points[i][axis];
+        return frame.box
+          ? delta - frame.box * Math.round(delta / frame.box)
+          : delta;
+      }),
+    ) ?? [];
+  const rmsOffset = Math.sqrt(
+    offsets.reduce(
+      (sum, delta) =>
+        sum + delta.reduce((total, value) => total + value * value, 0),
+      0,
+    ) / Math.max(1, offsets.length),
+  );
+  const energyRemaining =
+    first.energy > 0
+      ? (100 * (frame.metrics[0]?.value ?? 0)) / first.energy
+      : 100;
+  const positiveFraction = frame.volume
+    ? frame.volume.values.reduce((n, value) => n + Number(value > 0), 0) /
+      frame.volume.values.length
+    : 0;
+  useEffect(() => {
+    setCompareStart(false);
+    setWireframe(false);
+  }, [resetToken]);
 
   useEffect(() => {
     const element = host.current;
@@ -159,6 +220,8 @@ export default function SpatialVolumeView({
       camera,
       controls,
       particles: null,
+      startingSites: null,
+      offsets: null,
       surface: null,
       slice: null,
       render,
@@ -181,6 +244,8 @@ export default function SpatialVolumeView({
     renderer.domElement.addEventListener("webglcontextlost", contextLost);
     document.addEventListener("visibilitychange", render);
     const keys = (event: KeyboardEvent) => {
+      if (event.target !== element && event.target !== renderer.domElement)
+        return;
       if (!/^Arrow|^[+\-=rR]$/.test(event.key)) return;
       event.preventDefault();
       if (event.key.toLowerCase() === "r") camera.position.set(8, -10, 8);
@@ -307,6 +372,83 @@ export default function SpatialVolumeView({
       }
       current.particles.instanceMatrix.needsUpdate = true;
       current.particles.computeBoundingSphere();
+      if (!current.startingSites) {
+        current.startingSites = new THREE.InstancedMesh(
+          new THREE.SphereGeometry(1, 12, 8),
+          new THREE.MeshBasicMaterial({
+            color: palette.reference,
+            wireframe: true,
+            transparent: true,
+            opacity: 0.38,
+          }),
+          frame.points.length,
+        );
+        current.scene.add(current.startingSites);
+        current.offsets = new THREE.LineSegments(
+          new THREE.BufferGeometry(),
+          new THREE.LineBasicMaterial({
+            color: palette.reference,
+            transparent: true,
+            opacity: 0.75,
+          }),
+        );
+        current.scene.add(current.offsets);
+      }
+      const lines: number[] = [];
+      const half = frame.box / 2;
+      for (let i = 0; i < frame.points.length; i++) {
+        const start = first.points[i];
+        dummy.position.set(
+          start[0] * scale,
+          start[1] * scale,
+          start[2] * scale,
+        );
+        dummy.scale.setScalar((frame.points[i].radius ?? 0.23) * scale);
+        dummy.updateMatrix();
+        current.startingSites.setMatrixAt(i, dummy.matrix);
+        const delta = offsets[i];
+        // Split a minimum-image connection where it crosses a periodic face,
+        // rather than drawing a spurious line through the whole simulation box.
+        const cuts = [0, 1];
+        for (let axis = 0; axis < 3; axis++) {
+          const end = start[axis] + delta[axis];
+          if (end > half || end < -half) {
+            const edge = end > half ? half : -half;
+            cuts.push((edge - start[axis]) / delta[axis]);
+          }
+        }
+        cuts.sort((a, b) => a - b);
+        for (let segment = 1; segment < cuts.length; segment++) {
+          const a = cuts[segment - 1],
+            b = cuts[segment];
+          if (b - a < 1e-9) continue;
+          const middle = (a + b) / 2;
+          const shift = start.map(
+            (value, axis) =>
+              frame.box! *
+              Math.floor((value + delta[axis] * middle + half) / frame.box!),
+          );
+          for (const fraction of [a, b])
+            for (let axis = 0; axis < 3; axis++)
+              lines.push(
+                (start[axis] + delta[axis] * fraction - shift[axis]) * scale,
+              );
+        }
+      }
+      current.startingSites.instanceMatrix.needsUpdate = true;
+      current.startingSites.computeBoundingSphere();
+      current.startingSites.visible = compareStart;
+      if (current.offsets) {
+        current.offsets.geometry.dispose();
+        current.offsets.geometry = new THREE.BufferGeometry();
+        current.offsets.geometry.setAttribute(
+          "position",
+          new THREE.Float32BufferAttribute(lines, 3),
+        );
+        current.offsets.visible = compareStart;
+      }
+      element.dataset.rmsOffset = String(rmsOffset);
+      element.dataset.offsetSegments = String(lines.length / 6);
       element.dataset.spatialKind = "particles";
       element.dataset.zSpread = String(
         Math.max(...frame.points.map((p) => p.z)) -
@@ -315,7 +457,7 @@ export default function SpatialVolumeView({
       element.dataset.particleCount = String(frame.points.length);
     }
     current.render();
-  }, [frame]);
+  }, [frame, resetToken]);
 
   useEffect(() => {
     const current = state.current;
@@ -388,18 +530,123 @@ export default function SpatialVolumeView({
     current.render();
   }, [frame, sliceIndex, showSlice]);
 
+  useEffect(() => {
+    const current = state.current;
+    if (!current) return;
+    if (current.startingSites) current.startingSites.visible = compareStart;
+    if (current.offsets) current.offsets.visible = compareStart;
+    if (current.surface) current.surface.material.wireframe = wireframe;
+    current.render();
+  }, [compareStart, wireframe, frame.volume !== undefined]);
+
   useEffect(() => state.current?.render(), [active, locale]);
   return (
-    <div
-      ref={host}
-      className="lab-spatial"
-      data-show-slice={showSlice}
-      tabIndex={0}
-      role="img"
-      aria-label={t(
-        "三维空间模型：拖动旋转，滚轮缩放；方向键旋转，加减键缩放，R复位",
-        "Three-dimensional spatial model: drag to rotate, scroll to zoom; arrows rotate, plus/minus zoom, R resets",
-      )}
-    />
+    <div className="spatial-observation">
+      <div className="spatial-observation-tools">
+        {frame.volume ? (
+          <div
+            role="group"
+            aria-label={t("观察相界", "Inspect the phase boundary")}
+          >
+            <button
+              data-testid="spatial-surface"
+              aria-pressed={!wireframe}
+              onClick={() => setWireframe(false)}
+            >
+              {t("相界表面", "Surface")}
+            </button>
+            <button
+              data-testid="spatial-wireframe"
+              aria-pressed={wireframe}
+              onClick={() => setWireframe(true)}
+            >
+              {t("查看曲面网格", "Surface mesh")}
+            </button>
+          </div>
+        ) : (
+          <label>
+            <input
+              data-testid="spatial-compare-start"
+              type="checkbox"
+              checked={compareStart}
+              onChange={(event) => setCompareStart(event.target.checked)}
+            />
+            {t("和起始排列对比", "Compare with the starting arrangement")}
+          </label>
+        )}
+      </div>
+      <div
+        ref={host}
+        className="lab-spatial"
+        data-show-slice={showSlice}
+        data-compare-start={compareStart}
+        data-wireframe={wireframe}
+        data-energy-remaining={energyRemaining}
+        data-positive-fraction={positiveFraction}
+        data-testid={frame.volume ? "phenomenon-phase-field" : "phenomenon-md"}
+        tabIndex={0}
+        role="img"
+        aria-label={t(
+          "三维空间模型：拖动旋转，滚轮缩放；方向键旋转，加减键缩放，R复位",
+          "Three-dimensional spatial model: drag to rotate, scroll to zoom; arrows rotate, plus/minus zoom, R resets",
+        )}
+      />
+      <div className="spatial-observation-readout">
+        {frame.volume ? (
+          <>
+            <span>
+              {t("剩余自由能", "Free energy remaining")}{" "}
+              <strong data-testid="spatial-energy-remaining">
+                {energyRemaining.toFixed(1)}%
+              </strong>
+            </span>
+            <span>
+              {t("正相体积", "Positive-phase volume")}{" "}
+              <strong>{(positiveFraction * 100).toFixed(1)}%</strong>
+            </span>
+            <small>
+              {t(
+                "看界面如何变光滑；相的体积分数可以改变。",
+                "Watch the interface smooth out; phase volume fractions may change.",
+              )}
+            </small>
+          </>
+        ) : (
+          <>
+            <span>
+              {t("整体偏离起点", "Overall offset from the start")}{" "}
+              <strong data-testid="spatial-rms-offset">
+                {rmsOffset.toFixed(3)} σ
+              </strong>
+            </span>
+            <small>
+              {compareStart
+                ? t(
+                    "细线球为起始位置，连线取穿过周期边界的最短距离。",
+                    "Wire spheres mark starting sites; connectors use the shortest distance across periodic boundaries.",
+                  )
+                : t(
+                    "观察原子离开起始位置，看看整个排列怎样变化。",
+                    "Watch atoms leave their starting sites and the whole arrangement change.",
+                  )}
+            </small>
+          </>
+        )}
+        <details>
+          <summary>{t("读数说明", "About these readings")}</summary>
+          <p>
+            {frame.volume
+              ? t(
+                  "自由能以本次进入三维视图或重置时的值为100%；正相表示序参量大于零的体网格。曲面网格是显示用的三角形，不是额外的计算模型。",
+                  "Free energy is relative to its value when this 3D view opens or the model resets. Positive phase means volume cells with an order parameter above zero. The surface mesh is a rendering triangulation, not another simulation model.",
+                )
+              : t(
+                  "偏离量是所有原子相对本次视图起点的最短周期距离的均方根，单位为原子长度σ。它不累计跨边界的行程，也不用于求扩散系数。",
+                  "The offset is the root-mean-square minimum-image distance from each atom's position when this view opens, in atomic length units σ. It does not accumulate travel across the boundaries or determine a diffusion coefficient.",
+                )}
+          </p>
+        </details>
+      </div>
+    </div>
   );
 }

@@ -19,10 +19,8 @@ export interface VacancyFrame {
   attempts: number;
   accepted: number;
   vacancy: LatticeSite;
-  taggedId: number;
   atoms: { id: number; site: LatticeSite }[];
   vacancyTrail: LatticeSite[];
-  taggedTrail: LatticeSite[];
   move: VacancyMove | null;
   parameters: VacancyParameters;
 }
@@ -71,22 +69,16 @@ export function createVacancyDemo(
   let accepted = 0;
   let move: VacancyMove | null = null;
   let vacancyTrail: LatticeSite[] = [];
-  let taggedTrail: LatticeSite[] = [];
-  // Seed 17's first randomly proposed direction is -x. Track that neighbour so
-  // the first accepted exchange is easy to see; the proposal itself is unaltered.
-  const taggedId = index([1, 2, 2]);
   function snapshot(): VacancyFrame {
     return {
       size: VACANCY_SIZE,
       attempts,
       accepted,
       vacancy: copy(vacancy),
-      taggedId,
       atoms: occupancy.flatMap((id, i) =>
         id < 0 ? [] : [{ id, site: site(i) }],
       ),
       vacancyTrail: vacancyTrail.map(copy),
-      taggedTrail: taggedTrail.map(copy),
       move: move ? { ...move, from: copy(move.from), to: copy(move.to) } : null,
       parameters: { ...parameters },
     };
@@ -108,7 +100,6 @@ export function createVacancyDemo(
     attempts = accepted = 0;
     move = null;
     vacancyTrail = [copy(vacancy)];
-    taggedTrail = [[1, 2, 2]];
     return snapshot();
   }
   function attempt() {
@@ -149,11 +140,9 @@ export function createVacancyDemo(
     if (isAccepted) {
       occupancy[index(vacancy)] = atomId;
       occupancy[index(target)] = -1;
-      if (atomId === taggedId) taggedTrail.push(copy(vacancy));
       vacancy = copy(target);
       vacancyTrail.push(copy(vacancy));
       vacancyTrail = vacancyTrail.slice(-100);
-      taggedTrail = taggedTrail.slice(-100);
       accepted++;
     }
     return snapshot();

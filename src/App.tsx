@@ -976,8 +976,8 @@ function MethodPage({ method: m }: { method: Method }) {
               {(m.id === "mc" && mcExample === "diffusion"
                 ? [
                     t(
-                      "在简单立方晶格中留一个空位，并标记一个相邻原子。",
-                      "Leave one vacancy in a simple cubic lattice and tag a neighboring atom.",
+                      "在简单立方晶格中留一个空位，观察邻近原子如何填入空位。",
+                      "Leave one vacancy in a simple cubic lattice and observe a neighboring atom filling it.",
                     ),
                     t(
                       "等概率选六个方向之一；若越过边界，拒绝这次尝试。",

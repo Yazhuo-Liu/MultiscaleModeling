@@ -6056,7 +6056,6 @@ p.orbital-help {
 /* Vacancy exchange demo: all visual styling remains in the shared theme. */
 .vacancy-demo {
   --vacancy-atom: #4b9995;
-  --vacancy-tagged: #8663bd;
   --vacancy-hole: #d9962d;
   --vacancy-line: #b5cecc;
   --vacancy-background: #f3f8f7;
@@ -6206,9 +6205,6 @@ p.orbital-help {
 .vacancy-key-atom {
   background: var(--vacancy-atom);
 }
-.vacancy-key-tagged {
-  background: var(--vacancy-tagged);
-}
 .vacancy-key-hole {
   border: 2px solid var(--vacancy-hole);
 }
@@ -6331,9 +6327,6 @@ p.orbital-help {
 }
 .vacancy-svg-atom {
   fill: var(--vacancy-atom);
-}
-.vacancy-svg-tagged {
-  fill: var(--vacancy-tagged);
 }
 .vacancy-svg-hole {
   fill: none;
@@ -6659,5 +6652,1451 @@ p.orbital-help {
 @media (max-width: 700px) {
   .lab-beginner .lab-material-story {
     min-height: 130px;
+  }
+}
+
+/* Material scenes keep observation controls next to the object being explored. */
+:root {
+  --scene-bg: #f4f8f8;
+  --scene-ink: #38565b;
+  --scene-muted: #70888d;
+  --scene-line: #bdd1d3;
+  --scene-teal: #408d88;
+  --scene-gold: #ce9543;
+  --scene-purple: #9477b9;
+  --scene-cold: #628fa9;
+  --scene-warm: #d88f51;
+}
+.lab-phenomenon-first .lab-workspace {
+  display: block;
+}
+.lab-phenomenon-first .lab-parameter-panel {
+  margin: 18px 0 0;
+  padding: 16px 20px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.lab-phenomenon-first .lab-parameter-panel[open] {
+  display: block;
+}
+.lab-phenomenon-first .lab-controls-title {
+  margin-bottom: 0;
+}
+.lab-phenomenon-first .lab-parameter-panel[open] .lab-controls-title {
+  margin-bottom: 22px;
+}
+.lab-phenomenon-first .lab-control {
+  max-width: 650px;
+}
+.lab-phenomenon-first .lab-display > .learning-detail {
+  margin: 18px;
+}
+.phenomenon-scene {
+  min-width: 0;
+  background: var(--scene-bg);
+  color: var(--scene-ink);
+}
+.phenomenon-scene button,
+.phenomenon-scene select {
+  min-height: 38px;
+}
+.phenomenon-scene svg {
+  max-width: 100%;
+}
+@media (max-width: 640px) {
+  .lab-phenomenon-first .lab-display > .learning-detail {
+    margin: 12px;
+  }
+  .lab-phenomenon-first .lab-parameter-panel {
+    padding: 16px;
+  }
+}
+
+/* The vacancy is the persistent focus; only the atom in the current exchange brightens. */
+:root {
+  --vacancy-moving: #63bdb0;
+}
+.vacancy-key-moving {
+  background: var(--vacancy-moving);
+  border: 1px solid var(--vacancy-atom);
+}
+.vacancy-svg-moving {
+  fill: var(--vacancy-moving);
+  stroke: var(--vacancy-atom);
+  stroke-width: 2;
+}
+.vacancy-scene[data-renderer="svg"] canvas {
+  display: none;
+}
+/* Electron-scale material scenes. All colors and layout remain in this theme. */
+:root {
+  --quantum-bg: #f4f7fa;
+  --quantum-cloud: #7d69b5;
+  --quantum-nucleus: #bc884a;
+  --quantum-reference: #99afb7;
+  --quantum-site-a: #4e9890;
+  --quantum-site-b: #9b7ec0;
+}
+.quantum-scene {
+  background: var(--quantum-bg);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.quantum-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e2e9ed;
+}
+.quantum-toolbar > span {
+  font-size: 15px;
+  color: #516674;
+  line-height: 1.7;
+}
+.quantum-toolbar > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  border: 1px solid #dce5e8;
+  border-radius: 10px;
+  padding: 4px;
+  background: #fdfefe;
+}
+.quantum-toolbar button {
+  border-radius: 7px;
+  padding: 8px 11px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.quantum-toolbar button[aria-pressed="true"] {
+  background: #e8efed;
+  color: var(--accent-dark);
+}
+.quantum-cloud-wrap {
+  position: relative;
+}
+.quantum-cloud-scene {
+  width: 100%;
+  height: 410px;
+  touch-action: none;
+}
+.quantum-cloud-scene canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.quantum-cloud-scene:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -3px;
+}
+.quantum-cloud-label {
+  position: absolute;
+  left: 22px;
+  bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #617681;
+  pointer-events: none;
+}
+.quantum-cloud-label i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--quantum-nucleus);
+}
+.quantum-view-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 14px 24px;
+  border-top: 1px solid #e4ebee;
+  font-size: 14px;
+  color: #516674;
+}
+.quantum-view-options label {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  cursor: pointer;
+}
+.quantum-view-options input {
+  accent-color: var(--accent);
+  width: 16px;
+  height: 16px;
+}
+.quantum-view-options button {
+  border: 1px solid #d6e0e3;
+  border-radius: 8px;
+  padding: 7px 12px;
+  background: white;
+}
+.quantum-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 24px;
+  padding: 22px 24px;
+  background: #fff;
+  border-block: 1px solid #e4ebee;
+}
+.quantum-summary > div {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.quantum-summary span {
+  font-size: 14px;
+  color: #657681;
+}
+.quantum-summary strong {
+  font-size: 27px;
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  color: #42556a;
+}
+.quantum-summary small {
+  margin-left: 6px;
+  font-size: 14px;
+  font-weight: 400;
+}
+.quantum-summary p {
+  grid-column: 1 / -1;
+  font-size: 15px;
+  line-height: 1.85;
+  color: #536a74;
+}
+.quantum-note {
+  padding: 13px 24px;
+  font-size: 14px;
+  line-height: 1.85;
+  color: #687a84;
+}
+.quantum-note + .quantum-note {
+  padding-top: 0;
+}
+.quantum-density-section {
+  display: block;
+  width: 100%;
+  height: 410px;
+}
+.quantum-density-section text {
+  fill: #607681;
+  font: 15px var(--font);
+}
+.quantum-density-gradient {
+  color: var(--quantum-cloud);
+}
+.quantum-nucleus {
+  fill: var(--quantum-nucleus);
+}
+.quantum-section-axis {
+  fill: none;
+  stroke: #d8e2e8;
+  stroke-width: 1;
+}
+.quantum-section-reference {
+  fill: none;
+  stroke: var(--quantum-reference);
+  stroke-width: 1.5;
+  stroke-dasharray: 5 7;
+}
+.quantum-hf-diagram {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 410px;
+}
+.quantum-hf-diagram text {
+  fill: #536b79;
+  font-family: var(--font);
+  font-size: 15px;
+}
+.quantum-site-a {
+  color: var(--quantum-site-a);
+}
+.quantum-site-b {
+  color: var(--quantum-site-b);
+}
+.quantum-site-graphic {
+  cursor: pointer;
+}
+.quantum-site-graphic:focus {
+  outline: none;
+}
+.quantum-site-halo {
+  fill: #fff;
+  fill-opacity: 0.12;
+  stroke: transparent;
+  stroke-width: 2;
+}
+.quantum-site-graphic.is-selected .quantum-site-halo,
+.quantum-site-graphic:focus-visible .quantum-site-halo {
+  stroke: currentColor;
+  stroke-dasharray: 3 6;
+  fill-opacity: 0.6;
+}
+.quantum-one-electron-reference {
+  fill: none;
+  stroke: #c3ced8;
+  stroke-dasharray: 4 6;
+  stroke-width: 1;
+}
+.quantum-occupation-disc {
+  stroke: currentColor;
+  stroke-width: 2;
+}
+.quantum-site-center {
+  fill: currentColor;
+}
+.quantum-site-link {
+  stroke: #c7d3db;
+  stroke-width: 2;
+  fill: none;
+  stroke-dasharray: 5 7;
+}
+.quantum-coupling {
+  stroke: #8ca6ad;
+  stroke-width: 2;
+  fill: none;
+}
+.quantum-hf-diagram .quantum-site-title {
+  font-size: 19px;
+  font-weight: 500;
+}
+.quantum-hf-diagram .quantum-occupation-label {
+  font-size: 23px;
+  font-weight: 500;
+}
+.quantum-hf-diagram .quantum-coupling-label {
+  font-size: 14px;
+  fill: #81919d;
+}
+.quantum-energy-level {
+  stroke: currentColor;
+  stroke-width: 5;
+  stroke-linecap: round;
+}
+.quantum-zero-level {
+  stroke: #d8e0e5;
+  stroke-width: 1;
+  fill: none;
+}
+.quantum-occupation-total {
+  padding: 8px 32px 22px;
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+}
+.quantum-occupation-total svg {
+  width: min(100%, 560px);
+  height: 14px;
+}
+.quantum-occupation-total span {
+  font-size: 14px;
+  color: #657d85;
+}
+.quantum-share-a {
+  fill: var(--quantum-site-a);
+}
+.quantum-share-b {
+  fill: var(--quantum-site-b);
+}
+.quantum-inspection {
+  margin: 0 24px;
+  padding: 22px;
+  background: #fff;
+  border: 1px solid #dfe8eb;
+  border-radius: 12px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+.quantum-inspection h4 {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: 16px;
+  font-weight: 550;
+  color: #49616b;
+}
+.quantum-inspection > div {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.quantum-inspection span {
+  font-size: 14px;
+  color: #71818d;
+}
+.quantum-inspection strong {
+  font-size: 22px;
+  font-weight: 500;
+  color: #526c77;
+}
+.quantum-inspection p {
+  grid-column: 1 / -1;
+  font-size: 13px;
+  color: #7b8c97;
+  line-height: 1.8;
+}
+.quantum-scf-loop {
+  padding: 0 24px;
+  margin: 24px 0 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  list-style: none;
+}
+.quantum-scf-loop li {
+  position: relative;
+  padding: 10px 14px;
+  background: #e6eeed;
+  color: #5a7974;
+  border-radius: 9px;
+  font-size: 14px;
+  text-align: center;
+}
+.quantum-scf-loop li + li::before {
+  content: "→";
+  position: absolute;
+  left: -15px;
+  color: #8d9fa8;
+}
+.quantum-state {
+  padding: 8px 24px;
+  text-align: center;
+  font-size: 14px;
+  color: #6e8187;
+  line-height: 1.8;
+}
+.quantum-state strong {
+  font-weight: 500;
+  color: #466f64;
+}
+@media (max-width: 650px) {
+  .quantum-toolbar {
+    padding: 16px;
+  }
+  .quantum-toolbar > span {
+    font-size: 14px;
+  }
+  .quantum-cloud-scene,
+  .quantum-density-section {
+    height: 330px;
+  }
+  .quantum-view-options {
+    padding: 13px 16px;
+    font-size: 13px;
+  }
+  .quantum-summary {
+    padding: 20px 16px;
+    gap: 12px;
+  }
+  .quantum-summary span {
+    font-size: 13px;
+  }
+  .quantum-summary strong {
+    font-size: 24px;
+  }
+  .quantum-note {
+    padding: 12px 16px;
+  }
+  .quantum-inspection {
+    margin: 0 16px;
+    padding: 18px;
+    gap: 15px;
+    grid-template-columns: 1fr;
+  }
+  .quantum-inspection > div {
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .quantum-inspection strong {
+    font-size: 18px;
+  }
+  .quantum-scf-loop {
+    padding: 0 16px;
+    gap: 12px;
+  }
+  .quantum-scf-loop li {
+    padding: 9px 7px;
+    font-size: 12px;
+    flex: 1;
+  }
+  .quantum-scf-loop li + li::before {
+    left: -12px;
+  }
+  .quantum-hf-diagram text {
+    font-size: 29px;
+  }
+  .quantum-hf-diagram .quantum-occupation-label {
+    font-size: 31px;
+  }
+  .quantum-hf-diagram .quantum-site-title {
+    font-size: 30px;
+  }
+  .quantum-hf-diagram .quantum-coupling-label {
+    font-size: 25px;
+  }
+  .quantum-density-section text {
+    font-size: 22px;
+  }
+}
+/* Frame-driven continuum phenomena: mechanics and heat, all design kept here. */
+:root {
+  --scene-teal: #438e87;
+  --scene-teal-light: #cee6df;
+  --scene-gold: #c69754;
+  --scene-ink: #3d6069;
+  --scene-line: #a7bfbe;
+  --heat-cold: #b5d8e7;
+  --heat-mid: #fbefd3;
+  --heat-hot: #cf7048;
+}
+.continuum-scene {
+  padding: 24px;
+  background: #f7faf9;
+  border-top: 1px solid var(--line);
+}
+.continuum-scene-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 15px;
+  padding: 2px 4px 15px;
+}
+.continuum-scene-heading h3 {
+  font-size: 21px;
+  line-height: 1.6;
+  letter-spacing: -0.02em;
+  max-width: 640px;
+}
+.continuum-scene-heading > span {
+  color: #758885;
+  font-size: 13px;
+  line-height: 1.8;
+  padding-top: 5px;
+}
+.continuum-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+.continuum-svg text {
+  font-family: var(--font);
+  fill: var(--scene-ink);
+}
+.continuum-svg-label {
+  font-size: 20px;
+  font-weight: 500;
+}
+.continuum-svg-caption {
+  font-size: 16px;
+}
+.continuum-grip {
+  stroke: #7c9699;
+  stroke-width: 2;
+}
+.continuum-grip-hatch {
+  stroke: #91a9ac;
+  stroke-width: 2;
+}
+.continuum-dimension {
+  fill: none;
+  stroke: #97b3af;
+  stroke-width: 1.5;
+}
+.continuum-connector {
+  stroke: var(--scene-ink);
+  stroke-width: 4;
+  fill: none;
+}
+.continuum-junction {
+  fill: var(--scene-teal);
+}
+.continuum-pick {
+  cursor: pointer;
+  outline-offset: 4px;
+}
+.continuum-selection-surface {
+  fill: transparent;
+  stroke: transparent;
+  stroke-width: 1.5;
+}
+.continuum-pick.is-selected .continuum-selection-surface {
+  fill: #e9f3ee;
+  stroke: #c2dbd2;
+}
+.continuum-pick:focus-visible .continuum-selection-surface {
+  stroke: var(--scene-teal);
+  stroke-width: 3;
+}
+.maxwell-spring {
+  stroke: var(--scene-teal);
+  stroke-width: 4;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.maxwell-cylinder {
+  fill: none;
+  stroke: #ac8a57;
+  stroke-width: 4;
+  stroke-linecap: square;
+}
+.maxwell-fluid {
+  fill: #e9d8b9;
+  opacity: 0.8;
+}
+.maxwell-piston {
+  stroke: #816a48;
+  stroke-width: 5;
+  fill: none;
+}
+.maxwell-part-track {
+  fill: #e7d4af;
+}
+.maxwell-elastic-part {
+  fill: var(--scene-teal);
+}
+.continuum-choice-row {
+  display: flex;
+  gap: 10px;
+  padding: 15px 0;
+}
+.continuum-choice-row button,
+.continuum-small-button {
+  padding: 9px 16px;
+  border: 1px solid #d1e1da;
+  border-radius: 9px;
+  background: #fff;
+  font-size: 14px;
+}
+.continuum-choice-row button[aria-pressed="true"] {
+  background: #e6f1eb;
+  color: #386b5f;
+  border-color: #8bafa0;
+}
+.continuum-display-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 24px;
+  padding: 14px 0;
+}
+.continuum-display-controls label {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 15px;
+  color: #526e6b;
+  line-height: 1.7;
+}
+.continuum-display-controls input {
+  accent-color: var(--scene-teal);
+  width: 16px;
+  height: 16px;
+}
+.continuum-inspector {
+  background: #fff;
+  padding: 18px 21px;
+  border: 1px solid #dfebe5;
+  border-radius: 13px;
+}
+.continuum-inspector > p {
+  font-size: 16px;
+  line-height: 1.85;
+  color: #4e6868;
+  margin-bottom: 14px;
+}
+.continuum-readout-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 15px;
+}
+.continuum-readout-row > span {
+  color: #7b8e8b;
+  font-size: 13px;
+  line-height: 1.7;
+}
+.continuum-readout-row strong {
+  display: block;
+  font-family: var(--mono);
+  font-weight: 500;
+  font-size: 21px;
+  color: #3c6760;
+  margin-top: 4px;
+}
+.continuum-model-caption {
+  font-size: 14px;
+  line-height: 1.9;
+  color: #728680;
+  margin-top: 15px;
+}
+.continuum-range {
+  display: block;
+  margin: 0 0 20px;
+}
+.continuum-range > span {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 14px;
+  color: #55716d;
+  line-height: 1.7;
+  margin-bottom: 8px;
+}
+.continuum-range strong {
+  font-weight: 500;
+  font-family: var(--mono);
+}
+.continuum-range input {
+  width: 100%;
+  accent-color: var(--scene-teal);
+}
+.bar-reference {
+  stroke: #9caaa8;
+  stroke-width: 1.5;
+  fill: none;
+  stroke-dasharray: 6 5;
+}
+.bar-element {
+  fill: #c9e2d8;
+  stroke: #c9e2d8;
+  stroke-width: 0.5;
+}
+.bar-element.show-mesh {
+  stroke: #74a797;
+  stroke-width: 1;
+}
+.bar-load-arrow {
+  fill: none;
+  stroke: var(--scene-gold);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.bar-node-target {
+  fill: transparent;
+}
+.bar-node-button {
+  cursor: pointer;
+  outline: none;
+}
+.bar-node {
+  fill: #6b9c90;
+  stroke: #f7faf9;
+  stroke-width: 1;
+}
+.bar-node.is-selected {
+  fill: var(--scene-gold);
+  stroke: #fff;
+  stroke-width: 2;
+}
+.bar-node-button:focus-visible .bar-node {
+  fill: var(--scene-gold);
+  stroke: var(--scene-ink);
+  stroke-width: 2;
+}
+.heat-cold-frame {
+  fill: #abcdda;
+  stroke: #89b2c5;
+  stroke-width: 2;
+}
+.heat-plate-target {
+  cursor: crosshair;
+}
+.heat-cell {
+  stroke: none;
+}
+.heat-cell.show-grid {
+  stroke: #45656b38;
+  stroke-width: 0.65;
+}
+.heat-plate-border {
+  fill: transparent;
+  stroke: #759da9;
+  stroke-width: 1.5;
+}
+.heat-plate-target:focus-visible {
+  outline: none;
+}
+.heat-plate-target:focus-visible .heat-plate-border {
+  stroke: var(--scene-ink);
+  stroke-width: 4;
+}
+.heat-probe-mark {
+  fill: none;
+  stroke: #3b5964;
+  stroke-width: 2;
+}
+.heat-probe-mark circle {
+  fill: #ffffff80;
+}
+.heat-thermometer-track {
+  fill: #e7edeb;
+  stroke: #a9bfba;
+  stroke-width: 1;
+}
+.heat-thermometer-bulb {
+  stroke: #91aca7;
+  stroke-width: 2;
+}
+.heat-stop-cold {
+  stop-color: var(--heat-cold);
+}
+.heat-stop-mid {
+  stop-color: var(--heat-mid);
+}
+.heat-stop-hot {
+  stop-color: var(--heat-hot);
+}
+.heat-probe-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+@media (max-width: 700px) {
+  .continuum-scene {
+    padding: 16px 12px;
+  }
+  .continuum-scene-heading {
+    display: block;
+  }
+  .continuum-scene-heading h3 {
+    font-size: 18px;
+  }
+  .continuum-scene-heading > span {
+    display: block;
+    margin-top: 5px;
+    font-size: 13px;
+  }
+  .continuum-inspector {
+    padding: 16px;
+  }
+  .continuum-inspector > p {
+    font-size: 15px;
+  }
+  .continuum-svg-label {
+    font-size: 25px;
+  }
+  .continuum-svg-caption {
+    font-size: 21px;
+  }
+  .continuum-readout-row {
+    gap: 10px;
+  }
+  .continuum-readout-row strong {
+    font-size: 17px;
+  }
+  .continuum-readout-row > span {
+    font-size: 12px;
+  }
+  .heat-probe-controls {
+    gap: 15px;
+  }
+  .continuum-model-caption {
+    font-size: 13px;
+  }
+}
+/* Physical observation controls for the existing xyz models. */
+:root {
+  --spatial-reference: #b18b5c;
+}
+.lab-viewport:has(> .spatial-observation) {
+  height: auto;
+  min-height: 0;
+}
+.spatial-observation {
+  background: var(--spatial-background, #f6f9fa);
+}
+.spatial-observation .lab-spatial {
+  height: 420px;
+}
+.spatial-observation-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 13px 16px;
+  gap: 12px;
+  border-bottom: 1px solid var(--line);
+}
+.spatial-observation-tools label {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--accent-dark);
+  cursor: pointer;
+}
+.spatial-observation-tools input {
+  accent-color: var(--accent);
+  width: 16px;
+  height: 16px;
+}
+.spatial-observation-tools [role="group"] {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+}
+.spatial-observation-tools button {
+  border-radius: 7px;
+  padding: 8px 12px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #5c746d;
+}
+.spatial-observation-tools button[aria-pressed="true"] {
+  background: #e7f0ed;
+  color: var(--accent-dark);
+}
+.spatial-observation-readout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px 22px;
+  padding: 15px 20px;
+  background: #f2f7f4;
+  border-top: 1px solid #e1ebe6;
+  color: #4e6961;
+  font-size: 14px;
+  line-height: 1.7;
+}
+.spatial-observation-readout strong {
+  font: 500 17px var(--mono);
+  color: var(--accent-dark);
+  margin-left: 5px;
+}
+.spatial-observation-readout small {
+  flex-basis: 100%;
+  font-size: 14px;
+}
+.spatial-observation-readout details {
+  flex-basis: 100%;
+  font-size: 13px;
+}
+.spatial-observation-readout summary {
+  cursor: pointer;
+  color: #648178;
+}
+.spatial-observation-readout details p {
+  margin-top: 10px;
+  font-size: 14px;
+  line-height: 1.8;
+}
+@media (max-width: 700px) {
+  .spatial-observation .lab-spatial {
+    height: 330px;
+  }
+  .spatial-observation-tools {
+    justify-content: flex-start;
+    padding: 12px;
+  }
+  .spatial-observation-tools label,
+  .spatial-observation-tools button {
+    font-size: 13px;
+  }
+  .spatial-observation-readout {
+    padding: 14px;
+    gap: 7px 16px;
+  }
+}
+/* Material scenes for defects, rare events and grain-scale slip. */
+:root {
+  --meso-ink: #334d55;
+  --meso-muted: #647a80;
+  --meso-bg: #f5f9f8;
+  --meso-line: #d4e2de;
+  --meso-accent: #3b8e87;
+  --meso-accent-dark: #286c66;
+  --meso-gold: #c68d36;
+  --meso-grain-idle: #e1eeea;
+  --meso-grain-active: #f1d9b6;
+}
+.meso-scene {
+  background: var(--surface);
+  color: var(--meso-ink);
+  padding: 26px 22px 18px;
+}
+.meso-scene-heading {
+  margin: 0 0 24px;
+  max-width: 800px;
+}
+.meso-scene-heading > span,
+.meso-inspector-kicker {
+  color: var(--meso-accent-dark);
+  font: 12px var(--mono);
+  letter-spacing: 0.08em;
+}
+.meso-scene-heading h3 {
+  color: var(--ink);
+  font-size: 23px;
+  line-height: 1.5;
+  margin: 8px 0 10px;
+}
+.meso-scene-heading > p {
+  color: var(--meso-muted);
+  font-size: 15px;
+  line-height: 1.9;
+}
+.meso-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(230px, 0.44fr);
+  align-items: center;
+  gap: 24px;
+}
+.meso-drawing {
+  min-width: 0;
+  background: var(--meso-bg);
+  border: 1px solid var(--meso-line);
+  border-radius: 18px;
+  overflow: hidden;
+}
+.meso-drawing > svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.meso-drawing text {
+  font-family: var(--font);
+}
+.meso-slip-plane {
+  fill: #edf4f1;
+  stroke: var(--meso-line);
+  stroke-width: 1;
+}
+.meso-plane-grid {
+  fill: none;
+  stroke: #d9e6e0;
+  stroke-width: 1;
+}
+.meso-svg-note {
+  fill: var(--meso-muted);
+  font-size: 17px;
+}
+.meso-svg-label {
+  fill: var(--meso-ink);
+  font-size: 19px;
+}
+.meso-swept {
+  fill: var(--meso-accent);
+  fill-opacity: 0.17;
+}
+.meso-reference-line {
+  fill: none;
+  stroke: #9ab7ad;
+  stroke-dasharray: 6 6;
+  stroke-width: 2;
+}
+.meso-dislocation-line {
+  fill: none;
+  stroke: var(--meso-accent-dark);
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.meso-force-fill {
+  fill: var(--meso-gold);
+}
+.meso-force-arrow {
+  fill: none;
+  stroke: var(--meso-gold);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+}
+.meso-obstacle {
+  fill: #eadfc9;
+  stroke: #a38d65;
+  stroke-width: 1.5;
+}
+.meso-obstacle-hatch {
+  stroke: #b8a37e;
+  stroke-width: 1.4;
+}
+.meso-pinned-node {
+  fill: #786747;
+}
+.meso-measure-line {
+  stroke: var(--meso-accent);
+  stroke-dasharray: 3 5;
+  stroke-width: 1.7;
+}
+.meso-selected-point {
+  fill: #fff;
+  stroke: var(--meso-accent-dark);
+  stroke-width: 3;
+}
+.meso-inspector {
+  border-left: 2px solid var(--meso-line);
+  padding: 8px 0 8px 22px;
+  min-width: 0;
+}
+.meso-inspector h4 {
+  font-size: 19px;
+  font-weight: 600;
+  line-height: 1.6;
+  margin: 9px 0 18px;
+  color: var(--ink);
+}
+.meso-inspector p {
+  font-size: 14px;
+  line-height: 1.9;
+  color: var(--meso-muted);
+}
+.meso-readouts {
+  margin: 18px 0;
+  display: grid;
+  gap: 15px;
+}
+.meso-readouts > div {
+  min-width: 0;
+}
+.meso-readouts dt {
+  font-size: 13px;
+  color: var(--meso-muted);
+  line-height: 1.65;
+}
+.meso-readouts dd {
+  margin: 4px 0 0;
+  color: var(--meso-accent-dark);
+  font-family: var(--mono);
+  font-size: 23px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.meso-readouts dd small {
+  font: 13px var(--font);
+  color: var(--meso-muted);
+}
+.meso-range-label {
+  display: block;
+  font-size: 14px;
+  line-height: 1.7;
+}
+.meso-range-label > span {
+  display: block;
+  margin-bottom: 8px;
+}
+.meso-range-label input {
+  width: 100%;
+  accent-color: var(--meso-accent);
+}
+.meso-local-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px 26px;
+  padding: 18px 4px;
+  font-size: 14px;
+  line-height: 1.7;
+}
+.meso-local-controls label {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  cursor: pointer;
+}
+.meso-local-controls input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--meso-accent);
+  flex-shrink: 0;
+}
+.meso-model-note {
+  color: var(--meso-muted);
+  font-size: 13px;
+  line-height: 1.9;
+  border-top: 1px solid var(--meso-line);
+  padding: 14px 4px 0;
+}
+.meso-crystal-grid {
+  fill: none;
+  stroke: #cbded6;
+  stroke-width: 0.8;
+  stroke-opacity: 0.7;
+}
+.meso-atom-highlight {
+  stop-color: #eff9f4;
+}
+.meso-atom-mid {
+  stop-color: #86b6aa;
+}
+.meso-atom-dark {
+  stop-color: #559186;
+}
+.meso-lattice-atom {
+  stroke: #65988d;
+  stroke-width: 0.5;
+}
+.meso-periodic-boundary {
+  fill: none;
+  stroke: #99b8ad;
+  stroke-dasharray: 6 5;
+  stroke-width: 1.5;
+}
+.meso-candidate-site {
+  fill: none;
+  stroke: var(--meso-gold);
+  stroke-width: 1.4;
+  stroke-dasharray: 3 3;
+}
+.meso-vacancy-trail {
+  fill: none;
+  stroke: var(--meso-gold);
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.meso-latest-hop {
+  fill: none;
+  stroke: var(--meso-gold);
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+.meso-vacancy-halo {
+  fill: var(--meso-gold);
+  fill-opacity: 0.16;
+}
+.meso-vacancy-ring {
+  fill: var(--meso-bg);
+  stroke: var(--meso-gold);
+  stroke-width: 3;
+}
+.meso-vacancy-cross {
+  stroke: var(--meso-gold);
+  stroke-width: 1.5;
+}
+.meso-event-card {
+  padding: 15px;
+  border-radius: 12px;
+  background: #f6f1e8;
+  border: 1px solid #ebe0cf;
+}
+.meso-event-card strong {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.6;
+}
+.meso-event-card p {
+  margin: 8px 0;
+  font-size: 13px;
+}
+.meso-event-card small {
+  display: block;
+  font: 12px var(--mono);
+  line-height: 1.7;
+  color: #987338;
+}
+.meso-grain-surround {
+  fill: #edf3f0;
+  stroke: #d6e2dc;
+}
+.meso-grain {
+  cursor: pointer;
+  outline-offset: 1px;
+}
+.meso-grain-fill {
+  fill: var(--meso-grain-idle);
+  stroke: #89a79c;
+  stroke-width: 1.4;
+}
+.meso-grain.is-active .meso-grain-fill {
+  fill: var(--meso-grain-active);
+}
+.meso-grain:hover .meso-grain-fill,
+.meso-grain:focus-visible .meso-grain-fill {
+  stroke: var(--meso-accent-dark);
+  stroke-width: 3;
+}
+.meso-orientation-line {
+  fill: none;
+  stroke: #84a99b;
+  stroke-width: 1.3;
+  stroke-opacity: 0.66;
+  pointer-events: none;
+}
+.meso-grain.is-active .meso-orientation-line {
+  stroke: #c19858;
+}
+.meso-slip-band {
+  fill: none;
+  stroke: #b5843d;
+  stroke-width: 2.4;
+  pointer-events: none;
+}
+.meso-grain-selection {
+  fill: none;
+  stroke: var(--meso-accent-dark);
+  stroke-width: 3.5;
+  pointer-events: none;
+}
+.meso-grain-number circle {
+  fill: var(--meso-accent-dark);
+}
+.meso-grain-number text {
+  fill: white;
+  font: 15px var(--mono);
+}
+.meso-grain-number {
+  pointer-events: none;
+}
+.meso-load-arrow {
+  fill: none;
+  stroke: var(--meso-gold);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.meso-grain-picker {
+  display: grid;
+  gap: 8px;
+  font-size: 14px;
+  margin: 12px 0;
+}
+.meso-grain-picker select {
+  width: 100%;
+  padding: 10px 12px;
+  color: var(--meso-ink);
+  border: 1px solid var(--meso-line);
+  border-radius: 8px;
+  background: #fff;
+}
+.meso-grain-status {
+  font-size: 13px;
+  padding: 9px 12px;
+  line-height: 1.6;
+  border-radius: 8px;
+  background: #eaf1ed;
+  color: #668378;
+}
+.meso-grain-status.is-active {
+  background: #f8ead5;
+  color: #996d30;
+}
+.meso-grain-meter {
+  height: 8px;
+  background: #e4eeea;
+  border-radius: 5px;
+  margin-bottom: 9px;
+  overflow: hidden;
+}
+.meso-grain-meter > div {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--meso-gold);
+}
+.meso-grain-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+}
+.meso-grain-legend > i {
+  display: inline-block;
+  width: 13px;
+  height: 13px;
+  border-radius: 3px;
+  background: var(--meso-grain-active);
+  border: 1px solid #c69d64;
+}
+@media (max-width: 1150px) {
+  .meso-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+  }
+  .meso-inspector {
+    border-left: 0;
+    border-top: 1px solid var(--meso-line);
+    padding: 20px 5px 0;
+  }
+  .meso-readouts {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+  }
+  .meso-inspector h4 {
+    margin-bottom: 12px;
+  }
+  .meso-range-label {
+    max-width: 480px;
+  }
+}
+@media (max-width: 640px) {
+  .meso-scene {
+    padding: 19px 14px 14px;
+  }
+  .meso-scene-heading h3 {
+    font-size: 20px;
+  }
+  .meso-scene-heading > p {
+    font-size: 15px;
+  }
+  .meso-local-controls {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    font-size: 14px;
+  }
+  .meso-readouts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .meso-readouts dd {
+    font-size: 20px;
+  }
+  .meso-svg-note {
+    font-size: 21px;
+  }
+  .meso-svg-label {
+    font-size: 23px;
+  }
+}
+.continuum-range strong {
+  white-space: nowrap;
+}
+@media (max-width: 700px) {
+  .continuum-svg-label {
+    font-size: 35px;
+  }
+  .continuum-svg-caption {
+    font-size: 31px;
+  }
+  .heat-scene .continuum-svg-label {
+    font-size: 24px;
+  }
+  .heat-scene .continuum-svg-caption {
+    font-size: 22px;
+  }
+}
+/* Focus the selected grain boundary, not the bounding box of clipped slip lines. */
+.meso-grain:focus {
+  outline: none;
+}
+.meso-grain:focus-visible .meso-grain-fill {
+  stroke: var(--meso-accent-dark);
+  stroke-width: 3.5;
+}
+@media (max-width: 640px) {
+  .meso-svg-note,
+  .meso-svg-label {
+    font-size: 26px;
+  }
+}
+@media (max-width: 640px) {
+  .meso-grain-number circle {
+    r: 22px;
+  }
+  .meso-grain-number text {
+    font-size: 26px;
   }
 }

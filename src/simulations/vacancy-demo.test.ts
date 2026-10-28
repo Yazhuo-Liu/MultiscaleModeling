@@ -28,18 +28,38 @@ test("vacancy exchange conserves 124 unique atoms and exactly one vacancy", () =
     if (m.boundary) assert.equal(m.accepted, false);
   }
 });
-test("first untrapped proposal exchanges the tracked atom without a scripted direction", () => {
+test("accepted exchange moves one neighbour into the old vacancy and shifts the vacancy oppositely", () => {
   const demo = createVacancyDemo();
-  const before = demo.snapshot();
-  const frame = demo.attempt();
-  assert.equal(frame.move?.atomId, frame.taggedId);
-  assert.equal(frame.move?.accepted, true);
-  assert.deepEqual(
-    frame.atoms.find((a) => a.id === frame.taggedId)?.site,
-    before.vacancy,
-  );
-  assert.equal(frame.taggedTrail.length, 2);
-  assert.deepEqual(demo.reset(), before);
+  let before = demo.snapshot();
+  const initial = before;
+  for (let i = 0; i < 300; i++) {
+    const after = demo.attempt();
+    const move = after.move!;
+    if (move.accepted) {
+      const oldAtom = before.atoms.find((a) => a.id === move.atomId)!;
+      const newAtom = after.atoms.find((a) => a.id === move.atomId)!;
+      assert.deepEqual(newAtom.site, before.vacancy);
+      assert.deepEqual(after.vacancy, oldAtom.site);
+      assert.deepEqual(move.from, before.vacancy);
+      assert.deepEqual(move.to, after.vacancy);
+      assert.equal(
+        after.vacancyTrail.length,
+        Math.min(before.vacancyTrail.length + 1, 100),
+      );
+      for (const atom of after.atoms) {
+        if (atom.id !== move.atomId)
+          assert.deepEqual(
+            atom.site,
+            before.atoms.find((a) => a.id === atom.id)!.site,
+          );
+      }
+    } else {
+      assert.deepEqual(after.atoms, before.atoms);
+      assert.deepEqual(after.vacancy, before.vacancy);
+    }
+    before = after;
+  }
+  assert.deepEqual(demo.reset(), initial);
 });
 test("symmetric proposals and Metropolis acceptance satisfy pairwise detailed balance", () => {
   const temperature = 0.6,

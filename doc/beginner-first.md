@@ -10,7 +10,7 @@
 
 ## MC 演示
 
-默认展示可旋转的三维简单立方晶格、空位、被追踪原子、最近跳跃和轨迹。使用廉价格点空位交换和 Metropolis 接受规则；以教学俘获能改变接受概率，不计算真实原子势。动画插值展示单次跳跃，视图支持平面观察。只把尝试数、接受次数、轨迹作为观察量，不将 MC 步解释为物理时间或报告真实扩散系数。温度/俘获强度场景用于比较随机采样；KMC 章节承担具有事件速率与物理时钟的扩散教学。原 Ising 例子保留为进阶可选实验，并确保代码与实验名称明确对应。
+默认展示可旋转的三维简单立方晶格、空位、当前跳跃原子与空位轨迹。使用廉价格点空位交换和 Metropolis 接受规则；以教学俘获能改变接受概率，不计算真实原子势。动画插值展示单次跳跃，视图支持平面观察。只把尝试数、接受次数、轨迹作为观察量，不将 MC 步解释为物理时间或报告真实扩散系数。温度/俘获强度场景用于比较随机采样；KMC 章节承担具有事件速率与物理时钟的扩散教学。原 Ising 例子保留为进阶可选实验，并确保代码与实验名称明确对应。
 
 ## 文件职责
 
@@ -31,8 +31,8 @@
 - Each attempt proposes one of six signed Cartesian neighbour directions with probability 1/6. Out-of-domain proposals are rejected, preserving symmetric proposal probabilities at boundaries.
 - Configuration energy depends only on vacancy site: E(s)=−A exp(−|s−(2,2,2)|²/1.5). Metropolis acceptance=min(1,exp(−ΔE/T)), with T expressed in teaching units. Trap A=0 gives equal-energy sites; temperature then has no effect on accepted interior proposals. No interatomic potential or diffusion coefficient is calculated.
 - Free preset (T=1,A=0), cold trap (T=.25,A=2), warm trap (T=1.5,A=2). Presets reset the same seed. Higher T raises uphill acceptance, not necessarily an individual trajectory’s net distance. MC attempts do not represent elapsed physical time; the KMC link explains rate-based clocks.
-- Full xyz spheres, real OrbitControls camera, eased atom/vacancy exchange, bounded latest100-site vacancy/tagged trails. Tagged identity chosen adjacent to the initial hole so the deterministic first free proposal moves the highlighted atom; no proposal directions are forced.
+- Full xyz spheres, real OrbitControls camera, eased atom/vacancy exchange and the latest 100 sites of the vacancy path. Only the atom participating in an accepted exchange is briefly emphasized; there is no permanently tagged atom. The gold vacancy and its path remain the observation focus.
 - The Slice view shows the current vacancy's lattice layer. It hides trails rather than joining disjoint visits across layers. SVG slice fallback keeps the model usable without WebGL.
 - Paused initial state. Play, pause (including mid-hop), one attempt, reset, scene presets,3D/slice. Visibility pauses animation without accumulating hidden time. Reduced-motion uses instantaneous single steps; explicit play opts into movement.
 - Independent Python/NumPy snippet uses the same model and boundary rule (NumPy and JavaScript random generators differ, so trajectories need not match).
-- Tests cover conservation/unique occupancy, deterministic initial tracked exchange, reversibility probabilities, boundary rejection, copied snapshots and parameter bounds.
+- Tests cover conservation/unique occupancy, deterministic initial exchange and opposite atom/vacancy displacement, reversibility probabilities, boundary rejection, copied snapshots and parameter bounds.

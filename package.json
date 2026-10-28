@@ -16,7 +16,8 @@
     "test:foundations": "node scripts/smoke-foundations.mjs",
     "test:journey": "node scripts/smoke-journey.mjs",
     "test:spatial": "node scripts/smoke-orbitals3d.mjs",
-    "test:beginner": "node scripts/smoke-beginner.mjs"
+    "test:beginner": "node scripts/smoke-beginner.mjs",
+    "test:scenes": "node scripts/smoke-scenes.mjs"
   },
   "dependencies": {
     "@fontsource-variable/dm-sans": "^5.3.0",

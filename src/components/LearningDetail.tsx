@@ -5,13 +5,15 @@ export default function LearningDetail({
   collapsed,
   title,
   children,
+  testId,
 }: {
   collapsed: boolean;
   title: string;
   children: ReactNode;
+  testId?: string;
 }) {
   return collapsed ? (
-    <details className="learning-detail">
+    <details className="learning-detail" data-testid={testId}>
       <summary>{title}</summary>
       <div className="learning-detail-body">{children}</div>
     </details>

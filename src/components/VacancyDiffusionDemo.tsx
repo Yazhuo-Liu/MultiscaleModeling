@@ -156,12 +156,11 @@ export default function VacancyDiffusionDemo() {
     setResetToken((x) => x + 1);
   };
   const selected = presets.find((p) => p.id === preset)!;
-  const tagged = frame.atoms.find((a) => a.id === frame.taggedId)!;
   const moving = frame.move?.accepted && progress < 1;
   const phase = !frame.move
     ? t(
-        "留意金色空位旁的紫色原子",
-        "Watch the purple atom beside the gold vacancy",
+        "跟着金色空位看：哪个邻居会填进来？",
+        "Follow the gold vacancy: which neighbour will fill it?",
       )
     : moving
       ? t(
@@ -191,21 +190,19 @@ export default function VacancyDiffusionDemo() {
       data-running={playback !== "paused"}
       data-progress={progress.toFixed(3)}
       data-vacancy={JSON.stringify(frame.vacancy)}
-      data-tagged={JSON.stringify(tagged.site)}
-      data-tagged-trail={JSON.stringify(frame.taggedTrail)}
+      data-vacancy-trail={JSON.stringify(frame.vacancyTrail)}
+      data-moving-atom-id={moving ? frame.move?.atomId : undefined}
     >
       <header className="vacancy-heading">
         <div>
           <span className="eyebrow">
             {t("跟着一个空位走", "FOLLOW A VACANCY")}
           </span>
-          <h2>
-            {t("原子怎样换一个位置？", "How does an atom change places?")}
-          </h2>
+          <h2>{t("空位怎样一步步移动？", "How does a vacancy move?")}</h2>
           <p>
             {t(
-              "晶格中少了一个原子，邻近原子就可以跳进去。看似空位在走，实际上是原子在接力。",
-              "A missing atom leaves a site for its neighbour to hop into. The vacancy seems to travel as atoms take turns filling it.",
+              "金色圈标记一个没有原子的格点。邻近原子填进来后，原子原来的位置就空了：空位因此向相反方向移动。",
+              "The gold rings mark an empty lattice site. When a neighbour fills it, that atom leaves its old site empty: the vacancy moves in the opposite direction.",
             )}
           </p>
         </div>
@@ -268,16 +265,19 @@ export default function VacancyDiffusionDemo() {
         />
         <div className="vacancy-legend">
           <span>
+            <i className="vacancy-key-hole" />
+            {t("空位 / 移动轨迹", "Vacancy / trail")}
+          </span>
+          <span>
             <i className="vacancy-key-atom" />
             {t("晶格原子", "Lattice atom")}
           </span>
           <span>
-            <i className="vacancy-key-tagged" />
-            {t("追踪原子", "Tracked atom")}
-          </span>
-          <span>
-            <i className="vacancy-key-hole" />
-            {t("空位 / 移动轨迹", "Vacancy / trail")}
+            <i className="vacancy-key-moving" />
+            {t(
+              "正在交换的原子（暂时强调）",
+              "Exchanging atom (temporary highlight)",
+            )}
           </span>
           {frame.parameters.trap > 0 && (
             <span>
@@ -289,8 +289,8 @@ export default function VacancyDiffusionDemo() {
         <div className="vacancy-view-help">
           {mode === "3d"
             ? t(
-                "拖动旋转 · 滚轮缩放 · 紫色轨迹记录追踪原子走过的位置",
-                "Drag to rotate · scroll to zoom · purple trail follows the tracked atom",
+                "拖动旋转 · 滚轮缩放 · 金色轨迹只记录空位走过的位置",
+                "Drag to rotate · scroll to zoom · the gold trail follows the vacancy",
               )
             : t(
                 `截面跟随空位：第 ${frame.vacancy[2] + 1} 层 / 共 5 层`,
@@ -382,8 +382,8 @@ export default function VacancyDiffusionDemo() {
           </p>
           <p>
             {t(
-              "这是 Metropolis 采样的扩散图景：尝试次数不是物理时间，动画速度不代表真实扩散速度，也不能据此计算材料的扩散系数。颜色用来追踪同一种原子，不代表不同元素。",
-              "This illustrates diffusion-like moves in Metropolis sampling. Attempts are not physical time; animation speed is not a diffusion rate and cannot yield a material diffusion coefficient. Colours track identical atoms, not different elements.",
+              "这是 Metropolis 采样的扩散图景：尝试次数不是物理时间，动画速度不代表真实扩散速度，也不能据此计算材料的扩散系数。所有球表示同一种原子；只在交换过程中短暂强调当次移动的邻居。",
+              "This illustrates diffusion-like moves in Metropolis sampling. Attempts are not physical time; animation speed is not a diffusion rate and cannot yield a material diffusion coefficient. All spheres represent identical atoms; only the neighbour moving in the current exchange is briefly highlighted.",
             )}
           </p>
           <a href="#/method/kmc">

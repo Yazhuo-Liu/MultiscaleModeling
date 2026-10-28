@@ -152,6 +152,14 @@ async function mcReady(page) {
   await page.locator('.vacancy-scene[data-ready="true"]').waitFor();
   await painted(page);
 }
+async function openNumericalView(page) {
+  await page.locator(".simulation-lab").waitFor();
+  const details = page.getByTestId("lab-numerical-details");
+  if (await details.count()) {
+    if (!(await details.evaluate((node) => node.open)))
+      await details.locator(":scope > summary").click();
+  }
+}
 try {
   browser = await chromium.launch({
     executablePath,
@@ -203,6 +211,7 @@ try {
       await page.locator("#tab-lab").click();
       if (id === "mc") await page.getByTestId("mc-example-ising").click();
       await page.getByTestId("lab-preset-1").click();
+      await openNumericalView(page);
       await page.locator(".lab-viewport canvas").waitFor();
       assert.match(
         await page.locator(".lab-step").innerText(),
@@ -295,13 +304,41 @@ try {
   );
   await page.getByTestId("vacancy-preset-free").click();
   const initialVacancy = await demo.getAttribute("data-vacancy");
-  const initialTagged = await demo.getAttribute("data-tagged");
+  assert.equal(
+    await scene.getAttribute("data-highlighted-atom"),
+    "",
+    "No atom is permanently highlighted at rest",
+  );
+  assert.doesNotMatch(
+    await demo.innerText(),
+    /tracked atom|追踪原子|purple|紫色/i,
+  );
+
   await page.getByTestId("vacancy-step").click();
   await page.waitForFunction(() => {
     const node = document.querySelector(".vacancy-demo");
     const fraction = Number(node?.dataset.progress);
     return Number(node?.dataset.attempts) === 1 && fraction > 0 && fraction < 1;
   });
+  await page.waitForFunction(
+    () => document.querySelector(".vacancy-scene")?.dataset.highlightedAtom,
+  );
+  const [movingVacancy, movingAtom] = await scene.evaluate((node) => [
+    JSON.parse(node.dataset.vacancyDisplay),
+    JSON.parse(node.dataset.exchangeAtomDisplay),
+  ]);
+  const origin = JSON.parse(initialVacancy);
+  const destination = JSON.parse(await demo.getAttribute("data-vacancy"));
+  for (let axis = 0; axis < 3; axis++)
+    assert.ok(
+      Math.abs(
+        movingVacancy[axis] +
+          movingAtom[axis] -
+          origin[axis] -
+          destination[axis],
+      ) < 1e-6,
+      "Atom and vacancy move in opposite directions during an exchange",
+    );
   const midway = await scene.locator("canvas").screenshot();
   await page.waitForFunction(
     () =>
@@ -317,10 +354,15 @@ try {
     initialVacancy,
     "Vacancy relocates after an accepted swap",
   );
-  assert.notEqual(
-    await demo.getAttribute("data-tagged"),
-    initialTagged,
-    "Tracked atom visibly changes sites",
+  assert.deepEqual(
+    JSON.parse(await scene.getAttribute("data-exchange-atom-display")),
+    JSON.parse(initialVacancy),
+    "The exchanging atom arrives at the previous vacancy site",
+  );
+  assert.equal(
+    await scene.getAttribute("data-highlighted-atom"),
+    "",
+    "Atom highlight ends with its hop",
   );
   assert.equal(await demo.getAttribute("data-accepted"), "1");
   const pose = await scene.getAttribute("data-camera");
@@ -345,13 +387,13 @@ try {
   );
   assert.notDeepEqual(await scene.locator("canvas").screenshot(), picture);
   const attempts = await demo.getAttribute("data-attempts");
-  const tagged = await demo.getAttribute("data-tagged");
+  const vacancy = await demo.getAttribute("data-vacancy");
   await scene.locator("canvas").evaluate((canvas) => {
     window.__beginnerMCCanvas = canvas;
   });
   await language(page, "en");
   assert.equal(await demo.getAttribute("data-attempts"), attempts);
-  assert.equal(await demo.getAttribute("data-tagged"), tagged);
+  assert.equal(await demo.getAttribute("data-vacancy"), vacancy);
   assert.equal(
     await scene
       .locator("canvas")

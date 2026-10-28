@@ -287,7 +287,7 @@ export const methods: Method[] = [
     difficulty: "基础",
     prerequisites: ["概率", "能量", "指数函数"],
     intuition:
-      "不必追踪每个粒子的真实运动路径，也可以问“系统在平衡时更常出现哪些状态”。Monte Carlo 像不断提出小修改：能量降低通常接受，能量升高也偶尔接受，温度决定这种冒险有多频繁。",
+      "不必追踪每个粒子的真实运动路径，也可以问“系统在平衡时更常出现哪些状态”。Monte Carlo 像不断提出小修改：能量降低直接接受，能量升高也偶尔接受，温度决定这种冒险有多频繁。",
     concepts: [
       {
         title: "01 · 采样而非轨迹",
@@ -304,9 +304,9 @@ export const methods: Method[] = [
     ],
     equation: {
       formula:
-        "\\begin{aligned}P_{\\mathrm{accept}} &= \\min\\left[1,\\exp\\left(-\\frac{\\Delta E}{k_{\\mathrm B}T}\\right)\\right] \\\\ H &= -J\\sum_{\\langle i,j\\rangle}s_i s_j-h\\sum_i s_i\\end{aligned}",
+        "P_{\\mathrm{accept}}=\\min\\left[1,\\exp\\left(-\\frac{\\Delta E}{k_{\\mathrm B}T}\\right)\\right]",
       explanation:
-        "Ising 模型中 $s_i=\\pm1$，$J>0$ 偏好相邻自旋同向；$h$ 是每个自旋的外场能量系数，$h=0$ 即零场。实验使用二维周期格点和无量纲温度 $k_{\\mathrm B}T/J$；代码示例取零场。",
+        "先看一个空位交换：$\\Delta E$ 是交换后减去交换前的能量。能量不增加就接受；能量增加时，温度越高，越有机会接受同一次尝试。入门演示只用简单的位置能量表示空位偏好的区域，不计算真实原子势。进阶 Ising 实验把同一规则用在自旋翻转上；两种实验的 MC 步都不是物理时间。",
     },
     steps: [
       "初始化自旋格点并选择温度。",

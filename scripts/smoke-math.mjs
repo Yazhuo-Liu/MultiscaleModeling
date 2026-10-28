@@ -140,6 +140,13 @@ async function inspectScriptSizes(page, label) {
 
 async function inspectOrbitalFormula(page, locale) {
   await page.goto(`${base}#/foundation/atomic-orbitals`);
+  await page.getByTestId("foundation-level-model").click();
+  await page.locator(".foundation-section").first().waitFor();
+  await page.locator(".foundation-section details").evaluateAll((nodes) =>
+    nodes.forEach((node) => {
+      node.open = true;
+    }),
+  );
   const formula = page.locator(".theory-formula").filter({
     has: page.locator("annotation", { hasText: "L_{n-l-1}^{2l+1}" }),
   });
@@ -227,6 +234,15 @@ async function inspectOrbitalFormula(page, locale) {
   await page.setViewportSize({ width: 1440, height: 1000 });
 }
 async function inspectMath(page, label) {
+  await page.locator("#tab-theory").click();
+  assert.ok(
+    (await page.locator(".equation-card .katex-display").count()) > 0,
+    `${label}: core equation was not rendered`,
+  );
+  await noRawMath(page, `${label}/model`);
+  await inspectScriptSizes(page, `${label}/model`);
+  await noOverflow(page, `${label}/model`);
+  await page.locator("#tab-advanced").click();
   await page.locator(".derivation-stage").first().waitFor();
   assert.equal(
     await page.locator(".derivation-stage").count(),
@@ -236,10 +252,6 @@ async function inspectMath(page, label) {
   assert.ok(
     (await page.locator(".derivation-step").count()) >= 9,
     `${label}: explained steps`,
-  );
-  assert.ok(
-    (await page.locator(".equation-card .katex-display").count()) > 0,
-    `${label}: core equation was not rendered`,
   );
   assert.ok(
     (await page.locator(".derivation-path .katex-display").count()) >= 9,
@@ -365,10 +377,12 @@ try {
         ? ["应用与延伸", "算法与代码", "交互实验"]
         : ["Applications & links", "Algorithm & code", "Interactive lab"]) {
         await page.getByRole("tab", { name: tabName, exact: true }).click();
-        if (tabName === "交互实验" || tabName === "Interactive lab")
+        if (tabName === "交互实验" || tabName === "Interactive lab") {
+          if (id === "mc") await page.getByTestId("mc-example-ising").click();
           await page
             .locator(".lab-canvas, .lab-spatial canvas, .lab-three canvas")
             .waitFor();
+        }
         await noRawMath(page, `${id}/${locale}/${tabName}`);
       }
       console.log(
@@ -387,7 +401,7 @@ try {
   const route = page.url();
   await switchLanguage(page, "zh");
   assert.equal(page.url(), route);
-  await page.getByRole("tab", { name: "概念与理论", exact: true }).click();
+  await page.locator("#tab-advanced").click();
   await inspectMath(page, "phase-field/zh/restored");
   await page.evaluate(() => document.fonts.ready);
   assert.ok(

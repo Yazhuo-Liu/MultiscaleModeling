@@ -217,6 +217,7 @@ try {
   });
   observe(page);
   await page.goto(`${base}#/foundation/atomic-orbitals`);
+  await page.getByTestId("foundation-level-model").click();
   await page.locator(".orbital-explorer").waitFor();
   await page.evaluate(() => document.fonts.ready);
   assert.equal(

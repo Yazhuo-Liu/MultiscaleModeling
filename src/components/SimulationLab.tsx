@@ -1,5 +1,7 @@
 import MathMarkdown from "./MathMarkdown";
-import { useEffect, useMemo, useRef, useState } from "react";
+import LearningDetail from "./LearningDetail";
+import { getLabGuide } from "../content/lab-guides";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import {
   Play,
   Pause,
@@ -76,12 +78,15 @@ const fieldExtent = (
     return [0, Math.max(...frame.grid.values, 1e-12)];
   return undefined;
 };
-const fieldColor = (t: number) =>
-  new THREE.Color().setHSL(
-    0.57 - 0.43 * Math.max(0, Math.min(1, t)),
-    0.46,
-    0.43 + 0.23 * t,
-  );
+const fieldColor = (value: number) => {
+  const t = Math.max(0, Math.min(1, value));
+  return t < 0.5
+    ? new THREE.Color("#3967a4").lerp(new THREE.Color("#f1e8d5"), t * 2)
+    : new THREE.Color("#f1e8d5").lerp(
+        new THREE.Color("#d76c3e"),
+        (t - 0.5) * 2,
+      );
+};
 
 function CanvasView({
   frame,
@@ -151,6 +156,42 @@ function CanvasView({
             side / width + 0.4,
             side / height + 0.4,
           );
+          if (methodId === "crystal-plasticity") {
+            const cell = side / width;
+            const i = y * width + x;
+            // This is the same fixed orientation ordering as the Schmid model.
+            const theta = ((((i * 17) % 36) + 0.5) * Math.PI) / 72;
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(
+              left + x * cell + 1,
+              top + y * cell + 1,
+              cell - 2,
+              cell - 2,
+            );
+            ctx.clip();
+            ctx.translate(left + (x + 0.5) * cell, top + (y + 0.5) * cell);
+            ctx.rotate(-theta);
+            ctx.strokeStyle = "rgba(23, 53, 70, .38)";
+            ctx.lineWidth = 1.1;
+            for (let line = -3; line <= 3; line++) {
+              ctx.beginPath();
+              ctx.moveTo(-cell, (line * cell) / 5);
+              ctx.lineTo(cell, (line * cell) / 5);
+              ctx.stroke();
+            }
+            ctx.restore();
+            ctx.strokeStyle = "#ffffff";
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(left + x * cell, top + y * cell, cell, cell);
+            if (values[i] >= 1) {
+              ctx.beginPath();
+              ctx.moveTo(left + (x + 0.34) * cell, top + (y + 0.62) * cell);
+              ctx.lineTo(left + (x + 0.66) * cell, top + (y + 0.38) * cell);
+              ctx.lineWidth = 3;
+              ctx.stroke();
+            }
+          }
         }
       ctx.strokeStyle = "#8caaad";
       ctx.strokeRect(left, top, side, side);
@@ -251,8 +292,8 @@ function CanvasView({
       const scale = Math.min(iw, ih) / bounds.range;
       const toX = (v: number) => w / 2 + (v - bounds.x) * scale;
       const toY = (v: number) => h / 2 - (v - bounds.y) * scale;
-      ctx.strokeStyle = "#a9bdc5";
-      ctx.lineWidth = 1.6;
+      ctx.strokeStyle = methodId === "dd" ? "#46768a" : "#a9bdc5";
+      ctx.lineWidth = methodId === "dd" ? 3.5 : 1.6;
       frame.edges?.forEach(([a, b]) => {
         if (!points[a] || !points[b]) return;
         ctx.beginPath();
@@ -261,21 +302,29 @@ function CanvasView({
         ctx.stroke();
       });
       const [vlo, vhi] = limits(points.map((p) => p.value ?? 0));
-      points.forEach((p) => {
+      points.forEach((p, i) => {
+        const pinned =
+          methodId === "dd" && (i === 0 || i === points.length - 1);
+        const vacancy = methodId === "kmc" && p.value === 1;
         const radius = p.radius
           ? Math.max(2.5, Math.min(13, p.radius * scale))
           : points.length > 100
             ? 3.4
             : 6;
-        ctx.fillStyle =
-          p.value === undefined
-            ? "#358f89"
-            : `#${fieldColor((p.value - vlo) / (vhi - vlo)).getHexString()}`;
+        ctx.fillStyle = pinned
+          ? "#d58136"
+          : methodId === "kmc"
+            ? vacancy
+              ? "#fff8ec"
+              : "#6aa2aa"
+            : p.value === undefined
+              ? "#358f89"
+              : `#${fieldColor((p.value - vlo) / (vhi - vlo)).getHexString()}`;
         ctx.beginPath();
         ctx.arc(toX(p.x), toY(p.y), radius, 0, 2 * Math.PI);
         ctx.fill();
-        ctx.strokeStyle = "#ffffff";
-        ctx.lineWidth = 1.2;
+        ctx.strokeStyle = vacancy ? "#d58136" : "#ffffff";
+        ctx.lineWidth = vacancy ? 3 : 1.2;
         ctx.stroke();
       });
       ctx.fillStyle = "#65777d";
@@ -681,6 +730,198 @@ function ThreeView({
   return <div ref={ref} className="lab-three" />;
 }
 
+/** Material-scale pictures use the same numerical frame as the plot below. */
+function MaterialStory({
+  methodId,
+  frame,
+  params,
+}: {
+  methodId: MethodId;
+  frame: SimulationFrame;
+  params: Record<string, number>;
+}) {
+  const { t } = useLanguage();
+  const gradient = useId().replaceAll(":", "");
+  if (!["dft", "hf", "constitutive", "fem"].includes(methodId)) return null;
+  const occupation = frame.metrics[0]?.value ?? 1;
+  const cloudRadius =
+    24 / Math.sqrt(Math.max(0.1, frame.metrics[1]?.value ?? 0.3));
+  const stressFraction = Math.max(
+    0,
+    Math.min(1, occupation / (0.02 * params.modulus)),
+  );
+  const extension = methodId === "fem" ? occupation * 1e-6 * 10000 * 300 : 0;
+  return (
+    <svg
+      className={`lab-material-story material-${methodId}`}
+      viewBox="0 0 600 160"
+      role="img"
+      aria-label={t(
+        "随计算结果更新的材料图示",
+        "Material illustration updated from the simulation results",
+      )}
+      data-testid={`lab-material-${methodId}`}
+    >
+      {methodId === "dft" && (
+        <>
+          <defs>
+            <radialGradient id={gradient} className="material-electron">
+              <stop offset="0" stopColor="currentColor" stopOpacity="0.7" />
+              <stop offset="0.4" stopColor="currentColor" stopOpacity="0.3" />
+              <stop offset="1" stopColor="currentColor" stopOpacity="0" />
+            </radialGradient>
+          </defs>
+          <circle cx="145" cy="80" r={cloudRadius} fill={`url(#${gradient})`} />
+          <circle cx="145" cy="80" r="5" className="material-nucleus" />
+          <path d="M145 80 H250" className="material-guide" />
+          <text x="272" y="64">
+            {t("电子云的宽窄", "Electron cloud width")}
+          </text>
+          <text x="272" y="91" className="material-caption">
+            {t("随每次迭代调整", "Adjusted at each iteration")}
+          </text>
+          <text x="272" y="116" className="material-caption">
+            {t("云团宽度示意", "A schematic of cloud width")}
+          </text>
+        </>
+      )}
+      {methodId === "hf" && (
+        <>
+          <path d="M180 73 H420" className="material-guide" />
+          {[occupation, 2 - occupation].map((value, i) => (
+            <g key={i}>
+              <circle
+                cx={180 + i * 240}
+                cy="70"
+                r="43"
+                className="material-reference"
+              />
+              <circle
+                cx={180 + i * 240}
+                cy="70"
+                r={43 * Math.sqrt(Math.max(0, value))}
+                className={i === 0 ? "material-cloud-a" : "material-cloud-b"}
+              />
+              <circle
+                cx={180 + i * 240}
+                cy="70"
+                r="5"
+                className="material-nucleus"
+              />
+              <text x={180 + i * 240} y="145" textAnchor="middle">
+                {i === 0 ? "A" : "B"} · {value.toFixed(2)}{" "}
+                {t("个电子", "electrons")}
+              </text>
+            </g>
+          ))}
+        </>
+      )}
+      {methodId === "constitutive" && (
+        <>
+          <rect
+            x="84"
+            y="48"
+            width="242"
+            height="50"
+            rx="12"
+            className="material-specimen"
+          />
+          <rect
+            x="75"
+            y="32"
+            width="15"
+            height="82"
+            rx="3"
+            className="material-grip"
+          />
+          <rect
+            x="320"
+            y="32"
+            width="15"
+            height="82"
+            rx="3"
+            className="material-grip"
+          />
+          <path
+            d="M99 73 H115 L126 58 L148 88 L170 58 L192 88 L214 58 L236 88 L248 73 H310"
+            className="material-spring"
+          />
+          <text x="205" y="145" textAnchor="middle">
+            {t("伸长保持不变", "Extension stays fixed")}
+          </text>
+          <rect
+            x="420"
+            y="35"
+            width="100"
+            height="70"
+            rx="6"
+            className="material-force-track"
+          />
+          <rect
+            x="420"
+            y={105 - 70 * stressFraction}
+            width="100"
+            height={70 * stressFraction}
+            rx="5"
+            className="material-force"
+          />
+          <text x="470" y="145" textAnchor="middle">
+            {t("剩余应力", "Stress remaining")}{" "}
+            {Math.round(stressFraction * 100)}%
+          </text>
+        </>
+      )}
+      {methodId === "fem" && (
+        <>
+          <rect
+            x="86"
+            y="50"
+            width="300"
+            height="50"
+            className="material-reference"
+          />
+          <rect
+            x="86"
+            y="50"
+            width={300 + extension}
+            height="50"
+            rx="3"
+            className="material-specimen"
+          />
+          {Array.from({ length: 19 }, (_, i) => (
+            <path
+              key={i}
+              d={`M${86 + ((i + 1) * (300 + extension)) / 20} 50 v50`}
+              className="material-element"
+            />
+          ))}
+          <rect
+            x="72"
+            y="33"
+            width="16"
+            height="84"
+            className="material-grip"
+          />
+          <path
+            d={`M${396 + extension} 75 h55 m-12 -8 l12 8 -12 8`}
+            className="material-load"
+          />
+          <path d="M386 30 V120" className="material-reference" />
+          <text x="80" y="145" textAnchor="middle">
+            {t("固定", "Fixed")}
+          </text>
+          <text x="286" y="145" textAnchor="middle">
+            {t("20 个单元", "20 elements")}
+          </text>
+          <text x="490" y="145" textAnchor="middle">
+            {t("拉力", "Pull")}
+          </text>
+        </>
+      )}
+    </svg>
+  );
+}
+
 function exportFrame(frame: SimulationFrame, name: string, locale: Locale) {
   const label = (value: string) => translateSimulationText(locale, value);
   const rows: (string | number)[][] = [
@@ -732,10 +973,19 @@ function exportFrame(frame: SimulationFrame, name: string, locale: Locale) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-export default function SimulationLab({ method }: { method: Method }) {
+export default function SimulationLab({
+  method,
+  beginner = false,
+}: {
+  method: Method;
+  beginner?: boolean;
+}) {
   const { locale, t } = useLanguage();
   const number = (n: number) => formatNumber(n, locale);
   const label = (value: string) => translateSimulationText(locale, value);
+  const guide = getLabGuide(method.id, locale);
+  const materialFirst =
+    beginner && ["dft", "hf", "constitutive", "fem"].includes(method.id);
   const supportsSpatial = method.id === "md" || method.id === "phase-field";
   const [dimension, setDimension] = useState<2 | 3>(3);
   const spatial = supportsSpatial && dimension === 3;
@@ -857,11 +1107,40 @@ export default function SimulationLab({ method }: { method: Method }) {
   }, [frame, sliceIndex]);
   return (
     <div
-      className="simulation-lab"
+      className={`simulation-lab ${beginner ? "lab-beginner" : ""}`}
       ref={root}
       data-model-dimension={spatial ? "3" : "2"}
     >
-      {supportsSpatial && (
+      <header className="lab-guide">
+        <div className="lab-guide-copy">
+          <span className="eyebrow">{t("这次看什么", "WHAT TO WATCH")}</span>
+          <h3>{guide.question}</h3>
+          <p>{guide.observe}</p>
+        </div>
+        <div
+          className="lab-presets"
+          role="group"
+          aria-label={t("对比场景", "Compare scenarios")}
+        >
+          {guide.presets.map((preset, index) => (
+            <button
+              key={index}
+              data-testid={`lab-preset-${index}`}
+              aria-pressed={Object.entries(preset.params).every(
+                ([key, value]) => params[key] === value,
+              )}
+              onClick={() => {
+                setRunning(false);
+                reset({ ...defaults, ...preset.params });
+              }}
+            >
+              <span>{index === 0 ? "A" : "B"}</span>
+              {preset.label}
+            </button>
+          ))}
+        </div>
+      </header>
+      {supportsSpatial && !beginner && (
         <div className="lab-model-selector">
           <span>{t("计算模型", "Model dimension")}</span>
           <div role="group" aria-label={t("计算模型维度", "Model dimension")}>
@@ -892,65 +1171,77 @@ export default function SimulationLab({ method }: { method: Method }) {
       <div className="lab-workspace">
         <div className="lab-display">
           <div className="lab-display-toolbar">
-            <div
-              className="lab-mode"
-              role="group"
-              aria-label={t("可视化维度", "Visualization dimension")}
-            >
-              <button
-                className={mode === "2d" ? "active" : ""}
-                aria-pressed={mode === "2d"}
-                onClick={() => setMode("2d")}
+            {!materialFirst && (
+              <div
+                className="lab-mode"
+                role="group"
+                aria-label={t("可视化维度", "Visualization dimension")}
               >
-                <Scan size={15} />
-                {spatial
-                  ? frame.volume
-                    ? t("截面", "Slice")
-                    : t("投影", "Projection")
-                  : "2D"}
-              </button>
-              <button
-                className={mode === "3d" ? "active" : ""}
-                aria-pressed={mode === "3d"}
-                disabled={webglFailed}
-                onClick={() => setMode("3d")}
-              >
-                <Box size={15} />
-                {spatial ? "3D" : t("立体图示", "Perspective")}
-              </button>
-            </div>
+                <button
+                  className={mode === "2d" ? "active" : ""}
+                  aria-pressed={mode === "2d"}
+                  onClick={() => setMode("2d")}
+                >
+                  <Scan size={15} />
+                  {spatial
+                    ? frame.volume
+                      ? t("截面", "Slice")
+                      : t("投影", "Projection")
+                    : "2D"}
+                </button>
+                <button
+                  className={mode === "3d" ? "active" : ""}
+                  aria-pressed={mode === "3d"}
+                  disabled={webglFailed}
+                  onClick={() => setMode("3d")}
+                >
+                  <Box size={15} />
+                  {spatial ? "3D" : t("立体图示", "Perspective")}
+                </button>
+              </div>
+            )}
             <span className="lab-step">
               {running ? t("运行中", "Running") : t("已暂停", "Paused")} ·{" "}
               {steps} {t("步", "steps")}
             </span>
           </div>
-          <div className="lab-viewport">
-            {mode === "2d" ? (
-              <CanvasView
-                frame={displayFrame}
-                definition={definition}
-                methodId={method.id}
-                fieldRange={fieldRange}
-              />
-            ) : spatial ? (
-              <SpatialVolumeView
-                key={method.id}
-                frame={frame}
-                sliceIndex={sliceIndex}
-                showSlice={showSlice}
-                active={visible}
-                onError={onWebglError}
-              />
-            ) : (
-              <ThreeView
-                frame={frame}
-                definition={definition}
-                active={visible}
-                onError={onWebglError}
-                fieldRange={fieldRange}
-              />
-            )}
-          </div>
+          <MaterialStory methodId={method.id} frame={frame} params={params} />
+          <LearningDetail
+            collapsed={materialFirst}
+            title={
+              method.id === "fem"
+                ? t("查看单元节点", "Inspect the element nodes")
+                : t("查看对应曲线", "Inspect the curve")
+            }
+          >
+            <div className="lab-viewport">
+              {mode === "2d" ? (
+                <CanvasView
+                  frame={displayFrame}
+                  definition={definition}
+                  methodId={method.id}
+                  fieldRange={fieldRange}
+                />
+              ) : spatial ? (
+                <SpatialVolumeView
+                  key={method.id}
+                  frame={frame}
+                  sliceIndex={sliceIndex}
+                  showSlice={showSlice}
+                  active={visible}
+                  onError={onWebglError}
+                />
+              ) : (
+                <ThreeView
+                  frame={frame}
+                  definition={definition}
+                  active={visible}
+                  onError={onWebglError}
+                  fieldRange={fieldRange}
+                />
+              )}
+            </div>
+          </LearningDetail>
           {spatial && frame.volume && (
             <div className="lab-volume-controls">
               {mode === "3d" && (
@@ -991,49 +1282,65 @@ export default function SimulationLab({ method }: { method: Method }) {
               </label>
             </div>
           )}
-          <div className="lab-view-hint">
-            {mode === "3d" ? (
-              <>
-                {t("拖拽旋转 · 滚轮缩放", "Drag to rotate · Scroll to zoom")}
-                {spatial
-                  ? frame.volume
-                    ? ` · ${t("φ = 0 三维相界 · 移动剖面查看内部", "φ = 0 spatial interface · move the section to inspect the interior")}`
-                    : ` · ${t("真实 x、y、z 运动 · 周期模拟盒", "Physical x, y, z motion · periodic simulation box")}`
-                  : frame.grid
-                    ? ` · ${t("二维场值高度图", "Height plot of a two-dimensional field")}`
-                    : definition.view === "curves"
-                      ? ` · ${t("曲线图示", "Curve presentation")} · ${label(axisLabels[method.id]?.x ?? "x")} / ${label(axisLabels[method.id]?.y ?? "y")}`
-                      : ` · ${t("二维平面模型", "Two-dimensional planar model")}`}
-              </>
-            ) : spatial ? (
-              frame.volume ? (
-                t(
-                  "三维体数据的 xy 截面 · 固定色标 −1 至 +1",
-                  "An xy section of the 3D volume · fixed color range −1 to +1",
+          <p className="lab-physical-legend">{guide.legend}</p>
+          {method.id === "kmc" && (
+            <div className="lab-key-reading" data-testid="lab-kmc-clock">
+              <span>{t("这些跳跃一共用了", "Time taken by these hops")}</span>
+              <strong>
+                {number(frame.time)} <small>s</small>
+              </strong>
+              <span>
+                {number(frame.metrics[2]?.value ?? 0)} {t("次跳跃", "hops")}
+              </span>
+            </div>
+          )}
+          {!materialFirst && (
+            <div className="lab-view-hint">
+              {mode === "3d" ? (
+                <>
+                  {t("拖拽旋转 · 滚轮缩放", "Drag to rotate · Scroll to zoom")}
+                  {spatial
+                    ? frame.volume
+                      ? ` · ${t("φ = 0 三维相界 · 移动剖面查看内部", "φ = 0 spatial interface · move the section to inspect the interior")}`
+                      : ` · ${t("真实 x、y、z 运动 · 周期模拟盒", "Physical x, y, z motion · periodic simulation box")}`
+                    : frame.grid
+                      ? ` · ${t("二维场值高度图", "Height plot of a two-dimensional field")}`
+                      : definition.view === "curves"
+                        ? ` · ${t("曲线图示", "Curve presentation")} · ${label(axisLabels[method.id]?.x ?? "x")} / ${label(axisLabels[method.id]?.y ?? "y")}`
+                        : ` · ${t("二维平面模型", "Two-dimensional planar model")}`}
+                </>
+              ) : spatial ? (
+                frame.volume ? (
+                  t(
+                    "三维体数据的 xy 截面 · 固定色标 −1 至 +1",
+                    "An xy section of the 3D volume · fixed color range −1 to +1",
+                  )
+                ) : (
+                  t(
+                    "三维粒子的 xy 投影；z 方向仍参与计算",
+                    "xy projection of 3D particles; z still participates in the dynamics",
+                  )
                 )
+              ) : frame.grid ? (
+                t("固定色标", "Fixed color scale")
+              ) : definition.view === "curves" ? (
+                t("坐标范围随数据调整", "Axes adjust to the data range")
               ) : (
                 t(
-                  "三维粒子的 xy 投影；z 方向仍参与计算",
-                  "xy projection of 3D particles; z still participates in the dynamics",
+                  "固定比例显示运动与形变",
+                  "Fixed scale for motion and deformation",
                 )
-              )
-            ) : frame.grid ? (
-              t("固定色标", "Fixed color scale")
-            ) : definition.view === "curves" ? (
-              t("坐标范围随数据调整", "Axes adjust to the data range")
-            ) : (
-              t(
-                "固定比例显示运动与形变",
-                "Fixed scale for motion and deformation",
-              )
-            )}
-            {webglFailed &&
-              t(
-                " · 当前设备未提供 WebGL，已使用二维视图",
-                " · 3D is unavailable on this device; showing 2D",
               )}
-          </div>
-          {frame.curves?.length && definition.view === "curves" ? (
+              {webglFailed &&
+                t(
+                  " · 当前设备未提供 WebGL，已使用二维视图",
+                  " · 3D is unavailable on this device; showing 2D",
+                )}
+            </div>
+          )}
+          {!materialFirst &&
+          frame.curves?.length &&
+          definition.view === "curves" ? (
             <div className="lab-legend">
               {frame.curves.map((curve, i) => (
                 <span key={label(curve.name)}>
@@ -1087,23 +1394,28 @@ export default function SimulationLab({ method }: { method: Method }) {
               </select>
               <ChevronDown size={12} />
             </label>
-            <button
-              className="lab-export lab-icon-button"
-              onClick={() => exportFrame(frame, method.id, locale)}
-              aria-label={t("导出当前数值 CSV", "Export current data as CSV")}
-              title={t("导出当前数值 CSV", "Export current data as CSV")}
-            >
-              <Download size={16} />
-            </button>
+            {!beginner && (
+              <button
+                className="lab-export lab-icon-button"
+                onClick={() => exportFrame(frame, method.id, locale)}
+                aria-label={t("导出当前数值 CSV", "Export current data as CSV")}
+                title={t("导出当前数值 CSV", "Export current data as CSV")}
+              >
+                <Download size={16} />
+              </button>
+            )}
           </div>
         </div>
-        <div className="lab-controls">
-          <div className="lab-controls-title">
+        <details
+          className="lab-controls lab-parameter-panel"
+          open={beginner ? undefined : true}
+        >
+          <summary className="lab-controls-title">
             {t("实验参数", "Parameters")}
             <span>
               {t("调节后重新开始", "Changing a parameter resets the model")}
             </span>
-          </div>
+          </summary>
           {definition.controls.map((control) => (
             <label className="lab-control" key={control.key}>
               <span>
@@ -1129,27 +1441,30 @@ export default function SimulationLab({ method }: { method: Method }) {
               </span>
             </label>
           ))}
-        </div>
+        </details>
       </div>
       {error && (
         <p className="lab-error" role="alert">
           {label(error)}
         </p>
       )}
-      <div
-        className="lab-metrics"
-        aria-label={t("当前模拟数值", "Current simulation values")}
-      >
-        {frame.metrics.map((metric) => (
-          <div className="lab-metric" key={metric.label}>
-            <span>{label(metric.label)}</span>
-            <strong>
-              {number(metric.value)}
-              <small>{label(metric.unit ?? "")}</small>
-            </strong>
-          </div>
-        ))}
-      </div>
+      <details className="lab-readings" open={beginner ? undefined : true}>
+        <summary>{t("查看数值读数", "Inspect numerical readings")}</summary>
+        <div
+          className="lab-metrics"
+          aria-label={t("当前模拟数值", "Current simulation values")}
+        >
+          {frame.metrics.map((metric) => (
+            <div className="lab-metric" key={metric.label}>
+              <span>{label(metric.label)}</span>
+              <strong>
+                {number(metric.value)}
+                <small>{label(metric.unit ?? "")}</small>
+              </strong>
+            </div>
+          ))}
+        </div>
+      </details>
       <details className="lab-model-note">
         <summary>
           <Info size={14} />

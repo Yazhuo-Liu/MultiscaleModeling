@@ -1,5 +1,8 @@
 import MathMarkdown from "./components/MathMarkdown";
 import ScaleJourney from "./components/ScaleJourney";
+import BeginnerIntro from "./components/BeginnerIntro";
+import { getBeginner } from "./content/beginner";
+import { VACANCY_DEMO_CODE } from "./simulations/vacancy-demo";
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowUpRight,
@@ -44,6 +47,9 @@ function useUI() {
 }
 import type { Method, ScaleId } from "./types";
 const SimulationLab = lazy(() => import("./components/SimulationLab"));
+const VacancyDiffusionDemo = lazy(
+  () => import("./components/VacancyDiffusionDemo"),
+);
 const scales: {
   id: ScaleId;
   name: string;
@@ -645,7 +651,21 @@ function ScaleMap() {
 function MethodPage({ method: m }: { method: Method }) {
   const { locale, ui, t } = useUI();
   const methods = methodsFor(locale);
-  const [tab, setTab] = useState("theory");
+  const [tab, setTab] = useState("intro");
+  const [mcExample, setMcExample] = useState<"diffusion" | "ising">(
+    "diffusion",
+  );
+  const beginner = getBeginner(m.id, locale);
+  const code =
+    m.id === "mc" && mcExample === "diffusion" ? VACANCY_DEMO_CODE : m.code;
+  const selectTab = (next: string) => {
+    setTab(next);
+    requestAnimationFrame(() =>
+      document
+        .querySelector(".chapter-tabs")
+        ?.scrollIntoView({ block: "start", behavior: "instant" }),
+    );
+  };
   const [copied, setCopied] = useState(false);
   const index = methods.indexOf(m);
   const s = scaleOf(m.scale);
@@ -658,7 +678,7 @@ function MethodPage({ method: m }: { method: Method }) {
   );
   const copy = async () => {
     try {
-      await navigator.clipboard.writeText(m.code);
+      await navigator.clipboard.writeText(code);
       setCopied(true);
       copyTimer.current = setTimeout(() => setCopied(false), 2000);
     } catch {
@@ -667,7 +687,7 @@ function MethodPage({ method: m }: { method: Method }) {
   };
   const download = () => {
     const u = URL.createObjectURL(
-      new Blob([m.code], { type: "text/plain;charset=utf-8" }),
+      new Blob([code], { type: "text/plain;charset=utf-8" }),
     );
     const a = document.createElement("a");
     a.href = u;
@@ -691,7 +711,7 @@ function MethodPage({ method: m }: { method: Method }) {
           <h1>{m.title}</h1>
           {locale === "zh" && <p className="method-english">{m.english}</p>}
           <MathMarkdown className="method-description">
-            {m.description}
+            {tab === "intro" ? beginner.takeaway : m.description}
           </MathMarkdown>
         </div>
         <div className="method-monogram">
@@ -699,27 +719,40 @@ function MethodPage({ method: m }: { method: Method }) {
           <Atom size={90} />
         </div>
       </div>
-      <div className="method-facts">
-        <div>
-          <span>{ui("典型长度")}</span>
-          <b>{m.length}</b>
+      <details className="method-background learning-detail">
+        <summary>{t("尺度与学习准备", "Scales and background")}</summary>
+        <div className="method-facts">
+          <div>
+            <span>{ui("典型长度")}</span>
+            <b>{m.length}</b>
+          </div>
+          <div>
+            <span>{ui("特征时间")}</span>
+            <b>{m.time}</b>
+          </div>
+          <div>
+            <span>{ui("学习级别")}</span>
+            <b>{m.difficulty}</b>
+          </div>
+          <div>
+            <span>{ui("建议基础")}</span>
+            <b>{m.prerequisites.join(" · ")}</b>
+          </div>
         </div>
-        <div>
-          <span>{ui("特征时间")}</span>
-          <b>{m.time}</b>
-        </div>
-        <div>
-          <span>{ui("学习级别")}</span>
-          <b>{m.difficulty}</b>
-        </div>
-        <div>
-          <span>{ui("建议基础")}</span>
-          <b>{m.prerequisites.join(" · ")}</b>
-        </div>
-      </div>
+      </details>
       <div className="chapter-tabs" role="tablist" aria-label={ui("章节内容")}>
         {[
-          { id: "theory", title: ui("概念与理论"), icon: BookOpen },
+          { id: "intro", title: t("先看现象", "See the idea"), icon: Sparkles },
+          {
+            id: "theory",
+            title: t("理解模型", "Understand the model"),
+            icon: BookOpen,
+          },
+          {
+            id: "advanced",
+            title: t("公式与推导", "Equations & derivations"),
+            icon: GraduationCap,
+          },
           { id: "lab", title: ui("交互实验"), icon: FlaskConical },
           { id: "code", title: ui("算法与代码"), icon: Code2 },
           { id: "more", title: ui("应用与延伸"), icon: Compass },
@@ -739,6 +772,23 @@ function MethodPage({ method: m }: { method: Method }) {
         ))}
       </div>
       <div id="chapter-panel" role="tabpanel" aria-labelledby={`tab-${tab}`}>
+        {tab === "intro" && (
+          <BeginnerIntro id={m.id} onContinue={() => selectTab("theory")}>
+            <div className="beginner-demo" data-testid="beginner-demo">
+              <Suspense
+                fallback={
+                  <div className="loading-panel">{ui("正在准备交互实验…")}</div>
+                }
+              >
+                {m.id === "mc" ? (
+                  <VacancyDiffusionDemo />
+                ) : (
+                  <SimulationLab method={m} beginner />
+                )}
+              </Suspense>
+            </div>
+          </BeginnerIntro>
+        )}
         {tab === "theory" && (
           <div className="theory-content">
             <div className="foundation-prerequisites">
@@ -787,14 +837,34 @@ function MethodPage({ method: m }: { method: Method }) {
               </MathMarkdown>
               <MathMarkdown>{m.equation.explanation}</MathMarkdown>
             </section>
-            <Suspense fallback={<p>{ui("正在展开理论…")}</p>}>
-              <TheoryReading method={m} />
-            </Suspense>
+            <div className="learning-next">
+              <div>
+                <h3>
+                  {t("准备好看公式如何得到？", "Ready to build the equations?")}
+                </h3>
+                <p>
+                  {t(
+                    "从最简单的情形开始，再逐步加入复杂条件。",
+                    "Start with the simplest case, then add complexity one step at a time.",
+                  )}
+                </p>
+              </div>
+              <button
+                className="button primary"
+                onClick={() => selectTab("advanced")}
+              >
+                {t("进入公式与推导", "Explore the derivations")}
+                <ArrowRight size={16} />
+              </button>
+            </div>
             <div className="next-lab">
               <div>
                 <h3>{ui("把方程变成你能看见的现象")}</h3>
                 <p>
-                  {m.experiment.title} {ui("· 调整参数，检验你的直觉。")}
+                  {m.id === "mc" && mcExample === "diffusion"
+                    ? t("原子与空位的交换", "Atoms exchanging with a vacancy")
+                    : m.experiment.title}{" "}
+                  {ui("· 调整参数，检验你的直觉。")}
                 </p>
               </div>
               <button className="button primary" onClick={() => setTab("lab")}>
@@ -804,7 +874,54 @@ function MethodPage({ method: m }: { method: Method }) {
             </div>
           </div>
         )}
-        {tab === "lab" && (
+        {tab === "advanced" && (
+          <div className="theory-content">
+            <div className="learning-stage-note">
+              <span>03</span>
+              <p>
+                {t(
+                  "这一层保留完整数学：先读假设，再跟着每一步推导。需要回顾直觉时，可随时回到“先看现象”。",
+                  "This level develops the mathematics: read the assumptions, then follow each step. Return to “See the idea” whenever you want to revisit the intuition.",
+                )}
+              </p>
+            </div>
+            <Suspense fallback={<p>{ui("正在展开理论…")}</p>}>
+              <TheoryReading method={m} />
+            </Suspense>
+          </div>
+        )}
+        {(tab === "lab" || tab === "code") && m.id === "mc" && (
+          <div
+            className="example-selector"
+            role="group"
+            aria-label={t("选择 MC 示例", "Choose an MC example")}
+          >
+            <button
+              data-testid="mc-example-diffusion"
+              aria-pressed={mcExample === "diffusion"}
+              onClick={() => setMcExample("diffusion")}
+            >
+              {t("原子与空位 · 入门", "Atoms & vacancies · start here")}
+            </button>
+            <button
+              data-testid="mc-example-ising"
+              aria-pressed={mcExample === "ising"}
+              onClick={() => setMcExample("ising")}
+            >
+              {t("Ising 自旋 · 进阶", "Ising spins · go further")}
+            </button>
+          </div>
+        )}
+        {tab === "lab" && m.id === "mc" && mcExample === "diffusion" && (
+          <Suspense
+            fallback={
+              <div className="loading-panel">{ui("正在准备交互实验…")}</div>
+            }
+          >
+            <VacancyDiffusionDemo />
+          </Suspense>
+        )}
+        {tab === "lab" && (m.id !== "mc" || mcExample === "ising") && (
           <section className="lab-section">
             <div className="section-heading">
               <div>
@@ -856,7 +973,27 @@ function MethodPage({ method: m }: { method: Method }) {
               </div>
             </div>
             <ol className="algorithm-steps">
-              {m.steps.map((x, i) => (
+              {(m.id === "mc" && mcExample === "diffusion"
+                ? [
+                    t(
+                      "在简单立方晶格中留一个空位，并标记一个相邻原子。",
+                      "Leave one vacancy in a simple cubic lattice and tag a neighboring atom.",
+                    ),
+                    t(
+                      "等概率选六个方向之一；若越过边界，拒绝这次尝试。",
+                      "Choose one of six directions with equal probability; reject attempts outside the crystal.",
+                    ),
+                    t(
+                      "比较交换前后的教学能量，能量降低就接受，升高则按温度给出接受概率。",
+                      "Compare the teaching energies before and after the swap. Accept downhill moves and accept uphill moves with a temperature-dependent probability.",
+                    ),
+                    t(
+                      "交换原子与空位，记录轨迹和尝试数；这些步数没有物理时间单位。",
+                      "Swap atom and vacancy, record paths and attempts; these steps have no physical time unit.",
+                    ),
+                  ]
+                : m.steps
+              ).map((x, i) => (
                 <li key={x}>
                   <span>{String(i + 1).padStart(2, "0")}</span>
                   <MathMarkdown>{x}</MathMarkdown>
@@ -881,7 +1018,7 @@ function MethodPage({ method: m }: { method: Method }) {
                 </div>
               </div>
               <pre tabIndex={0}>
-                <code>{m.code}</code>
+                <code>{code}</code>
               </pre>
             </div>
             <p className="code-note">

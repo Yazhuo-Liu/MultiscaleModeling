@@ -95,6 +95,7 @@ try {
   ];
   for (const id of ids) {
     await page.goto(`${base}#/method/${id}`);
+    await page.locator("#tab-theory").click();
     await page.locator(".concept-card").first().waitFor();
     assert.ok((await page.locator(".concept-card").count()) >= 3);
     await page.getByRole("tab", { name: "算法与代码" }).click();
@@ -109,6 +110,7 @@ try {
     await page.getByRole("tab", { name: "应用与延伸" }).click();
     assert.ok((await page.locator(".references a").count()) >= 2);
     await page.getByRole("tab", { name: "交互实验" }).click();
+    if (id === "mc") await page.getByTestId("mc-example-ising").click();
     await page.locator(".lab-viewport canvas").waitFor();
     await page.locator(".lab-playback").scrollIntoViewIfNeeded();
     await page.getByRole("button", { name: "前进一步", exact: true }).click();

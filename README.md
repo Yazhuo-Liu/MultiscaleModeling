@@ -4,6 +4,8 @@
 
 覆盖 11 种方法：DFT、Hartree–Fock、分子动力学、Monte Carlo、位错动力学、Kinetic Monte Carlo、相场、多晶塑性、本构 / 速率与状态方程、有限元、有限差分。每章提供直觉、核心概念、方程、交互实验、算法步骤、代码、模型边界与参考资料。新增的深入理论包括学习目标、3节详细推导与变量表、科学示意图、定量算例、常见误区与可展开自测。顶栏按钮切换中英文并记住语言，切换保留实验状态。
 
+**从现象开始阅读**：全部 19 章默认进入“先看现象”，用具体问题、可操作图示与三步短解释建立直觉；再进入“理解模型”和“公式与推导”。原有数学、算例、代码和参考资料完整保留。实验加入场景对比按钮，入门层的专家参数和数值读数可按需展开。MC 默认提供三维原子—空位交换动画、追踪轨迹和俘获场景，使用轻量格点采样；Ising 作为进阶可选实验保留。详见 [入门分层设计](doc/beginner-first.md)。
+
 实验完全在浏览器本机计算。氢/铁轨道提供真正的三维密度等值面、概率云及可移动剖面；MD 和相场默认使用独立的三维求解器，可切换回二维教学模型。其他低维例子的旋转视图标为“立体图示”，与三维计算区分。网站不需要后端、数据库、密钥或付费服务。教学简化模型用于理解概念；其近似与适用范围在章节中明确说明，不应用于未经验证的工程预测。
 
 新增 **8 个双语基础章节**：多尺度动机、各尺度局限、误差传播、电子结构、H/Fe 原子轨道、共价与金属成键、能带与带隙、形成能与相稳定性。每章包含递进讲解、推导、算例、误区、自检与公开参考。轨道可分层探索：氢为解析1s/2s/2p，铁为明确标注Slater屏蔽类氢近似的五个3d及4s。默认显示可旋转的三维等值面，支持调密度阈值、切换概率云和观察内部节点；另有相关误差、二聚化能带和形成能凸包交互。入口为 `#/foundations`，方法页也提供对应先修链接。
@@ -29,6 +31,8 @@ npm run preview
 
 `npm run test:spatial` 检查三维轨道、体数据、MD的xyz运动、相场剖切与手机回退，设计见 [真正三维模型](doc/true-3d.md)。`npm run test:browser` 在生产构建后检查全部章节与图形交互（需要系统 Chromium 或 Playwright Chromium）；`node --test scripts/deploy.test.mjs` 验证发布命令。详见 [验证记录](doc/validation.md)。
 
+`npm run test:beginner` 检查 19 章双语分层阅读、新 MC 动画/相机/状态及材料图示场景对比。
+
 `npm test` 检查数值模型；`npm run build` 执行 TypeScript 检查并生成 `dist/`。网站采用 hash 路由和相对资源路径，适合 GitHub Pages 仓库子路径。纯静态托管时保留 `dist/` 的完整文件结构。
 
 源码格式化命令：`npm run format`。网页配色、字号与布局集中在 `src/theme.css`，字体随站点打包，无外部字体服务请求。
@@ -52,6 +56,9 @@ npm run preview
 
 - `src/i18n.tsx`：语言选择、持久化和文档语言；`src/content/ui-en.ts`：界面翻译。
 - `src/content/methods.ts` / `methods.en.ts`：中英文课程基础内容。
+- `src/content/beginner.ts`：19 章双语无公式入门；`BeginnerIntro.tsx` 提供共享排版。
+- `src/content/lab-guides.ts`：实验问题、材料图例与可比较参数场景。
+- `src/components/VacancyDiffusionDemo.tsx` / `VacancyLatticeView.tsx`：原子—空位三维交换与显示；`src/simulations/vacancy-demo.ts` 为独立轻量模型和匹配的 Python 代码。
 - `src/content/theory-*.ts`：11章详细理论，含并列的 `zh` 与 `en` 数据。
 - `src/components/TheoryFigure.tsx`：11张双语SVG科学示意图。
 - `src/content/simulation-i18n.ts`：实验参数、读数与模型说明翻译，不改变数值计算。

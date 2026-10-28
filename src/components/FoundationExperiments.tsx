@@ -10,6 +10,7 @@ import {
   sshGap,
 } from "../foundations/models";
 import MathMarkdown from "./MathMarkdown";
+import LearningDetail from "./LearningDetail";
 
 const ink = "var(--figure-ink)";
 const grid = "var(--figure-grid)";
@@ -81,7 +82,11 @@ function Metric({
   );
 }
 
-export function UncertaintyExplorer() {
+export function UncertaintyExplorer({
+  beginner = false,
+}: {
+  beginner?: boolean;
+}) {
   const { t } = useLanguage();
   const [modulus, setModulus] = useState(200);
   const [cvPercent, setCvPercent] = useState(5);
@@ -118,12 +123,21 @@ export function UncertaintyExplorer() {
         <h3>
           {t("一个输入，两个相关的输出", "One input, two correlated outputs")}
         </h3>
-        <MathMarkdown>
-          {t(
-            String.raw`只让弹性模量 $E$ 不确定。固定 $F=1000\,\mathrm{N}$、$A=10\,\mathrm{mm}^2$、$L=100\,\mathrm{mm}$，每个可能的 $E$ 同时产生一对刚度 $k$ 和位移 $u$。`,
-            String.raw`Only Young's modulus $E$ is uncertain. With $F=1000\,\mathrm{N}$, $A=10\,\mathrm{mm}^2$ and $L=100\,\mathrm{mm}$ fixed, each possible $E$ produces a paired stiffness $k$ and displacement $u$.`,
-          )}
-        </MathMarkdown>
+        {beginner ? (
+          <p>
+            {t(
+              "同样粗细、同样长度的杆，在相同拉力下会伸长多少？材料软硬有一点不确定，结果也会散开。试着增大散布，看看图上的点怎样变化。",
+              "How much does the same rod stretch under the same force? If its stiffness is uncertain, the result also spreads out. Increase the spread and watch the points move.",
+            )}
+          </p>
+        ) : (
+          <MathMarkdown>
+            {t(
+              String.raw`只让弹性模量 $E$ 不确定。固定 $F=1000\,\mathrm{N}$、$A=10\,\mathrm{mm}^2$、$L=100\,\mathrm{mm}$，每个可能的 $E$ 同时产生一对刚度 $k$ 和位移 $u$。`,
+              String.raw`Only Young's modulus $E$ is uncertain. With $F=1000\,\mathrm{N}$, $A=10\,\mathrm{mm}^2$ and $L=100\,\mathrm{mm}$ fixed, each possible $E$ produces a paired stiffness $k$ and displacement $u$.`,
+            )}
+          </MathMarkdown>
+        )}
       </header>
       <div className="foundation-lab-controls">
         <RangeControl
@@ -241,64 +255,82 @@ export function UncertaintyExplorer() {
           "Teal: 41 bounded, equally weighted illustrative samples. Orange: response at the central input. Axes follow the input range.",
         )}
       </p>
-      <div className="foundation-lab-metrics" aria-live="polite">
-        <Metric
-          label={t("刚度及其标准差", "Stiffness and standard deviation")}
-          value={`${Math.round(model.stiffnessNPerMm)} ± ${Math.round(model.stiffnessStdNPerMm)} N/mm`}
-          detail={t("局部线性传播", "Local linear propagation")}
-        />
-        <Metric
-          label={t("位移及其标准差", "Displacement and standard deviation")}
-          value={`${model.displacementMm.toFixed(4)} ± ${model.displacementStdMm.toFixed(4)} mm`}
-          detail={t("局部线性传播", "Local linear propagation")}
-        />
-        <Metric
-          label={t(
-            "保留相关性：ku 的标准差",
-            "With correlation: standard deviation of ku",
-          )}
-          value="0 N"
-          detail={t(
-            "给定外力下的精确恒等式",
-            "Exact identity at the prescribed force",
-          )}
-          testId="uncertainty-product-correct"
-        />
-        <Metric
-          label={t(
-            "误当独立：ku 的标准差",
-            "Assuming independence incorrectly: SD of ku",
-          )}
-          value={`${model.independentProductStdN.toFixed(2)} N`}
-          detail={t(
-            "这是假设错误带来的虚假不确定度",
-            "Spurious uncertainty from the wrong assumption",
-          )}
-          testId="uncertainty-product-independent"
-        />
-      </div>
-      <MathMarkdown
-        display
-      >{String.raw`k=\frac{EA}{L},\qquad u=\frac{FL}{EA},\qquad ku=F`}</MathMarkdown>
-      <div className="foundation-lab-note">
-        <MathMarkdown>
+      {beginner && (
+        <p className="foundation-lab-note">
           {t(
-            String.raw`局部协方差为 $\operatorname{Cov}(k,u)\approx-F(\sigma_E/E)^2$，它抵消乘积传播中的两个方差项。有限幅度的非线性样本相关系数一般不精确等于 $-1$。上面的“±”表示一倍标准差，不是最小/最大值或保证区间。`,
-            String.raw`The local covariance $\operatorname{Cov}(k,u)\approx-F(\sigma_E/E)^2$ cancels the two variance terms in the product. Finite-amplitude nonlinear samples do not generally have a Pearson correlation of exactly $-1$. Here “±” denotes one standard deviation, not extrema or a guaranteed interval.`,
-          )}
-        </MathMarkdown>
-        <p>
-          {t(
-            "增大散布后，一阶近似会逐渐偏离非线性响应。材料不服从线弹性等模型偏差需要另外验证，增加样本数量无法消除它。",
-            "As the spread grows, a first-order approximation departs from the nonlinear response. Model bias, such as departure from linear elasticity, requires separate validation and is not removed by taking more samples.",
+            "同样的拉力下，材料越硬，杆伸长得越少。输入的散布增大，图上两种结果的散布也会改变；它们不是彼此独立的。",
+            "Under the same force, a stiffer material stretches less. Increasing the spread in the input changes both outputs together; they are not independent.",
           )}
         </p>
-      </div>
+      )}
+      <LearningDetail
+        collapsed={beginner}
+        title={t("展开数值比较", "Compare the numbers")}
+      >
+        <div className="foundation-lab-metrics" aria-live="polite">
+          <Metric
+            label={t("刚度及其标准差", "Stiffness and standard deviation")}
+            value={`${Math.round(model.stiffnessNPerMm)} ± ${Math.round(model.stiffnessStdNPerMm)} N/mm`}
+            detail={t("局部线性传播", "Local linear propagation")}
+          />
+          <Metric
+            label={t("位移及其标准差", "Displacement and standard deviation")}
+            value={`${model.displacementMm.toFixed(4)} ± ${model.displacementStdMm.toFixed(4)} mm`}
+            detail={t("局部线性传播", "Local linear propagation")}
+          />
+          <Metric
+            label={t(
+              "保留相关性：ku 的标准差",
+              "With correlation: standard deviation of ku",
+            )}
+            value="0 N"
+            detail={t(
+              "给定外力下的精确恒等式",
+              "Exact identity at the prescribed force",
+            )}
+            testId="uncertainty-product-correct"
+          />
+          <Metric
+            label={t(
+              "误当独立：ku 的标准差",
+              "Assuming independence incorrectly: SD of ku",
+            )}
+            value={`${model.independentProductStdN.toFixed(2)} N`}
+            detail={t(
+              "这是假设错误带来的虚假不确定度",
+              "Spurious uncertainty from the wrong assumption",
+            )}
+            testId="uncertainty-product-independent"
+          />
+        </div>
+      </LearningDetail>
+      <LearningDetail
+        collapsed={beginner}
+        title={t("想了解计算关系？", "Curious about the calculation?")}
+      >
+        <MathMarkdown
+          display
+        >{String.raw`k=\frac{EA}{L},\qquad u=\frac{FL}{EA},\qquad ku=F`}</MathMarkdown>
+        <div className="foundation-lab-note">
+          <MathMarkdown>
+            {t(
+              String.raw`局部协方差为 $\operatorname{Cov}(k,u)\approx-F(\sigma_E/E)^2$，它抵消乘积传播中的两个方差项。有限幅度的非线性样本相关系数一般不精确等于 $-1$。上面的“±”表示一倍标准差，不是最小/最大值或保证区间。`,
+              String.raw`The local covariance $\operatorname{Cov}(k,u)\approx-F(\sigma_E/E)^2$ cancels the two variance terms in the product. Finite-amplitude nonlinear samples do not generally have a Pearson correlation of exactly $-1$. Here “±” denotes one standard deviation, not extrema or a guaranteed interval.`,
+            )}
+          </MathMarkdown>
+          <p>
+            {t(
+              "增大散布后，一阶近似会逐渐偏离非线性响应。材料不服从线弹性等模型偏差需要另外验证，增加样本数量无法消除它。",
+              "As the spread grows, a first-order approximation departs from the nonlinear response. Model bias, such as departure from linear elasticity, requires separate validation and is not removed by taking more samples.",
+            )}
+          </p>
+        </div>
+      </LearningDetail>
     </section>
   );
 }
 
-export function BandExplorer() {
+export function BandExplorer({ beginner = false }: { beginner?: boolean }) {
   const { t } = useLanguage();
   const [t2, setT2] = useState(0.6);
   const titleId = useId();
@@ -328,12 +360,21 @@ export function BandExplorer() {
             "How do alternating couplings open a gap?",
           )}
         </h3>
-        <MathMarkdown>
-          {t(
-            String.raw`每个原胞有两个位点。固定胞内跃迁 $t_1=1\,\mathrm{eV}$，改变胞间跃迁 $t_2$。含自旋时，每个原胞有两个电子：下带填满，上带空着。`,
-            String.raw`Each unit cell has two sites. Keep the intracell hopping $t_1=1\,\mathrm{eV}$ fixed and vary the intercell hopping $t_2$. With two electrons per cell including spin, the lower band is full and the upper band is empty.`,
-          )}
-        </MathMarkdown>
+        {beginner ? (
+          <p>
+            {t(
+              "把原子想成一串有规律排列的座位。改变相邻位置之间的联系强弱，看看已占据和未占据的能量之间，是否出现一段空白。这个空白就是带隙。",
+              "Imagine atoms as seats in a repeating chain. Change the links between neighbors and look for an empty interval between occupied and unoccupied energies. That interval is the band gap.",
+            )}
+          </p>
+        ) : (
+          <MathMarkdown>
+            {t(
+              String.raw`每个原胞有两个位点。固定胞内跃迁 $t_1=1\,\mathrm{eV}$，改变胞间跃迁 $t_2$。含自旋时，每个原胞有两个电子：下带填满，上带空着。`,
+              String.raw`Each unit cell has two sites. Keep the intracell hopping $t_1=1\,\mathrm{eV}$ fixed and vary the intercell hopping $t_2$. With two electrons per cell including spin, the lower band is full and the upper band is empty.`,
+            )}
+          </MathMarkdown>
+        )}
       </header>
       <div className="foundation-lab-controls">
         <RangeControl
@@ -549,12 +590,21 @@ export function BandExplorer() {
           </text>
         </svg>
       </div>
-      <MathMarkdown className="foundation-lab-legend">
-        {t(
-          "青色下带：占满；橙色上带：空带。虚线取中隙能量 $E_F = 0$，表示此半填充对称模型的能量基准。",
-          "Teal lower band: occupied. Orange upper band: empty. The dashed midgap level $E_F = 0$ is the convention for this symmetric, half-filled model.",
-        )}
-      </MathMarkdown>
+      {beginner ? (
+        <p className="foundation-lab-legend">
+          {t(
+            "青色：已占据的能量；橙色：未占据的能量。两者之间的空白越宽，带隙越大。",
+            "Teal: occupied energies. Orange: unoccupied energies. A wider empty interval means a larger band gap.",
+          )}
+        </p>
+      ) : (
+        <MathMarkdown className="foundation-lab-legend">
+          {t(
+            "青色下带：占满；橙色上带：空带。虚线取中隙能量 $E_F = 0$，表示此半填充对称模型的能量基准。",
+            "Teal lower band: occupied. Orange upper band: empty. The dashed midgap level $E_F = 0$ is the convention for this symmetric, half-filled model.",
+          )}
+        </MathMarkdown>
+      )}
       <div className="foundation-lab-metrics" aria-live="polite">
         <Metric
           label={t("带隙", "Band gap")}
@@ -578,20 +628,29 @@ export function BandExplorer() {
           )}
         />
       </div>
-      <MathMarkdown
-        display
-      >{String.raw`E_\pm(k)=\pm\sqrt{t_1^2+t_2^2+2t_1t_2\cos(ka)},\qquad E_g=2|t_1-t_2|`}</MathMarkdown>
-      <p className="foundation-lab-note">
-        {t(
-          "这是一维、无电子相互作用的教学模型。带隙闭合不等同于对真实材料电导率的预测；真实材料还需要考虑占据、维度、散射与电子关联。晶格示意中的连线表示跃迁耦合，不表示电子运动轨迹。",
-          "This is a one-dimensional, noninteracting teaching model. Closing the gap alone does not predict a real material's conductivity; occupation, dimensionality, scattering and electron correlations also matter. Links in the chain represent hopping couplings, not electron trajectories.",
-        )}
-      </p>
+      <LearningDetail
+        collapsed={beginner}
+        title={t("想了解计算关系？", "Curious about the calculation?")}
+      >
+        <MathMarkdown
+          display
+        >{String.raw`E_\pm(k)=\pm\sqrt{t_1^2+t_2^2+2t_1t_2\cos(ka)},\qquad E_g=2|t_1-t_2|`}</MathMarkdown>
+        <p className="foundation-lab-note">
+          {t(
+            "这是一维、无电子相互作用的教学模型。带隙闭合不等同于对真实材料电导率的预测；真实材料还需要考虑占据、维度、散射与电子关联。晶格示意中的连线表示跃迁耦合，不表示电子运动轨迹。",
+            "This is a one-dimensional, noninteracting teaching model. Closing the gap alone does not predict a real material's conductivity; occupation, dimensionality, scattering and electron correlations also matter. Links in the chain represent hopping couplings, not electron trajectories.",
+          )}
+        </p>
+      </LearningDetail>
     </section>
   );
 }
 
-export function FormationEnergyExplorer() {
+export function FormationEnergyExplorer({
+  beginner = false,
+}: {
+  beginner?: boolean;
+}) {
   const { t } = useLanguage();
   const [energy, setEnergy] = useState(-0.1);
   const titleId = useId();
@@ -616,12 +675,21 @@ export function FormationEnergyExplorer() {
             "Does a negative formation energy guarantee stability?",
           )}
         </h3>
-        <MathMarkdown>
-          {t(
-            String.raw`假想体系中，元素 A、B 的形成能为零，AB 为 $-0.30\,\mathrm{eV/atom}$。改变候选 A₃B 的形成能，比较它与相同总体成分的 A + AB 混合物。`,
-            String.raw`In this hypothetical system, elemental A and B have zero formation energy, and AB has $-0.30\,\mathrm{eV/atom}$. Vary the energy of a candidate A₃B phase and compare it with an A + AB mixture of the same overall composition.`,
-          )}
-        </MathMarkdown>
+        {beginner ? (
+          <p>
+            {t(
+              "材料可以保持一种结构，也可以分成几种结构的混合物。移动橙色候选点：比元素能量更低，还不够；还要与相同成分的混合物比较。",
+              "A material can keep one structure or split into a mixture of structures. Move the orange candidate point: being below the elements is not enough; compare it with mixtures of the same composition.",
+            )}
+          </p>
+        ) : (
+          <MathMarkdown>
+            {t(
+              String.raw`假想体系中，元素 A、B 的形成能为零，AB 为 $-0.30\,\mathrm{eV/atom}$。改变候选 A₃B 的形成能，比较它与相同总体成分的 A + AB 混合物。`,
+              String.raw`In this hypothetical system, elemental A and B have zero formation energy, and AB has $-0.30\,\mathrm{eV/atom}$. Vary the energy of a candidate A₃B phase and compare it with an A + AB mixture of the same overall composition.`,
+            )}
+          </MathMarkdown>
+        )}
       </header>
       <div className="foundation-lab-controls">
         <RangeControl
@@ -804,49 +872,67 @@ export function FormationEnergyExplorer() {
           "Gray dashed line: hull of competing A, AB and B phases only. Teal solid line: hull including the candidate. Orange point: candidate A₃B. The two hulls may coincide.",
         )}
       </p>
-      <div className="foundation-lab-metrics" aria-live="polite">
-        <Metric
-          label={t("竞争混合物的能量", "Energy of the competing mixture")}
-          value="−0.150 eV/atom"
-          detail={t("按原子数计：½ A + ½ AB", "By atom fraction: ½ A + ½ AB")}
-        />
-        <Metric
-          label={t(
-            "相对竞争混合物的能差",
-            "Energy relative to the competing mixture",
+      {beginner && (
+        <p className="foundation-lab-note">
+          {t(
+            "橙色点比同成分的竞争混合物更低时，这个候选结构才有能量优势。图中的连线帮助你做这次比较。",
+            "The candidate has an energy advantage only when the orange point lies below competing mixtures of the same composition. The connecting lines help make that comparison.",
           )}
-          value={`${result.excessOverCompetitors >= 0 ? "+" : ""}${result.excessOverCompetitors.toFixed(3)} eV/atom`}
-          detail={t(
-            "负值表示比已有竞争相更低",
-            "Negative means below the existing competitors",
+        </p>
+      )}
+      <LearningDetail
+        collapsed={beginner}
+        title={t("展开数值比较", "Compare the numbers")}
+      >
+        <div className="foundation-lab-metrics" aria-live="polite">
+          <Metric
+            label={t("竞争混合物的能量", "Energy of the competing mixture")}
+            value="−0.150 eV/atom"
+            detail={t("按原子数计：½ A + ½ AB", "By atom fraction: ½ A + ½ AB")}
+          />
+          <Metric
+            label={t(
+              "相对竞争混合物的能差",
+              "Energy relative to the competing mixture",
+            )}
+            value={`${result.excessOverCompetitors >= 0 ? "+" : ""}${result.excessOverCompetitors.toFixed(3)} eV/atom`}
+            detail={t(
+              "负值表示比已有竞争相更低",
+              "Negative means below the existing competitors",
+            )}
+          />
+          <Metric
+            label={t(
+              "加入候选后的凸包距离",
+              "Energy above the hull including the candidate",
+            )}
+            value={`${result.energyAboveHull.toFixed(3)} eV/atom`}
+            detail={
+              result.onHull
+                ? t("位于所选相的凸包上", "On the hull of the selected phases")
+                : t(
+                    "存在能量更低的竞争混合物",
+                    "A competing mixture has lower energy",
+                  )
+            }
+            testId="formation-above-hull"
+          />
+        </div>
+      </LearningDetail>
+      <LearningDetail
+        collapsed={beginner}
+        title={t("想了解计算关系？", "Curious about the calculation?")}
+      >
+        <MathMarkdown
+          display
+        >{String.raw`E_{\mathrm{mix}}=\tfrac12 E_f(\mathrm A)+\tfrac12 E_f(\mathrm{AB})=-0.15\;\mathrm{eV/atom}`}</MathMarkdown>
+        <p className="foundation-lab-note">
+          {t(
+            "形成能的零点是选定的元素参考态，所有能量均按每原子计。这里仅比较给定相的零温能量，不含温度、熵、其他未知相或相变速率；在这个凸包上不等于已证明真实材料在所有条件下稳定。",
+            "The zero of formation energy is set by the chosen elemental reference states; all energies are per atom. This comparison uses zero-temperature energies of the listed phases only. It excludes temperature, entropy, unlisted phases and transformation rates, so being on this hull is not proof of real-material stability under all conditions.",
           )}
-        />
-        <Metric
-          label={t(
-            "加入候选后的凸包距离",
-            "Energy above the hull including the candidate",
-          )}
-          value={`${result.energyAboveHull.toFixed(3)} eV/atom`}
-          detail={
-            result.onHull
-              ? t("位于所选相的凸包上", "On the hull of the selected phases")
-              : t(
-                  "存在能量更低的竞争混合物",
-                  "A competing mixture has lower energy",
-                )
-          }
-          testId="formation-above-hull"
-        />
-      </div>
-      <MathMarkdown
-        display
-      >{String.raw`E_{\mathrm{mix}}=\tfrac12 E_f(\mathrm A)+\tfrac12 E_f(\mathrm{AB})=-0.15\;\mathrm{eV/atom}`}</MathMarkdown>
-      <p className="foundation-lab-note">
-        {t(
-          "形成能的零点是选定的元素参考态，所有能量均按每原子计。这里仅比较给定相的零温能量，不含温度、熵、其他未知相或相变速率；在这个凸包上不等于已证明真实材料在所有条件下稳定。",
-          "The zero of formation energy is set by the chosen elemental reference states; all energies are per atom. This comparison uses zero-temperature energies of the listed phases only. It excludes temperature, entropy, unlisted phases and transformation rates, so being on this hull is not proof of real-material stability under all conditions.",
-        )}
-      </p>
+        </p>
+      </LearningDetail>
     </section>
   );
 }

@@ -303,7 +303,7 @@ export const methodsEn: Method[] = [
     difficulty: "Foundation",
     prerequisites: ["Probability", "Energy", "Exponential functions"],
     intuition:
-      "Instead of tracing the true path of every particle, ask which states a system visits most often at equilibrium. Monte Carlo proposes small changes repeatedly. Moves that lower energy are usually accepted; some energy-increasing moves are accepted too, with temperature controlling how often that happens.",
+      "Instead of tracing the true path of every particle, ask which states a system visits most often at equilibrium. Monte Carlo proposes small changes repeatedly. Moves that lower energy are accepted; some energy-increasing moves are accepted too, with temperature controlling how often that happens.",
     concepts: [
       {
         title: "01 · Sampling is not a trajectory",
@@ -320,9 +320,9 @@ export const methodsEn: Method[] = [
     ],
     equation: {
       formula:
-        "\\begin{aligned}P_{\\mathrm{accept}} &= \\min\\left[1,\\exp\\left(-\\frac{\\Delta E}{k_{\\mathrm B}T}\\right)\\right] \\\\ H &= -J\\sum_{\\langle i,j\\rangle}s_i s_j-h\\sum_i s_i\\end{aligned}",
+        "P_{\\mathrm{accept}}=\\min\\left[1,\\exp\\left(-\\frac{\\Delta E}{k_{\\mathrm B}T}\\right)\\right]",
       explanation:
-        "In the Ising model, $s_i=\\pm1$ and $J>0$ favors neighboring spins pointing the same way. The coefficient $h$ is the external-field energy per spin; $h=0$ means zero field. The experiment uses a periodic two-dimensional lattice and the dimensionless temperature $k_{\\mathrm B}T/J$. The code example uses zero field.",
+        "Start with one vacancy exchange: $\\Delta E$ is the energy after minus before the swap. Accept moves that do not increase energy; for the same uphill attempt, a higher temperature raises its acceptance probability. The introductory demo uses a simple site energy for vacancy preference, without a real interatomic potential. The advanced Ising experiment applies the same rule to spin flips. Neither experiment gives MC steps a physical time unit.",
     },
     steps: [
       "Initialize the spin lattice and select a temperature.",

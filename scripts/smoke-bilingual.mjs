@@ -134,6 +134,7 @@ try {
   });
   for (const id of ids) {
     await page.goto(`${base}#/method/${id}`);
+    await page.locator("#tab-advanced").click();
     await page.locator(".theory-section").first().waitFor();
     assert.equal(
       await page.locator(".theory-section").count(),
@@ -196,6 +197,7 @@ try {
     await page
       .getByRole("tab", { name: "Interactive lab", exact: true })
       .click();
+    if (id === "mc") await page.getByTestId("mc-example-ising").click();
     await page.locator(".lab-viewport canvas").waitFor();
     await page
       .getByRole("button", { name: "Step forward", exact: true })
@@ -293,6 +295,7 @@ try {
   await page.goto(`${base}#/method/md`);
   await switchTo(page, "zh");
   await page.reload();
+  await page.locator("#tab-advanced").click();
   await page.locator(".theory-section").first().waitFor();
   assert.equal(await page.locator("html").getAttribute("lang"), "zh-CN");
   assert.ok(page.url().endsWith("#/method/md"));
@@ -309,6 +312,7 @@ try {
     });
     for (const id of ["crystal-plasticity", "constitutive", "hf"]) {
       await page.goto(`${base}#/method/${id}`);
+      await page.locator("#tab-advanced").click();
       await page.locator(".theory-section").first().waitFor();
       await noOverflow(page, `${locale} ${id} mobile theory`);
       assert.ok(

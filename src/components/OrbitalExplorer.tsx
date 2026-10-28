@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useId, useMemo, useState } from "react";
 import { useLanguage } from "../i18n";
 import MathMarkdown from "./MathMarkdown";
+import LearningDetail from "./LearningDetail";
 import OrbitalVolumeView from "./OrbitalVolumeView";
 import {
   OrbitalDensitySlice,
@@ -31,7 +32,7 @@ const orbitalLatex = (orbital: HydrogenOrbital | IronOrbital) =>
           ? `3d_{${orbital.slice(1)}}`
           : orbital;
 
-export function OrbitalExplorer() {
+export function OrbitalExplorer({ beginner = false }: { beginner?: boolean }) {
   const { t } = useLanguage();
   const id = useId();
   const [atom, setAtom] = useState<Atom>("H");
@@ -83,7 +84,7 @@ export function OrbitalExplorer() {
   ];
   return (
     <section
-      className="orbital-explorer"
+      className={`orbital-explorer ${beginner ? "orbital-beginner" : ""}`}
       data-orbital-atom={atom}
       data-orbital-level={level}
       data-orbital-view={view}
@@ -140,17 +141,31 @@ export function OrbitalExplorer() {
         ))}
       </div>
       <div className="orbital-context">
-        <MathMarkdown>
-          {atom === "H"
-            ? t(
-                "**自由氢原子**：基态组态 $1s^1$，共有 1 个电子。",
-                "**An isolated hydrogen atom**: ground-state configuration $1s^1$, with one electron.",
-              )
-            : t(
-                "**自由中性 Fe 原子**：基态组态 $[\\mathrm{Ar}]3d^64s^2$，共有 26 个电子。这里的分类与占据不等同于金属 Fe 的能带。",
-                "**An isolated neutral Fe atom**: ground-state configuration $[\\mathrm{Ar}]3d^64s^2$, with 26 electrons. These populations do not describe the bands of metallic Fe.",
-              )}
-        </MathMarkdown>
+        {beginner ? (
+          <p>
+            {atom === "H"
+              ? t(
+                  "氢原子只有一个电子。这里的形状表示它可能在哪里被测量到，不是电子绕核运动的路线。1s 是最低能量状态；2s、2p 是更高能量的状态。",
+                  "Hydrogen has one electron. These shapes show where it may be measured, not a path around the nucleus. 1s is its lowest-energy state; 2s and 2p are higher-energy states.",
+                )
+              : t(
+                  "铁原子有 26 个电子。这里一次观察其中一种轨道的形状，用的是简化模型，并不是金属铁里所有电子的分布。",
+                  "Iron has 26 electrons. Here you explore one type of orbital at a time using a simplified model, not the distribution of all electrons in metallic iron.",
+                )}
+          </p>
+        ) : (
+          <MathMarkdown>
+            {atom === "H"
+              ? t(
+                  "**自由氢原子**：基态组态 $1s^1$，共有 1 个电子。",
+                  "**An isolated hydrogen atom**: ground-state configuration $1s^1$, with one electron.",
+                )
+              : t(
+                  "**自由中性 Fe 原子**：基态组态 $[\\mathrm{Ar}]3d^64s^2$，共有 26 个电子。这里的分类与占据不等同于金属 Fe 的能带。",
+                  "**An isolated neutral Fe atom**: ground-state configuration $[\\mathrm{Ar}]3d^64s^2$, with 26 electrons. These populations do not describe the bands of metallic Fe.",
+                )}
+          </MathMarkdown>
+        )}
       </div>
       {level === "shells" && (
         <div className="orbital-shells-panel">
@@ -338,126 +353,147 @@ export function OrbitalExplorer() {
               </button>
             )}
           </div>
-          <div className="orbital-volume-controls">
-            {view === "3d" && (
-              <>
-                <div
-                  className="orbital-representation"
-                  role="group"
-                  aria-label={t(
-                    "三维呈现方式",
-                    "Three-dimensional representation",
+          <LearningDetail
+            collapsed={beginner}
+            title={t("调整形状显示与剖面", "Adjust the surface and sections")}
+          >
+            <div className="orbital-volume-controls">
+              {view === "3d" && (
+                <>
+                  <div
+                    className="orbital-representation"
+                    role="group"
+                    aria-label={t(
+                      "三维呈现方式",
+                      "Three-dimensional representation",
+                    )}
+                  >
+                    <button
+                      type="button"
+                      data-testid="orbital-representation-surface"
+                      aria-pressed={representation === "surface"}
+                      onClick={() => setRepresentation("surface")}
+                    >
+                      {t("密度等值面", "Density isosurfaces")}
+                    </button>
+                    <button
+                      type="button"
+                      data-testid="orbital-representation-cloud"
+                      aria-pressed={representation === "cloud"}
+                      onClick={() => setRepresentation("cloud")}
+                    >
+                      {t("概率云", "Probability cloud")}
+                    </button>
+                  </div>
+                  {representation === "surface" && (
+                    <label className="orbital-density-control">
+                      <span>
+                        {t("等值面密度阈值", "Isosurface density threshold")}
+                      </span>
+                      <input
+                        data-testid="orbital-density"
+                        type="range"
+                        min="-5"
+                        max="-0.3"
+                        step="0.1"
+                        value={Math.log10(densityFraction)}
+                        onChange={(e) =>
+                          setDensityFraction(
+                            10 ** Number(e.currentTarget.value),
+                          )
+                        }
+                        aria-label={t(
+                          "等值面密度阈值，对数刻度",
+                          "Isosurface density threshold, logarithmic scale",
+                        )}
+                        aria-valuetext={`${Number((100 * densityFraction).toPrecision(3))}%`}
+                      />
+                      <output>
+                        {Number((100 * densityFraction).toPrecision(3))}% ρₘₐₓ
+                      </output>
+                    </label>
                   )}
-                >
-                  <button
-                    type="button"
-                    data-testid="orbital-representation-surface"
-                    aria-pressed={representation === "surface"}
-                    onClick={() => setRepresentation("surface")}
-                  >
-                    {t("密度等值面", "Density isosurfaces")}
-                  </button>
-                  <button
-                    type="button"
-                    data-testid="orbital-representation-cloud"
-                    aria-pressed={representation === "cloud"}
-                    onClick={() => setRepresentation("cloud")}
-                  >
-                    {t("概率云", "Probability cloud")}
-                  </button>
-                </div>
-                {representation === "surface" && (
-                  <label className="orbital-density-control">
-                    <span>
-                      {t("等值面密度阈值", "Isosurface density threshold")}
-                    </span>
+                </>
+              )}
+              <div className="orbital-section-controls">
+                {view === "3d" && (
+                  <label className="orbital-check">
                     <input
-                      data-testid="orbital-density"
-                      type="range"
-                      min="-5"
-                      max="-0.3"
-                      step="0.1"
-                      value={Math.log10(densityFraction)}
-                      onChange={(e) =>
-                        setDensityFraction(10 ** Number(e.currentTarget.value))
-                      }
-                      aria-label={t(
-                        "等值面密度阈值，对数刻度",
-                        "Isosurface density threshold, logarithmic scale",
-                      )}
-                      aria-valuetext={`${Number((100 * densityFraction).toPrecision(3))}%`}
+                      data-testid="orbital-slice-enabled"
+                      type="checkbox"
+                      checked={showSlice}
+                      onChange={(e) => setShowSlice(e.target.checked)}
                     />
-                    <output>
-                      {Number((100 * densityFraction).toPrecision(3))}% ρₘₐₓ
-                    </output>
+                    {t("显示密度剖面", "Show density slice")}
                   </label>
                 )}
-              </>
-            )}
-            <div className="orbital-section-controls">
-              {view === "3d" && (
-                <label className="orbital-check">
-                  <input
-                    data-testid="orbital-slice-enabled"
-                    type="checkbox"
-                    checked={showSlice}
-                    onChange={(e) => setShowSlice(e.target.checked)}
-                  />
-                  {t("显示密度剖面", "Show density slice")}
+                <label className="orbital-plane-control">
+                  <span>{t("截面方向", "Slice orientation")}</span>
+                  <select
+                    data-testid="orbital-slice-axis"
+                    value={sliceAxis}
+                    onChange={(e) => setSliceAxis(e.target.value as SliceAxis)}
+                  >
+                    <option value="x">yz</option>
+                    <option value="y">xz</option>
+                    <option value="z">xy</option>
+                  </select>
                 </label>
-              )}
-              <label className="orbital-plane-control">
-                <span>{t("截面方向", "Slice orientation")}</span>
-                <select
-                  data-testid="orbital-slice-axis"
-                  value={sliceAxis}
-                  onChange={(e) => setSliceAxis(e.target.value as SliceAxis)}
-                >
-                  <option value="x">yz</option>
-                  <option value="y">xz</option>
-                  <option value="z">xy</option>
-                </select>
-              </label>
-              <label className="orbital-slice-position-control">
-                <span>{t("剖面位置", "Slice position")}</span>
-                <input
-                  data-testid="orbital-slice-position"
-                  type="range"
-                  min="-1"
-                  max="1"
-                  step="0.02"
-                  value={slicePosition}
-                  disabled={view === "3d" && !showSlice && !cutaway}
-                  onChange={(e) =>
-                    setSlicePosition(Number(e.currentTarget.value))
-                  }
-                  aria-label={t("移动剖面位置", "Move the slice")}
-                  aria-valuetext={`${sliceAxis} = ${Number((slicePosition * model.extent).toFixed(2))} a₀`}
-                />
-                <output>
-                  {sliceAxis} ={" "}
-                  {Number((slicePosition * model.extent).toFixed(2))} a₀
-                </output>
-              </label>
-              {view === "3d" && (
-                <label className="orbital-check">
+                <label className="orbital-slice-position-control">
+                  <span>{t("剖面位置", "Slice position")}</span>
                   <input
-                    data-testid="orbital-cutaway"
-                    type="checkbox"
-                    checked={cutaway}
-                    onChange={(e) => setCutaway(e.target.checked)}
+                    data-testid="orbital-slice-position"
+                    type="range"
+                    min="-1"
+                    max="1"
+                    step="0.02"
+                    value={slicePosition}
+                    disabled={view === "3d" && !showSlice && !cutaway}
+                    onChange={(e) =>
+                      setSlicePosition(Number(e.currentTarget.value))
+                    }
+                    aria-label={t("移动剖面位置", "Move the slice")}
+                    aria-valuetext={`${sliceAxis} = ${Number((slicePosition * model.extent).toFixed(2))} a₀`}
                   />
-                  {t("剖开观察内部", "Cut away to see inside")}
+                  <output>
+                    {sliceAxis} ={" "}
+                    {Number((slicePosition * model.extent).toFixed(2))} a₀
+                  </output>
                 </label>
-              )}
+                {view === "3d" && (
+                  <label className="orbital-check">
+                    <input
+                      data-testid="orbital-cutaway"
+                      type="checkbox"
+                      checked={cutaway}
+                      onChange={(e) => setCutaway(e.target.checked)}
+                    />
+                    {t("剖开观察内部", "Cut away to see inside")}
+                  </label>
+                )}
+              </div>
             </div>
-          </div>
+          </LearningDetail>
           <div className="orbital-visual-grid">
             <figure className="orbital-figure">
               <div className="orbital-current">
-                <MathMarkdown inlineMath>
-                  {orbitalLatex(atom === "H" ? hydrogen : iron)}
-                </MathMarkdown>
+                {beginner ? (
+                  <strong>
+                    {atom === "H"
+                      ? hydrogen
+                      : iron === "dz2"
+                        ? "3d_z²"
+                        : iron === "dx2-y2"
+                          ? "3d_x²−y²"
+                          : iron.startsWith("d")
+                            ? `3${iron}`
+                            : iron}
+                  </strong>
+                ) : (
+                  <MathMarkdown inlineMath>
+                    {orbitalLatex(atom === "H" ? hydrogen : iron)}
+                  </MathMarkdown>
+                )}
                 <span>
                   {view === "2d"
                     ? t("空间密度截面", "Spatial-density section")
@@ -501,22 +537,31 @@ export function OrbitalExplorer() {
                 </span>
               </div>
               <figcaption>
-                <MathMarkdown>
-                  {view === "2d"
-                    ? t(
-                        "截面来自同一三维波函数；深浅采用相对密度的对数色阶，以便观察较弱的尾部。改变截面方向和位置，可以找到节点。",
-                        "The section comes from the same three-dimensional wavefunction. A logarithmic relative-density scale reveals weak tails. Change its orientation and position to find nodes.",
-                      )
-                    : representation === "surface"
+                {beginner ? (
+                  <p>
+                    {t(
+                      "转动模型，看看从不同方向观察时形状怎样变化。两种颜色表示波函数的相位，并不表示正负电荷。形状的边缘是选定的显示阈值，电子云没有硬壳。",
+                      "Rotate the model to see its shape from different directions. The colors show wavefunction phase, not positive and negative charge. The edge is a chosen display threshold; an electron cloud has no hard shell.",
+                    )}
+                  </p>
+                ) : (
+                  <MathMarkdown>
+                    {view === "2d"
                       ? t(
-                          "表面满足 $|\\psi(x,y,z)|^2=\\rho_{\\mathrm{iso}}$，两种颜色区分波函数正负。降低阈值会显出更远的区域；百分比是相对于最大密度，**不是表面内包含的概率**。",
-                          "Surfaces satisfy $|\\psi(x,y,z)|^2=\\rho_{\\mathrm{iso}}$; the two colors distinguish wavefunction signs. Lower thresholds reveal more distant regions. The percentage is relative to maximum density, **not enclosed probability**.",
+                          "截面来自同一三维波函数；深浅采用相对密度的对数色阶，以便观察较弱的尾部。改变截面方向和位置，可以找到节点。",
+                          "The section comes from the same three-dimensional wavefunction. A logarithmic relative-density scale reveals weak tails. Change its orientation and position to find nodes.",
                         )
-                      : t(
-                          `点按 $|\\psi(x,y,z)|^2$ 在三维空间采样，截断半径为 $${model.extent}a_0$。点代表可能的测量位置，不是同时存在的许多电子，也不是运动轨迹。`,
-                          `Points sample $|\\psi(x,y,z)|^2$ in three-dimensional space, with a cutoff radius of $${model.extent}a_0$. They represent possible measurement positions, not many simultaneous electrons or trajectories.`,
-                        )}
-                </MathMarkdown>
+                      : representation === "surface"
+                        ? t(
+                            "表面满足 $|\\psi(x,y,z)|^2=\\rho_{\\mathrm{iso}}$，两种颜色区分波函数正负。降低阈值会显出更远的区域；百分比是相对于最大密度，**不是表面内包含的概率**。",
+                            "Surfaces satisfy $|\\psi(x,y,z)|^2=\\rho_{\\mathrm{iso}}$; the two colors distinguish wavefunction signs. Lower thresholds reveal more distant regions. The percentage is relative to maximum density, **not enclosed probability**.",
+                          )
+                        : t(
+                            `点按 $|\\psi(x,y,z)|^2$ 在三维空间采样，截断半径为 $${model.extent}a_0$。点代表可能的测量位置，不是同时存在的许多电子，也不是运动轨迹。`,
+                            `Points sample $|\\psi(x,y,z)|^2$ in three-dimensional space, with a cutoff radius of $${model.extent}a_0$. They represent possible measurement positions, not many simultaneous electrons or trajectories.`,
+                          )}
+                  </MathMarkdown>
+                )}
               </figcaption>
               {view === "3d" && (
                 <p className="orbital-help">
@@ -527,7 +572,12 @@ export function OrbitalExplorer() {
                 </p>
               )}
             </figure>
-            <OrbitalRadialPlot model={model} />
+            <LearningDetail
+              collapsed={beginner}
+              title={t("电子离原子核多远？", "How far from the nucleus?")}
+            >
+              <OrbitalRadialPlot model={model} />
+            </LearningDetail>
           </div>
           {unavailable && (
             <p className="orbital-note" role="status">
@@ -537,17 +587,22 @@ export function OrbitalExplorer() {
               )}
             </p>
           )}
-          <MathMarkdown className="orbital-model-note">
-            {atom === "H"
-              ? t(
-                  "**模型：孤立氢原子的解析波函数。** $1s$ 是基态；选择 $2s$ 或 $2p$ 查看激发态，不表示基态电子同时占据这些轨道。所有图形都来自 $\\psi=R_{nl}(r)Y_{lm}(\\theta,\\phi)$，坐标单位为玻尔半径 $a_0$。",
-                  "**Model: analytic wavefunctions of isolated hydrogen.** $1s$ is the ground state; $2s$ and $2p$ are excited states, not additional ground-state occupancies. Every view comes from $\\psi=R_{nl}(r)Y_{lm}(\\theta,\\phi)$, with coordinates in Bohr radii $a_0$.",
-                )
-              : t(
-                  `**模型：自由中性 Fe 的 Slater 屏蔽类氢近似。** $3d$ 取 $Z_{\\mathrm{eff}}=6.25$，$4s$ 取 $3.75$，径向函数与球谐函数共同构成三维分布。当前轨道有 ${model.radialNodes.length} 个径向节点、${model.l} 个角节点。这是单个轨道的教学近似，不是自洽 HF/DFT、Fe 原子总电子密度或金属能带。`,
-                  `**Model: Slater-screened hydrogenic approximation for isolated neutral Fe.** $Z_{\\mathrm{eff}}=6.25$ for $3d$ and $3.75$ for $4s$; a radial function and spherical harmonic form the full spatial distribution. This orbital has ${model.radialNodes.length} radial and ${model.l} angular nodes. It is a single-orbital teaching approximation, not self-consistent HF/DFT, total Fe electron density, or metallic bands.`,
-                )}
-          </MathMarkdown>
+          <LearningDetail
+            collapsed={beginner}
+            title={t("模型与近似", "Model and approximations")}
+          >
+            <MathMarkdown className="orbital-model-note">
+              {atom === "H"
+                ? t(
+                    "**模型：孤立氢原子的解析波函数。** $1s$ 是基态；选择 $2s$ 或 $2p$ 查看激发态，不表示基态电子同时占据这些轨道。所有图形都来自 $\\psi=R_{nl}(r)Y_{lm}(\\theta,\\phi)$，坐标单位为玻尔半径 $a_0$。",
+                    "**Model: analytic wavefunctions of isolated hydrogen.** $1s$ is the ground state; $2s$ and $2p$ are excited states, not additional ground-state occupancies. Every view comes from $\\psi=R_{nl}(r)Y_{lm}(\\theta,\\phi)$, with coordinates in Bohr radii $a_0$.",
+                  )
+                : t(
+                    `**模型：自由中性 Fe 的 Slater 屏蔽类氢近似。** $3d$ 取 $Z_{\\mathrm{eff}}=6.25$，$4s$ 取 $3.75$，径向函数与球谐函数共同构成三维分布。当前轨道有 ${model.radialNodes.length} 个径向节点、${model.l} 个角节点。这是单个轨道的教学近似，不是自洽 HF/DFT、Fe 原子总电子密度或金属能带。`,
+                    `**Model: Slater-screened hydrogenic approximation for isolated neutral Fe.** $Z_{\\mathrm{eff}}=6.25$ for $3d$ and $3.75$ for $4s$; a radial function and spherical harmonic form the full spatial distribution. This orbital has ${model.radialNodes.length} radial and ${model.l} angular nodes. It is a single-orbital teaching approximation, not self-consistent HF/DFT, total Fe electron density, or metallic bands.`,
+                  )}
+            </MathMarkdown>
+          </LearningDetail>
         </div>
       )}
     </section>

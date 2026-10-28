@@ -71,9 +71,9 @@ async function chapter(page, id) {
   await page.evaluate((id) => {
     location.hash = `/foundation/${id}`;
   }, id);
-  await page
-    .locator(`[data-foundation="${id}"] .foundation-references`)
-    .waitFor();
+  await page.locator(`[data-foundation="${id}"]`).waitFor();
+  await page.getByTestId("foundation-level-model").click();
+  await page.locator(".foundation-section").first().waitFor();
   if (id === "atomic-orbitals")
     await page.locator(".orbital-explorer").waitFor();
   if (["error-propagation", "band-structure", "formation-energy"].includes(id))
@@ -93,6 +93,7 @@ async function inspect(page, id, locale, viewport) {
     (await page.locator(".foundation-section").count()) >= 5,
     `${id}: sections`,
   );
+  await page.getByTestId("foundation-level-advanced").click();
   assert.ok(
     (await page.locator(".foundation-derivation .derivation-step").count()) >=
       3,
@@ -101,11 +102,36 @@ async function inspect(page, id, locale, viewport) {
   assert.equal(
     await page.locator(".katex-error").count(),
     0,
+    `${id}: advanced mathematics`,
+  );
+  await overflow(page, `${id}/${locale}/${viewport}/advanced`);
+  const advancedMath = await page.locator(".foundation-reading math").count();
+  assert.ok(advancedMath > 0, `${id}: advanced MathML remains available`);
+  assert.equal(
+    advancedMath,
+    await page.locator(".foundation-reading .katex").count(),
+    `${id}: every advanced formula includes MathML`,
+  );
+  await page.getByTestId("foundation-level-model").click();
+  await page.locator(".foundation-equation-disclosure").evaluateAll((nodes) =>
+    nodes.forEach((node) => {
+      node.open = true;
+    }),
+  );
+  assert.equal(
+    await page.locator(".katex-error").count(),
+    0,
     `${id}/${locale}: invalid formula`,
   );
+  const modelMath = await page.locator(".foundation-reading math").count();
+  assert.equal(
+    modelMath,
+    await page.locator(".foundation-reading .katex").count(),
+    `${id}: every model formula includes MathML`,
+  );
   assert.ok(
-    (await page.locator(".foundation-reading math").count()) > 3,
-    `${id}: accessible mathematics`,
+    modelMath + advancedMath > 3,
+    `${id}: accessible mathematics across model and derivation levels`,
   );
   const prose = await page.locator("main").evaluate((node) => {
     const clone = node.cloneNode(true);
@@ -330,9 +356,11 @@ try {
     "en",
     "language preference survives reload",
   );
+  await page.getByTestId("foundation-level-model").click();
   await page.locator(".foundation-references").waitFor();
   await page.locator(".foundation-connections a").first().click();
   await page.locator(".method-page").waitFor();
+  await page.locator("#tab-theory").click();
   assert.ok(
     (await page.locator(".foundation-prerequisites a").count()) >= 2,
     "methods link back to foundations",

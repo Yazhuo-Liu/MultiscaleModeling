@@ -55,6 +55,7 @@ const ids = [
 const errors = [],
   failures = [];
 let scrollableEquationsChecked = 0;
+let scriptSizesChecked = 0;
 let browser;
 const noOverflow = async (page, label) =>
   assert.equal(
@@ -103,6 +104,127 @@ async function noRawMath(page, label) {
     0,
     `${label}: math rendering error`,
   );
+}
+async function inspectScriptSizes(page, label) {
+  await page.evaluate(() => document.fonts.ready);
+  const measurements = await page
+    .locator(".math-markdown .katex .sizing")
+    .evaluateAll((nodes) =>
+      nodes
+        .filter(
+          (node) =>
+            (node.classList.contains("reset-size6") &&
+              node.classList.contains("size3")) ||
+            (node.classList.contains("reset-size3") &&
+              node.classList.contains("size1")),
+        )
+        .map((node) => {
+          const style = getComputedStyle(node);
+          const parent = getComputedStyle(node.parentElement);
+          return {
+            text: node.textContent.slice(0, 32),
+            expected: node.classList.contains("reset-size6") ? 0.7 : 5 / 7,
+            ratio: parseFloat(style.fontSize) / parseFloat(parent.fontSize),
+          };
+        }),
+    );
+  scriptSizesChecked += measurements.length;
+  assert.deepEqual(
+    measurements.filter(
+      ({ ratio, expected }) => Math.abs(ratio - expected) > 0.002,
+    ),
+    [],
+    `${label}: KaTeX script-size CSS must match the renderer's actual HTML classes`,
+  );
+}
+
+async function inspectOrbitalFormula(page, locale) {
+  await page.goto(`${base}#/foundation/atomic-orbitals`);
+  const formula = page.locator(".theory-formula").filter({
+    has: page.locator("annotation", { hasText: "L_{n-l-1}^{2l+1}" }),
+  });
+  await formula.waitFor();
+  for (const [name, viewport] of [
+    ["desktop", { width: 1440, height: 1000 }],
+    ["mobile", { width: 390, height: 844 }],
+  ]) {
+    await page.setViewportSize(viewport);
+    await formula.scrollIntoViewIfNeeded();
+    await page.evaluate(() => document.fonts.ready);
+    const measured = await formula.evaluate((element) => {
+      const math = element.querySelector(".katex");
+      const baseSize = parseFloat(getComputedStyle(math).fontSize);
+      const firstScript = element.querySelector(".sizing.reset-size6.size3");
+      const nestedScript = element.querySelector(".sizing.reset-size3.size1");
+      const psi = [...element.querySelectorAll(".katex-html .mathnormal")].find(
+        (node) => node.textContent === "ψ",
+      );
+      const index = psi.parentElement.querySelector(".msupsub .sizing");
+      const psiBox = psi.getBoundingClientRect();
+      const indexBox = index.getBoundingClientRect();
+      return {
+        baseSize,
+        primaryRatio:
+          parseFloat(getComputedStyle(firstScript).fontSize) / baseSize,
+        nestedRatio:
+          parseFloat(getComputedStyle(nestedScript).fontSize) / baseSize,
+        font: getComputedStyle(psi).fontFamily,
+        baseRight: psiBox.right,
+        subLeft: indexBox.left,
+        baseCenterY: psiBox.y + psiBox.height / 2,
+        subCenterY: indexBox.y + indexBox.height / 2,
+        scrollWidth: element.querySelector(".math-display").scrollWidth,
+        clientWidth: element.querySelector(".math-display").clientWidth,
+      };
+    });
+    // Keep a screenshot even on failure: matching HTML classes alone cannot
+    // prove that the stylesheet actually scaled and positioned the scripts.
+    await formula.screenshot({
+      path: `test-results/math-${locale}-orbital-scripts-${name}.png`,
+    });
+    console.log(
+      `Orbital scripts ${locale}/${name}: ${JSON.stringify(measured)}`,
+    );
+    assert.ok(
+      Math.abs(measured.primaryRatio - 0.7) < 0.002,
+      "Primary subscripts/superscripts are 70% of the base size",
+    );
+    assert.ok(
+      Math.abs(measured.nestedRatio - 0.5) < 0.002,
+      "Nested scripts are 50% of the base size",
+    );
+    assert.match(
+      measured.font,
+      /KaTeX/,
+      "The actual glyph uses bundled math fonts",
+    );
+    assert.ok(
+      measured.subCenterY > measured.baseCenterY,
+      "The subscript is visibly below its base glyph",
+    );
+    assert.ok(
+      measured.subLeft >= measured.baseRight - measured.baseSize * 0.2,
+      "The subscript follows the base rather than covering it",
+    );
+    await inspectScriptSizes(page, `atomic-orbitals/${locale}/${name}`);
+    await noRawMath(page, `atomic-orbitals/${locale}/${name}`);
+    await noOverflow(page, `atomic-orbitals/${locale}/${name}`);
+    const scroll = await formula.locator(".math-display").evaluate((node) => {
+      const overflow = node.scrollWidth > node.clientWidth + 2;
+      node.scrollLeft = node.scrollWidth;
+      const reachable = node.scrollLeft > 0;
+      node.scrollLeft = 0;
+      return { overflow, reachable, mode: getComputedStyle(node).overflowX };
+    });
+    if (scroll.overflow) {
+      scrollableEquationsChecked++;
+      assert.ok(
+        scroll.reachable && ["auto", "scroll"].includes(scroll.mode),
+        "Long orbital formulas retain readable sizing and local horizontal scrolling",
+      );
+    }
+  }
+  await page.setViewportSize({ width: 1440, height: 1000 });
 }
 async function inspectMath(page, label) {
   await page.locator(".derivation-stage").first().waitFor();
@@ -162,6 +284,7 @@ async function inspectMath(page, label) {
   );
   assert.deepEqual(displays, [], `${label}: raw display field`);
   await noRawMath(page, label);
+  await inspectScriptSizes(page, label);
   await noOverflow(page, label);
   if (page.viewportSize().width <= 700) {
     const scrollChecks = await page
@@ -206,6 +329,7 @@ try {
   await page.goto(base);
   for (const locale of ["zh", "en"]) {
     await switchLanguage(page, locale);
+    await inspectOrbitalFormula(page, locale);
     for (const id of ids) {
       await page.goto(`${base}#/method/${id}`);
       await inspectMath(page, `${id}/${locale}/desktop`);
@@ -242,7 +366,9 @@ try {
         : ["Applications & links", "Algorithm & code", "Interactive lab"]) {
         await page.getByRole("tab", { name: tabName, exact: true }).click();
         if (tabName === "交互实验" || tabName === "Interactive lab")
-          await page.locator(".lab-canvas").waitFor();
+          await page
+            .locator(".lab-canvas, .lab-spatial canvas, .lab-three canvas")
+            .waitFor();
         await noRawMath(page, `${id}/${locale}/${tabName}`);
       }
       console.log(
@@ -253,7 +379,9 @@ try {
   // Math-rich prose must not leak its source into experimental instructions.
   await page.goto(`${base}#/method/phase-field`);
   await page.getByRole("tab", { name: "Interactive lab", exact: true }).click();
-  await page.locator(".lab-canvas").waitFor();
+  await page
+    .locator(".lab-canvas, .lab-spatial canvas, .lab-three canvas")
+    .waitFor();
   await page.getByRole("button", { name: "Step forward", exact: true }).click();
   await noRawMath(page, "phase-field/en/running lab");
   const route = page.url();
@@ -273,6 +401,10 @@ try {
   assert.ok(
     scrollableEquationsChecked > 0,
     "Long equations exercised within their own mobile scroll containers",
+  );
+  assert.ok(
+    scriptSizesChecked > 100,
+    "Computed script sizes were verified across foundation and method formula contexts",
   );
   assert.deepEqual(errors, [], "Browser JavaScript errors");
   assert.deepEqual(failures, [], "Failed static assets");

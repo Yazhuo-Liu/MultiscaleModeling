@@ -77,6 +77,8 @@ symbols: [{ symbol: String.raw`\tau`, meaning: String.raw`松弛时间，$\tau=\
 
 `npm test` 严格编译所有正文与公式，并检查推导结构；构建后运行 `npm run test:math`，检查中英文数学显示、MathML、手机布局和实验回归。公共 `MathMarkdown` 组件不解释原始 HTML，KaTeX 不启用受信任 HTML 命令。
 
+KaTeX的渲染器、CSS和字体必须来自同一版本。直接依赖已固定为与`rehype-katex`匹配的版本，`npm test`检查版本一致性，`test:math`检查实际上下标字号和位置，避免公式虽能编译却排版错误。升级时需同步验证，详见[数学排版修复](doc/math-rendering.md)。
+
 ## 显式发布
 
 普通 push 只运行验证，**不会重新发布网站**。准备发布时，将修改提交并推送至 `main`，然后运行：

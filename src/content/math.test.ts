@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { createRequire } from "node:module";
 import katex from "katex";
 import { unified } from "unified";
 import remarkParse from "remark-parse";
@@ -13,6 +14,17 @@ import { getTheory } from "./theory";
 
 const parser = unified().use(remarkParse).use(remarkMath);
 const forbiddenControls = /[\u0000-\u0008\u000b\u000c\u000e-\u001f]/;
+
+test("KaTeX renderer matches the release providing site CSS and fonts", () => {
+  const require = createRequire(import.meta.url);
+  const rendererRequire = createRequire(require.resolve("rehype-katex"));
+  const markdownKatex = rendererRequire("katex") as { version: string };
+  assert.equal(
+    markdownKatex.version,
+    katex.version,
+    "Markdown-rendered math and the katex/dist CSS imported by main.tsx must use the same release",
+  );
+});
 
 function checkLatex(source: string, location: string, displayMode = false) {
   assert.ok(source.trim(), `${location}: empty formula`);

@@ -19,7 +19,7 @@ const STAGES: {
   short: [string, string];
   title: [string, string];
   caption: [string, string];
-  scale: string;
+  field: number;
   focus: [string, string];
 }[] = [
   {
@@ -30,7 +30,7 @@ const STAGES: {
       "宏观上是一件承载的物体。沿着局部裂纹，走进材料内部。",
       "A load-bearing object at first glance. Follow a local crack into the material.",
     ],
-    scale: "≈ 10 cm",
+    field: 0.1,
     focus: ["看裂纹", "See the crack"],
   },
   {
@@ -41,7 +41,7 @@ const STAGES: {
       "裂纹形成开口；裂尖前方的完整材料中，隐藏着更细的结构。",
       "The crack has an opening. Intact material ahead of its tip contains finer structure.",
     ],
-    scale: "≈ 1 mm",
+    field: 1e-3,
     focus: ["看晶粒", "See the grains"],
   },
   {
@@ -52,7 +52,7 @@ const STAGES: {
       "晶界分隔不同取向的晶粒。选中一个晶粒，继续向内部放大。",
       "Grain boundaries separate differently oriented crystals. Look inside one grain.",
     ],
-    scale: "≈ 20 μm",
+    field: 20e-6,
     focus: ["看位错", "See dislocations"],
   },
   {
@@ -63,7 +63,7 @@ const STAGES: {
       "位错参与塑性滑移。选中一段位错线，观察核心附近的局部横截面。",
       "Dislocations participate in plastic slip. Inspect a local cross-section near a selected core.",
     ],
-    scale: "≈ 200 nm",
+    field: 200e-9,
     focus: ["看原子", "See the atoms"],
   },
   {
@@ -74,21 +74,34 @@ const STAGES: {
       "理想化横截面：紫色高亮额外半原子面，终止处是刃型位错核心。",
       "An idealized section: purple highlights an extra half-plane ending at an edge-dislocation core.",
     ],
-    scale: "≈ 3 nm",
+    field: 3e-9,
     focus: ["", ""],
   },
 ];
 const LAST = STAGES.length - 1;
-const HOLD_MS = 2400;
-const ZOOM_MS = 1250;
+const HOLD_MS = 650;
+const ENDPOINT_HOLD_MS = 1400;
+const ZOOM_MS = 3000;
 const clamp = (value: number) => Math.max(0, Math.min(LAST, value));
 const smooth = (t: number) => t * t * (3 - 2 * t);
+function fieldLabel(metres: number) {
+  const [unit, divisor]: [string, number] =
+    metres >= 0.01
+      ? ["cm", 0.01]
+      : metres >= 0.001
+        ? ["mm", 0.001]
+        : metres >= 1e-6
+          ? ["μm", 1e-6]
+          : ["nm", 1e-9];
+  return `≈ ${Number((metres / divisor).toPrecision(2))} ${unit}`;
+}
 type Motion = { from: number; to: number; elapsed: number; duration: number };
 
 export default function ScaleJourney() {
   const { t } = useLanguage();
   const id = useId().replace(/:/g, "");
   const host = useRef<HTMLElement>(null);
+  const view = useRef<HTMLDivElement>(null);
   const [reduced, setReduced] = useState(
     () => matchMedia("(prefers-reduced-motion: reduce)").matches,
   );
@@ -98,11 +111,14 @@ export default function ScaleJourney() {
     () => !matchMedia("(prefers-reduced-motion: reduce)").matches,
   );
   const playingRef = useRef(playing);
-  const [visible, setVisible] = useState(true);
+  const [direction, setDirectionState] = useState<1 | -1>(1);
+  const directionRef = useRef<1 | -1>(1);
+  const [visible, setVisible] = useState(false);
   const [foreground, setForeground] = useState(() => !document.hidden);
   const [revision, wake] = useState(0);
   const motion = useRef<Motion | null>(null);
-  const hold = useRef(0);
+  // Start moving soon after the illustration actually enters the viewport.
+  const hold = useRef(ENDPOINT_HOLD_MS - 350);
   const putPosition = useCallback((value: number) => {
     positionRef.current = clamp(value);
     setPosition(positionRef.current);
@@ -111,14 +127,18 @@ export default function ScaleJourney() {
     playingRef.current = value;
     setPlaying(value);
   }, []);
+  const setDirection = useCallback((value: 1 | -1) => {
+    directionRef.current = value;
+    setDirectionState(value);
+  }, []);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) =>
-        setVisible(entry.isIntersecting && entry.intersectionRatio >= 0.2),
-      { threshold: [0, 0.2] },
+        setVisible(entry.isIntersecting && entry.intersectionRatio >= 0.55),
+      { threshold: [0, 0.55] },
     );
-    if (host.current) observer.observe(host.current);
+    if (view.current) observer.observe(view.current);
     const visibility = () => setForeground(!document.hidden);
     document.addEventListener("visibilitychange", visibility);
     const preference = matchMedia("(prefers-reduced-motion: reduce)");
@@ -163,24 +183,29 @@ export default function ScaleJourney() {
         if (fraction >= 1) {
           motion.current = null;
           hold.current = 0;
-          if (playingRef.current && movement.to >= LAST) setPlayback(false);
         }
       } else if (playingRef.current) {
         hold.current += delta;
-        if (hold.current >= HOLD_MS) {
+        const current = positionRef.current;
+        const endpoint = current === 0 || current === LAST;
+        if (hold.current >= (endpoint ? ENDPOINT_HOLD_MS : HOLD_MS)) {
           hold.current = 0;
-          const next = Math.min(
-            LAST,
-            Math.floor(positionRef.current + 0.001) + 1,
+          const travel =
+            current >= LAST ? -1 : current <= 0 ? 1 : directionRef.current;
+          setDirection(travel);
+          const next = clamp(
+            travel === 1
+              ? Math.floor(current + 0.00001) + 1
+              : Math.ceil(current - 0.00001) - 1,
           );
-          if (positionRef.current >= LAST) setPlayback(false);
-          else
-            motion.current = {
-              from: positionRef.current,
-              to: next,
-              elapsed: 0,
-              duration: reduced ? 0 : ZOOM_MS * (next - positionRef.current),
-            };
+          // Explicit Play opts into motion even with a reduced-motion preference.
+          // The default remains paused, and manual stage selection stays instant.
+          motion.current = {
+            from: current,
+            to: next,
+            elapsed: 0,
+            duration: ZOOM_MS * Math.abs(next - current),
+          };
         }
       }
       if (playingRef.current || motion.current)
@@ -199,12 +224,14 @@ export default function ScaleJourney() {
     revision,
     putPosition,
     setPlayback,
+    setDirection,
   ]);
 
   const seek = (value: number) => {
     setPlayback(false);
     motion.current = null;
     hold.current = 0;
+    setDirection(1);
     putPosition(value);
     wake((n) => n + 1);
   };
@@ -212,6 +239,7 @@ export default function ScaleJourney() {
     setPlayback(false);
     hold.current = 0;
     const target = clamp(value);
+    setDirection(target >= positionRef.current ? 1 : -1);
     if (reduced || Math.abs(target - positionRef.current) < 0.001) {
       motion.current = null;
       putPosition(target);
@@ -220,22 +248,20 @@ export default function ScaleJourney() {
         from: positionRef.current,
         to: target,
         elapsed: 0,
-        duration: Math.min(
-          4000,
-          ZOOM_MS * Math.abs(target - positionRef.current),
-        ),
+        duration: ZOOM_MS * Math.abs(target - positionRef.current),
       };
     }
     wake((n) => n + 1);
   };
   const togglePlayback = () => {
-    if (playingRef.current) {
+    if (playingRef.current || motion.current) {
       setPlayback(false);
       motion.current = null;
     } else {
       motion.current = null;
-      hold.current = 0;
-      if (positionRef.current >= LAST - 0.001) putPosition(0);
+      hold.current = ENDPOINT_HOLD_MS;
+      if (positionRef.current >= LAST - 0.00001) setDirection(-1);
+      else if (positionRef.current <= 0.00001) setDirection(1);
       setPlayback(true);
     }
     wake((n) => n + 1);
@@ -254,7 +280,7 @@ export default function ScaleJourney() {
   );
   const base = Math.min(LAST, Math.floor(position));
   const fraction = position - base;
-  const selected = Math.round(position);
+  const selected = direction === -1 ? Math.ceil(position) : base;
   const stage = STAGES[selected];
   const target = JOURNEY_TARGETS[STAGES[base].id];
   const ratio = target.width / 600;
@@ -264,12 +290,19 @@ export default function ScaleJourney() {
   const tx = (300 - endScale * target.cx) * progress;
   const ty = (180 - endScale * target.cy) * progress;
   const camera = `translate(${tx} ${ty}) scale(${scale})`;
-  const incoming = smooth(Math.max(0, Math.min(1, (fraction - 0.12) / 0.76)));
+  const incoming = smooth(Math.max(0, Math.min(1, (fraction - 0.35) / 0.6)));
   const outgoing =
     1 - smooth(Math.max(0, Math.min(1, (fraction - 0.72) / 0.28)));
   const settled =
     Math.abs(position - Math.round(position)) < 0.0001 && !motion.current;
-  const active = visible && foreground && (playing || motion.current !== null);
+  const running = playing || motion.current !== null;
+  const active = visible && foreground && running;
+  const field =
+    STAGES[base].field *
+    Math.pow(
+      STAGES[Math.min(LAST, base + 1)].field / STAGES[base].field,
+      fraction,
+    );
   return (
     <section
       ref={host}
@@ -279,6 +312,7 @@ export default function ScaleJourney() {
       data-position={position.toFixed(4)}
       data-playing={playing ? "true" : "false"}
       data-active={active ? "true" : "false"}
+      data-direction={direction === 1 ? "in" : "out"}
     >
       <div className="journey-heading">
         <span>
@@ -289,7 +323,7 @@ export default function ScaleJourney() {
           {String(selected + 1).padStart(2, "0")} / 05
         </span>
       </div>
-      <div className="journey-view">
+      <div ref={view} className="journey-view">
         <svg
           viewBox="0 0 600 360"
           className="journey-canvas"
@@ -321,11 +355,24 @@ export default function ScaleJourney() {
                 {scenes[base + 1]}
               </g>
             )}
+            {base < LAST && (
+              <rect
+                className="journey-tracking-frame"
+                transform={camera}
+                x={target.cx - target.width / 2}
+                y={target.cy - target.width * 0.3}
+                width={target.width}
+                height={target.width * 0.6}
+                rx="2"
+                vectorEffect="non-scaling-stroke"
+                opacity={1 - smooth(Math.max(0, (fraction - 0.88) / 0.12))}
+              />
+            )}
           </g>
         </svg>
         <div className="journey-scale">
           <span>{t("示意视野", "Illustrative field")}</span>
-          <strong>{stage.scale}</strong>
+          <strong>{fieldLabel(field)}</strong>
         </div>
         {settled && base < LAST && (
           <button
@@ -361,8 +408,20 @@ export default function ScaleJourney() {
             <i key={s.id} className={i <= selected ? "is-reached" : ""} />
           ))}
         </div>
+        {active && (
+          <span className="journey-motion-status" aria-hidden="true">
+            {direction === 1 ? <ZoomIn size={13} /> : <ZoomOut size={13} />}
+            {direction === 1
+              ? t("逐层放大", "Zooming in")
+              : t("返回全貌", "Zooming out")}
+          </span>
+        )}
       </div>
-      <div className="journey-caption" aria-live="polite" aria-atomic="true">
+      <div
+        className="journey-caption"
+        aria-live={running ? "off" : "polite"}
+        aria-atomic="true"
+      >
         <h2 id={`${id}-title`}>{t(...stage.title)}</h2>
         <p id={`${id}-description`}>{t(...stage.caption)}</p>
       </div>
@@ -389,20 +448,14 @@ export default function ScaleJourney() {
           data-testid="journey-play"
           onClick={togglePlayback}
           aria-label={
-            playing
-              ? t("暂停探索", "Pause the tour")
-              : position >= LAST
-                ? t("重新播放探索", "Replay the tour")
-                : t("自动探索", "Play the tour")
+            running
+              ? t("暂停动画", "Pause animation")
+              : t("播放缩放动画", "Play zoom animation")
           }
         >
-          {playing ? <Pause size={16} /> : <Play size={16} />}
+          {running ? <Pause size={16} /> : <Play size={16} />}
           <span>
-            {playing
-              ? t("暂停", "Pause")
-              : position >= LAST
-                ? t("重播", "Replay")
-                : t("自动探索", "Play tour")}
+            {running ? t("暂停动画", "Pause") : t("播放动画", "Play")}
           </span>
         </button>
         <button
@@ -455,8 +508,8 @@ export default function ScaleJourney() {
       </div>
       <p className="journey-note">
         {t(
-          "概念性放大 · 尺度随材料与工况变化",
-          "A conceptual zoom · scales vary with material and conditions",
+          "概念性放大 · 图形缩放压缩了真实尺度跨度",
+          "A conceptual zoom · visual magnification compresses the scale range",
         )}
       </p>
     </section>

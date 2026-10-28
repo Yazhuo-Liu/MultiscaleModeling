@@ -74,7 +74,7 @@ async function at(page, value) {
       );
     },
     value,
-    { timeout: 12000 },
+    { timeout: 20000 },
   );
 }
 async function status(page, attribute, value) {
@@ -161,15 +161,80 @@ try {
   );
   await journey(page).scrollIntoViewIfNeeded();
   await status(page, "data-active", "true");
-  await page.waitForFunction(
-    () =>
-      Number(document.querySelector(".scale-journey")?.dataset.position) > 0.04,
-    null,
-    { timeout: 8000 },
+  // Observe real elapsed-time rendering, rather than only setting slider values.
+  // Restart through the visible controls so font loading cannot consume this zoom.
+  await page.getByTestId("journey-reset").click();
+  await at(page, 0);
+  await page.getByTestId("journey-play").click();
+  assert.equal(
+    await page.locator(".journey-caption").getAttribute("aria-live"),
+    "off",
+    "Continuous automatic playback does not repeatedly announce changing captions",
   );
+  const growth = await page.evaluate(async () => {
+    const samples = [];
+    const started = performance.now();
+    let sampled = -Infinity;
+    return await new Promise((resolve, reject) => {
+      const sample = (time) => {
+        const host = document.querySelector(".scale-journey");
+        const position = Number(host?.dataset.position);
+        const frame = document.querySelector(".journey-tracking-frame");
+        if (
+          position > 0.02 &&
+          position < 0.9 &&
+          frame &&
+          time - sampled >= 400
+        ) {
+          const bounds = frame.getBoundingClientRect();
+          samples.push({
+            position,
+            width: bounds.width,
+            height: bounds.height,
+            sceneWidth: document
+              .querySelector(".journey-scene-out")
+              .getBoundingClientRect().width,
+            scale: document.querySelector(".journey-scale strong")?.textContent,
+          });
+          sampled = time;
+          if (samples.length === 4) return resolve(samples);
+        }
+        if (time - started > 8000)
+          return reject(new Error("No continuous first zoom was rendered"));
+        requestAnimationFrame(sample);
+      };
+      requestAnimationFrame(sample);
+    });
+  });
+  for (let i = 1; i < growth.length; i++) {
+    assert.ok(growth[i].position > growth[i - 1].position);
+    assert.ok(
+      growth[i].width > growth[i - 1].width + 2 &&
+        growth[i].height > growth[i - 1].height + 1,
+      "The same visible selection frame grows on screen over successive timed frames",
+    );
+  }
+  assert.ok(
+    growth.at(-1).width > growth[0].width * 1.5,
+    "Actual enlargement is substantial enough to see",
+  );
+  assert.ok(
+    growth.at(-1).sceneWidth > growth[0].sceneWidth * 1.5,
+    "The metal specimen itself enlarges with the tracked selection",
+  );
+  assert.ok(
+    new Set(growth.map((sample) => sample.scale)).size > 2,
+    "The illustrative field changes continuously during the zoom",
+  );
+  await page.screenshot({ path: "test-results/journey-timed-zoom.png" });
   await page.getByTestId("journey-play").click();
   await status(page, "data-playing", "false");
   await frozen(page, "Pause");
+  assert.equal(
+    await page.locator(".journey-caption").getAttribute("aria-live"),
+    "polite",
+    "Paused manual exploration retains accessible caption announcements",
+  );
 
   // Scrubbing must change the camera continuously, not simply swap captions.
   await page.getByTestId("journey-progress").fill("0.5");
@@ -179,7 +244,23 @@ try {
   const frame = await page.getByTestId("journey-canvas").evaluate((svg) => {
     const outgoing = svg.querySelector(".journey-scene-out");
     const incoming = svg.querySelector(".journey-scene-in");
+    const cracks = ["macro", "detail"].map((name) => {
+      const path = svg.querySelector(`[data-crack-outline="${name}"]`);
+      const matrix = path?.getScreenCTM();
+      return {
+        outline: path?.getAttribute("d"),
+        matrix: matrix && [
+          matrix.a,
+          matrix.b,
+          matrix.c,
+          matrix.d,
+          matrix.e,
+          matrix.f,
+        ],
+      };
+    });
     return {
+      cracks,
       outgoingTransform: outgoing?.getAttribute("transform"),
       incomingTransform: incoming?.getAttribute("transform"),
       incomingOpacity: Number(
@@ -200,8 +281,44 @@ try {
     frame.incomingOpacity > 0 && frame.incomingOpacity < 1,
     "The intermediate frame blends the two physical levels",
   );
+  assert.ok(frame.cracks.every((crack) => crack.outline && crack.matrix));
+  assert.equal(
+    frame.cracks[0].outline,
+    frame.cracks[1].outline,
+    "The crack enlarged from the specimen retains exactly the same outline",
+  );
+  for (let index = 0; index < 6; index++)
+    assert.ok(
+      Math.abs(frame.cracks[0].matrix[index] - frame.cracks[1].matrix[index]) <
+        0.0001,
+      "Macro and detail crack outlines coincide on screen throughout the handoff",
+    );
   await page.screenshot({ path: "test-results/journey-transition-zh.png" });
 
+  await choose(page, "object");
+  await page.getByTestId("journey-next").click();
+  await page.waitForFunction(
+    () => {
+      const value = Number(
+        document.querySelector(".scale-journey")?.dataset.position,
+      );
+      return value > 0.08 && value < 0.8;
+    },
+    null,
+    { timeout: 8000 },
+  );
+  assert.equal(
+    await page.locator(".journey-caption").getAttribute("aria-live"),
+    "off",
+    "Manual camera flights also suppress repeating live announcements",
+  );
+  await page.getByTestId("journey-play").click();
+  await status(page, "data-playing", "false");
+  await frozen(page, "Main pause control stops a manual camera flight");
+  assert.ok(
+    (await position(page)) > 0 && (await position(page)) < 1,
+    "Pausing a manual flight preserves an intermediate view",
+  );
   await choose(page, "object");
   await page.getByTestId("journey-focus").click();
   await at(page, 1);
@@ -274,6 +391,26 @@ try {
     { timeout: 8000 },
   );
 
+  // A visible caption/card must not consume the animation when its actual drawing
+  // is mostly above the viewport. This catches observing the whole card instead.
+  await page.locator(".journey-view").evaluate((view) => {
+    const bounds = view.getBoundingClientRect();
+    window.scrollTo({
+      top: scrollY + bounds.top + bounds.height * 0.75,
+      behavior: "instant",
+    });
+  });
+  assert.ok(
+    await journey(page).evaluate(
+      (host) => host.getBoundingClientRect().bottom > 150,
+    ),
+    "Part of the card remains visible while the illustration is mostly hidden",
+  );
+  await status(page, "data-active", "false");
+  await frozen(page, "Partially visible illustration");
+  await page.locator(".journey-view").scrollIntoViewIfNeeded();
+  await status(page, "data-active", "true");
+
   // Browser visibility event with both standard properties matching a hidden tab.
   await page.evaluate(() => {
     window.__journeyVisibilityDescriptors = ["hidden", "visibilityState"].map(
@@ -305,24 +442,95 @@ try {
   await page.getByTestId("journey-progress").fill("3.6");
   await page.getByTestId("journey-play").click();
   await at(page, 4);
-  await status(page, "data-playing", "false");
+  assert.equal(
+    await journey(page).getAttribute("data-playing"),
+    "true",
+    "The tour keeps playing at the atomic endpoint",
+  );
   assert.equal(
     await page.getByTestId("journey-focus").count(),
     0,
     "There is no further zoom hotspot at the atomic level",
   );
-  await page.getByTestId("journey-play").click();
-  await status(page, "data-playing", "true");
+  const loop = await page.evaluate(async () => {
+    const started = performance.now();
+    let previous = 4;
+    let maxStep = 0;
+    let reachedObject = false;
+    let intermediateReturn = false;
+    let arrivalStarted = null;
+    let arrivedAtDefects = false;
+    return await new Promise((resolve, reject) => {
+      const sample = (time) => {
+        const host = document.querySelector(".scale-journey");
+        const current = Number(host?.dataset.position);
+        if (host?.dataset.playing !== "true")
+          return reject(new Error("Loop stopped playing"));
+        maxStep = Math.max(maxStep, Math.abs(current - previous));
+        if (current > 3.05 && current < 3.95) {
+          intermediateReturn = true;
+          if (host.dataset.stage !== "atoms")
+            return reject(
+              new Error(
+                "Reverse zoom changes its caption before reaching the next layer",
+              ),
+            );
+        }
+        // The diagnostic position is rounded to four decimals; its last eased
+        // frame can read 3.0000 before actually arriving. Check within the hold.
+        if (current === 3) {
+          arrivalStarted ??= time;
+          if (time - arrivalStarted > 100) {
+            if (host.dataset.stage !== "dislocations")
+              return reject(
+                new Error("Reverse zoom did not announce its arrived layer"),
+              );
+            arrivedAtDefects = true;
+          }
+        } else arrivalStarted = null;
+        if (current === 0) reachedObject = true;
+        if (reachedObject && current > 0.03 && host.dataset.direction === "in")
+          return resolve({ maxStep, intermediateReturn, arrivedAtDefects });
+        if (time - started > 30000)
+          return reject(
+            new Error("Tour did not return smoothly and start another loop"),
+          );
+        previous = current;
+        requestAnimationFrame(sample);
+      };
+      requestAnimationFrame(sample);
+    });
+  });
   assert.ok(
-    (await position(page)) < 1,
-    "Replay returns to the macroscopic object",
+    loop.intermediateReturn,
+    "Atoms zoom out through intermediate geometry",
+  );
+  assert.ok(
+    loop.arrivedAtDefects,
+    "The caption updates when the return reaches its next layer",
+  );
+  assert.ok(
+    loop.maxStep < 0.1,
+    "Neither endpoint teleports to the opposite scale",
+  );
+  // Paused at atoms, explicitly playing must also start the smooth return.
+  await page.getByTestId("journey-progress").fill("4");
+  await page.getByTestId("journey-play").click();
+  assert.ok(
+    (await position(page)) > 3.9,
+    "Playing at atoms preserves its initial view",
   );
   await page.waitForFunction(
-    () =>
-      Number(document.querySelector(".scale-journey")?.dataset.position) > 0.03,
+    () => {
+      const value = Number(
+        document.querySelector(".scale-journey")?.dataset.position,
+      );
+      return value > 3 && value < 3.95;
+    },
     null,
     { timeout: 8000 },
   );
+  await status(page, "data-direction", "out");
   await page.getByTestId("journey-reset").click();
   await at(page, 0);
   await status(page, "data-playing", "false");
@@ -344,7 +552,7 @@ try {
   await at(page, 0);
   await noOverflow(page, "Desktop");
   console.log(
-    "PASS journey animation: nested zoom, scrubbing, focus, forward/backward, interruption, playback, language state, visibility and replay.",
+    "PASS journey animation: nested zoom, scrubbing, focus, forward/backward, interruption, playback, language state, visibility and continuous endpoint loops.",
   );
 
   const reduced = await browser.newPage({
@@ -361,6 +569,34 @@ try {
     "Reduced motion starts paused",
   );
   await frozen(reduced, "Reduced-motion initial state");
+  // The preference suppresses unsolicited motion, but an explicit Play request
+  // still provides the full gradual animation instead of jumping between scenes.
+  await reduced.getByTestId("journey-play").click();
+  await reduced.locator(".journey-view").scrollIntoViewIfNeeded();
+  await reduced.waitForFunction(
+    () => {
+      const value = Number(
+        document.querySelector(".scale-journey")?.dataset.position,
+      );
+      return value > 0.06 && value < 0.8;
+    },
+    null,
+    { timeout: 8000 },
+  );
+  await reduced.getByTestId("journey-play").click();
+  const reducedIntermediate = await position(reduced);
+  assert.ok(
+    reducedIntermediate > 0 && reducedIntermediate < 1,
+    "Reduced-motion explicit playback has genuine intermediate frames",
+  );
+  await frozen(reduced, "Reduced-motion explicit pause");
+  await reduced.emulateMedia({ reducedMotion: "no-preference" });
+  await reduced.getByTestId("journey-play").click();
+  await status(reduced, "data-playing", "true");
+  await reduced.emulateMedia({ reducedMotion: "reduce" });
+  await status(reduced, "data-playing", "false");
+  await frozen(reduced, "Changing system preference stops active animation");
+
   const hashes = new Set();
   for (const stage of stages) {
     await reduced.getByTestId(`journey-stage-${stage}`).click();

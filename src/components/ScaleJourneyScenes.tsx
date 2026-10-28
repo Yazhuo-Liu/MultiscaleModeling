@@ -31,6 +31,35 @@ const color = {
   warmLight: "var(--journey-warm-light, #eee6d6)",
 };
 
+// The same crack is embedded in the specimen and the enlarged view. Keeping
+// these coordinates shared lets its faces stay registered throughout the zoom.
+const CRACK_OUTLINE =
+  "M-20 162 44 168 88 161 132 171 181 164 219 174 258 171 292 178 320 175 350 180 321 184 291 190 263 188 224 200 185 198 138 218 92 215 41 239-61 251Z";
+const CRACK_UPPER_FACE =
+  "M-20 161 44 167 88 160 132 170 181 163 219 173 258 170 292 177 320 174 350 180";
+const CRACK_LOWER_FACE =
+  "M350 180 321 184 291 190 263 188 224 200 185 198 138 218 92 215 41 239-61 251";
+
+function CrackEdges() {
+  return (
+    <>
+      <path
+        d={CRACK_UPPER_FACE}
+        fill="none"
+        stroke={color.light}
+        strokeWidth="3"
+        opacity=".9"
+      />
+      <path
+        d={CRACK_LOWER_FACE}
+        fill="none"
+        stroke={color.metalDark}
+        strokeWidth="2.5"
+      />
+    </>
+  );
+}
+
 type Point = readonly [number, number];
 const grainSeeds: Point[] = [
   [-10, -10],
@@ -125,6 +154,7 @@ const atoms = Array.from({ length: 7 }, (_, row) => row - 3).flatMap((j) =>
 const atomByIndex = new Map(atoms.map((atom) => [`${atom.i},${atom.j}`, atom]));
 
 function MetalObject({ id }: { id: string }) {
+  const target = JOURNEY_TARGETS.object;
   return (
     <>
       <defs>
@@ -212,18 +242,17 @@ function MetalObject({ id }: { id: string }) {
           />
         </g>
       ))}
-      <path
-        d="M310 191 319 181 329 180 337 172 345 174 355 166 348 174 338 177 331 185 321 185 315 195Z"
-        fill={color.ink}
-        opacity=".88"
-      />
-      <path
-        d="m310 191 9-10 10-1 8-8 8 2 10-8"
-        fill="none"
-        stroke={color.light}
-        strokeWidth="1.1"
-        opacity=".85"
-      />
+      <g
+        transform={`translate(${target.cx - target.width / 2} ${target.cy - target.width * 0.3}) scale(${target.width / 600})`}
+      >
+        <path
+          data-crack-outline="macro"
+          d={CRACK_OUTLINE}
+          fill={color.ink}
+          opacity=".88"
+        />
+        <CrackEdges />
+      </g>
       <path
         d="M165 261 523 209"
         fill="none"
@@ -239,8 +268,6 @@ function MetalObject({ id }: { id: string }) {
 }
 
 function Crack({ id }: { id: string }) {
-  const crack =
-    "M-20 162 44 168 88 161 132 171 181 164 219 174 258 171 292 178 320 175 350 180 321 184 291 190 263 188 224 200 185 198 138 218 92 215 41 239-61 251Z";
   return (
     <>
       <defs>
@@ -254,7 +281,7 @@ function Crack({ id }: { id: string }) {
           <stop offset="1" stopColor={color.metalDark} />
         </linearGradient>
         <clipPath id={`${id}-opening`}>
-          <path d={crack} />
+          <path d={CRACK_OUTLINE} />
         </clipPath>
       </defs>
       <rect width="600" height="360" fill={`url(#${id}-metal)`} />
@@ -263,7 +290,11 @@ function Crack({ id }: { id: string }) {
           <path key={i} d={`M0 ${i * 13 + 2} 600 ${i * 13 - 34}`} />
         ))}
       </g>
-      <path d={crack} fill={`url(#${id}-void)`} />
+      <path
+        data-crack-outline="detail"
+        d={CRACK_OUTLINE}
+        fill={`url(#${id}-void)`}
+      />
       <g
         clipPath={`url(#${id}-opening)`}
         stroke={color.ink}
@@ -274,19 +305,7 @@ function Crack({ id }: { id: string }) {
           <path key={i} d={`m${i * 30} 151 28 101`} />
         ))}
       </g>
-      <path
-        d="M-20 161 44 167 88 160 132 170 181 163 219 173 258 170 292 177 320 174 350 180"
-        fill="none"
-        stroke={color.light}
-        strokeWidth="3"
-        opacity=".9"
-      />
-      <path
-        d="M350 180 321 184 291 190 263 188 224 200 185 198 138 218 92 215 41 239-61 251"
-        fill="none"
-        stroke={color.metalDark}
-        strokeWidth="2.5"
-      />
+      <CrackEdges />
       <path
         d="M351 178q32-31 61-22m-57 26q30 30 55 25"
         stroke={color.teal}
